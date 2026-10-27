@@ -26,6 +26,14 @@ npm run dev      # abre em http://localhost:4321
 npm run build    # gera o site final em ./dist
 ```
 
+> **Windows:** se aparecer o erro *"a execução de scripts foi desabilitada neste sistema"*, rode uma vez no PowerShell (responda **S** se perguntar):
+>
+> ```powershell
+> Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+> ```
+>
+> Alternativa sem mudar nada no sistema: use `npm.cmd` / `npx.cmd` no lugar de `npm` / `npx`.
+
 ## Adicionar um projeto
 
 Crie um arquivo `.md` em `src/content/projetos/` com o cabeçalho:
