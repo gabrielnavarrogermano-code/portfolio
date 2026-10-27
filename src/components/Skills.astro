@@ -3,23 +3,27 @@ import SectionTitle from './SectionTitle.astro';
 
 const groups = [
   { title: 'Banco de Dados & Automação', items: ['Python', 'SQL', 'PostgreSQL', 'MySQL'] },
-  { title: 'Visualização de Dados', items: ['Tableau', 'Excel'] },
-  { title: 'Versionamento', items: ['Git', 'GitHub'] },
+  {
+    title: 'Análise de Dados',
+    items: ['Análise de bases de dados com pandas', 'Estatística descritiva'],
+  },
+  { title: 'Visualização de Dados', items: ['Power BI', 'DAX', 'Excel'] },
   { title: 'Preparação de Dados para BI', items: ['ETL', 'Extração', 'Limpeza e tratamento'] },
+  { title: 'Versionamento', items: ['Git', 'GitHub'] },
 ];
 
 // Pipeline: onde cada ferramenta entra no processo
 const pipeline = [
   { stage: 'Extração', tools: ['SQL', 'Python'] },
-  { stage: 'Tratamento', tools: ['Python', 'Excel'] },
+  { stage: 'Tratamento', tools: ['pandas', 'Excel'] },
   { stage: 'Armazenamento', tools: ['PostgreSQL', 'MySQL'] },
-  { stage: 'Visualização', tools: ['Tableau', 'Excel'] },
+  { stage: 'Visualização', tools: ['Power BI', 'Excel'] },
 ];
 ---
 
 <section id="habilidades" class="py-24">
   <div class="mx-auto max-w-5xl px-6">
-    <SectionTitle index="05" label="Habilidades" title="Ferramentas do dia a dia" />
+    <SectionTitle index="04" label="Habilidades" title="Ferramentas do dia a dia" />
 
     <div class="mt-12">
       <p data-reveal class="font-mono text-sm text-muted">Onde cada ferramenta entra</p>
@@ -62,7 +66,10 @@ const pipeline = [
         <div
           data-reveal
           style={`--delay: ${i * 120}ms`}
-          class="spotlight rounded-2xl border border-line bg-surface p-6"
+          class:list={[
+            'spotlight rounded-2xl border border-line bg-surface p-6',
+            i === groups.length - 1 && groups.length % 2 === 1 && 'sm:col-span-2',
+          ]}
         >
           <p class="flex items-center gap-3 font-semibold text-white">
             <span class="font-mono text-xs text-accent-2">{String(i + 1).padStart(2, '0')}</span>

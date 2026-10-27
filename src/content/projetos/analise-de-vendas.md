@@ -2,7 +2,7 @@
 title: Análise de Vendas e Sazonalidade
 summary: Quais produtos e meses puxam o faturamento? Dashboard interativo para responder em segundos.
 kind: Dashboard
-tools: [SQL, PostgreSQL, Tableau]
+tools: [SQL, PostgreSQL, Power BI]
 order: 1
 exemplo: true
 # dashboard: https://public.tableau.com/...
