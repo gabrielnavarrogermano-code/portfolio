@@ -1,0 +1,84 @@
+---
+import SectionTitle from './SectionTitle.astro';
+
+// Escada "do dado à decisão": cada nível agrega mais valor que o anterior
+const levels = [
+  { title: 'Dados', text: 'Registros brutos de sistemas, bancos e planilhas.', width: '40%' },
+  { title: 'Informação', text: 'Dados tratados, padronizados e organizados com SQL.', width: '60%' },
+  { title: 'Conhecimento', text: 'Indicadores e tendências apresentados em dashboards.', width: '80%' },
+  { title: 'Decisão', text: 'Ações estratégicas embasadas em evidências.', width: '100%' },
+];
+
+const deliverables = [
+  {
+    title: 'Visão unificada',
+    text: 'Reunir dados de diferentes fontes em uma única base confiável.',
+  },
+  {
+    title: 'Indicadores claros',
+    text: 'KPIs que mostram o desempenho do negócio de forma objetiva.',
+  },
+  {
+    title: 'Agilidade',
+    text: 'Respostas em minutos, sem depender de relatórios manuais.',
+  },
+  {
+    title: 'Decisões fundamentadas',
+    text: 'Menos intuição, mais evidência na hora de escolher o próximo passo.',
+  },
+];
+---
+
+<section id="bi" class="mx-auto max-w-5xl px-6 py-24">
+  <SectionTitle
+    index="04"
+    label="Inteligência de Negócio"
+    title="Do dado à decisão"
+    subtitle="Business Intelligence é o processo de transformar dados dispersos em informação confiável para quem precisa decidir."
+  />
+
+  <div class="mt-14 grid gap-14 lg:grid-cols-2">
+    <div>
+      <p data-reveal class="font-mono text-sm text-muted">A cadeia de valor dos dados</p>
+      <ol class="mt-6 space-y-6">
+        {
+          levels.map((l, i) => (
+            <li data-reveal="left" style={`--delay: ${i * 150}ms`}>
+              <div class="flex items-baseline justify-between gap-4">
+                <p class="font-semibold text-white">
+                  <span class="mr-3 font-mono text-xs text-accent-2">{String(i + 1).padStart(2, '0')}</span>
+                  {l.title}
+                </p>
+              </div>
+              <div class="mt-2 h-1.5 rounded-full bg-line">
+                <div
+                  class="level-bar h-full rounded-full bg-linear-to-r from-accent-2/60 to-accent"
+                  style={`width: ${l.width}; --delay: ${300 + i * 150}ms`}
+                />
+              </div>
+              <p class="mt-2 text-sm text-muted">{l.text}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+
+    <div>
+      <p data-reveal class="font-mono text-sm text-muted">O que o BI entrega</p>
+      <div class="mt-6 grid gap-4 sm:grid-cols-2">
+        {
+          deliverables.map((d, i) => (
+            <div data-reveal="zoom" style={`--delay: ${i * 100}ms`} class="spotlight rounded-2xl border border-line bg-surface p-5">
+              <p class="font-semibold text-white">{d.title}</p>
+              <p class="mt-2 text-sm leading-relaxed text-muted">{d.text}</p>
+            </div>
+          ))
+        }
+      </div>
+      <blockquote data-reveal class="mt-6 border-l-2 border-accent-2 pl-4 text-sm leading-relaxed text-zinc-300">
+        Meu papel nessa cadeia está na base: garantir que os dados cheguem ao BI extraídos, tratados e prontos para
+        análise.
+      </blockquote>
+    </div>
+  </div>
+</section>

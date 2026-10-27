@@ -1,0 +1,73 @@
+---
+import SectionTitle from './SectionTitle.astro';
+
+const experience = [
+  'Suporte à infraestrutura de redes',
+  'Documentação de processos internos',
+  'Diagnóstico e correção de problemas de hardware',
+  'Atendimento a chamados dos colaboradores',
+  'Criação de contas e gestão de permissões de acesso',
+];
+
+const tools = ['Kanban', 'SharePoint', 'Microsoft 365 Admin', 'Entra ID'];
+---
+
+<section id="apresentacao" class="mx-auto max-w-5xl px-6 py-24">
+  <div class="grid gap-12 lg:grid-cols-5">
+    <div class="lg:col-span-2">
+      <div class="lg:sticky lg:top-28">
+        <SectionTitle index="01" label="Apresentação" title="Prazer, Gabriel" />
+        <p data-reveal style="--delay: 100ms" class="mt-6 text-lg leading-relaxed text-muted">
+          Estou construindo minha formação em Engenharia de Software com um direcionamento claro:
+          <span class="text-white">desenvolver soluções para Inteligência e Análise de Dados</span>.
+        </p>
+        <div data-reveal style="--delay: 200ms" class="mt-8">
+          <p class="font-mono text-xs tracking-wider text-muted uppercase">Disponível para</p>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <span class="rounded-full border border-accent/40 px-4 py-1.5 text-sm text-white">Estágio em Dados</span>
+            <span class="rounded-full border border-accent/40 px-4 py-1.5 text-sm text-white">Júnior em Dados</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-4 lg:col-span-3">
+      <article data-reveal="right" class="spotlight rounded-2xl border border-line bg-surface p-6 sm:p-8">
+        <p class="font-mono text-xs tracking-wider text-accent-2 uppercase">Formação</p>
+        <h3 class="mt-3 text-xl font-semibold text-white">Engenharia de Software</h3>
+        <p class="mt-1 text-muted">UniCesumar · 2º semestre</p>
+        <p class="mt-4 leading-relaxed text-zinc-300">
+          Base técnica em lógica, programação e banco de dados, aplicada desde já a projetos de análise.
+        </p>
+      </article>
+
+      <article data-reveal="right" style="--delay: 100ms" class="spotlight rounded-2xl border border-line bg-surface p-6 sm:p-8">
+        <p class="font-mono text-xs tracking-wider text-accent-2 uppercase">Experiência atual</p>
+        <h3 class="mt-3 text-xl font-semibold text-white">Estagiário de TI</h3>
+        <p class="mt-1 text-muted">Hebe's Life Science · Indústria farmacêutica</p>
+        <ul class="mt-5 grid gap-2.5 sm:grid-cols-2">
+          {
+            experience.map((item) => (
+              <li class="flex gap-2.5 text-sm leading-relaxed text-zinc-300">
+                <span class="mt-2 h-1.5 w-1.5 flex-none rounded-full bg-accent" />
+                {item}
+              </li>
+            ))
+          }
+        </ul>
+        <div class="mt-6 flex flex-wrap gap-2 border-t border-line pt-5">
+          {tools.map((tool) => <span class="rounded-md bg-white/5 px-2 py-1 font-mono text-xs text-zinc-300">{tool}</span>)}
+        </div>
+      </article>
+
+      <article data-reveal="right" style="--delay: 200ms" class="spotlight rounded-2xl border border-line bg-surface p-6 sm:p-8">
+        <p class="font-mono text-xs tracking-wider text-accent-2 uppercase">Objetivo</p>
+        <h3 class="mt-3 text-xl font-semibold text-white">Ingressar na área de dados</h3>
+        <p class="mt-4 leading-relaxed text-zinc-300">
+          Quero atuar ao lado de equipes de tecnologia e de negócio, usando minhas competências analíticas para converter
+          dados brutos em <span class="text-white">insights práticos que orientem decisões</span>.
+        </p>
+      </article>
+    </div>
+  </div>
+</section>

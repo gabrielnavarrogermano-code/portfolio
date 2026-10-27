@@ -1,0 +1,65 @@
+---
+import { site } from '../data/site';
+---
+
+<section id="contato" class="mx-auto max-w-5xl px-6 pb-24">
+  <div
+    data-reveal="zoom"
+    class="relative overflow-hidden rounded-3xl border border-line bg-surface px-6 py-16 text-center sm:px-16"
+  >
+    <div class="glow -z-0 -top-24 left-1/2 h-64 w-64 -translate-x-1/2 bg-accent"></div>
+
+    <div class="relative">
+      <p class="font-mono text-sm text-accent">06 <span class="text-muted">/ Contato</span></p>
+      <h2 class="mx-auto mt-4 max-w-xl text-3xl font-bold tracking-tight text-white sm:text-5xl">
+        Vamos transformar <span class="text-gradient">dados em decisões?</span>
+      </h2>
+      <p class="mx-auto mt-4 max-w-md text-lg text-muted">
+        Estou aberto a vagas, projetos e boas conversas sobre dados.
+      </p>
+
+      <div class="mt-10 flex flex-wrap justify-center gap-3">
+        <a
+          href={`mailto:${site.email}`}
+          class="group inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-medium text-black transition hover:bg-white"
+        >
+          Enviar e-mail
+          <span class="transition-transform group-hover:translate-x-1">→</span>
+        </a>
+        <button
+          id="copy-email"
+          data-email={site.email}
+          class="inline-flex cursor-pointer items-center rounded-full border border-line px-6 py-3 font-mono text-sm text-zinc-300 transition hover:border-white/40 hover:text-white"
+        >
+          {site.email}
+        </button>
+      </div>
+
+      <div class="mt-8 flex justify-center gap-6 text-sm">
+        <a href={site.linkedin} target="_blank" rel="noopener" class="text-muted transition hover:text-white">
+          LinkedIn ↗
+        </a>
+        <a href={site.github} target="_blank" rel="noopener" class="text-muted transition hover:text-white">
+          GitHub ↗
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const btn = document.getElementById('copy-email');
+    if (!btn) return;
+    btn.addEventListener('click', async () => {
+      const email = btn.dataset.email ?? '';
+      try {
+        await navigator.clipboard.writeText(email);
+        btn.textContent = 'E-mail copiado ✓';
+      } catch {
+        btn.textContent = email;
+      }
+      setTimeout(() => (btn.textContent = email), 2000);
+    });
+  });
+</script>

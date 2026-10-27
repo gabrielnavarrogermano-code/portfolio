@@ -1,0 +1,61 @@
+---
+import '../styles/global.css';
+import { ClientRouter } from 'astro:transitions';
+import { site } from '../data/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = `${site.name} | Análise de Dados`, description = site.description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="pt-BR" class="bg-bg">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <title>{title}</title>
+    <ClientRouter />
+    <noscript><style>[data-reveal] { opacity: 1; transform: none; filter: none; }</style></noscript>
+  </head>
+  <body class="min-h-screen bg-bg font-sans text-zinc-100 antialiased">
+    <slot />
+
+    <script>
+      // Revela elementos [data-reveal] ao entrar na tela e liga a luz dos cards .spotlight
+      document.addEventListener('astro:page-load', () => {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                io.unobserve(entry.target);
+              }
+            }
+          },
+          { threshold: 0.1, rootMargin: '0px 0px -12% 0px' },
+        );
+        document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+
+        document.querySelectorAll<HTMLElement>('.spotlight').forEach((card) => {
+          card.addEventListener('pointermove', (ev) => {
+            const rect = card.getBoundingClientRect();
+            card.style.setProperty('--x', `${ev.clientX - rect.left}px`);
+            card.style.setProperty('--y', `${ev.clientY - rect.top}px`);
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

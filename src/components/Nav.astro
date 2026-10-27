@@ -1,0 +1,38 @@
+---
+const links = [
+  { href: '/#apresentacao', label: 'Apresentação' },
+  { href: '/#projetos', label: 'Projetos' },
+  { href: '/#sobre', label: 'Sobre' },
+  { href: '/#bi', label: 'BI' },
+  { href: '/#habilidades', label: 'Habilidades' },
+];
+---
+
+<header class="fixed inset-x-0 top-0 z-50 px-4 pt-4">
+  <nav
+    class="mx-auto flex max-w-5xl items-center justify-between rounded-full border border-line/80 bg-bg/70 py-2 pr-2 pl-5 backdrop-blur-md"
+  >
+    <a href="/" class="font-mono text-sm font-medium tracking-tight text-white">
+      gabriel<span class="text-accent">.</span>dados
+    </a>
+
+    <div class="flex items-center gap-1">
+      {
+        links.map((link) => (
+          <a
+            href={link.href}
+            class="hidden rounded-full px-4 py-2 text-sm text-muted transition-colors hover:bg-white/5 hover:text-white sm:block"
+          >
+            {link.label}
+          </a>
+        ))
+      }
+      <a
+        href="/#contato"
+        class="rounded-full bg-white px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-accent"
+      >
+        Contato
+      </a>
+    </div>
+  </nav>
+</header>

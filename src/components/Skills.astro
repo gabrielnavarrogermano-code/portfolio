@@ -1,0 +1,53 @@
+---
+import SectionTitle from './SectionTitle.astro';
+
+const groups = [
+  { title: 'Banco de Dados & Automação', items: ['Python', 'SQL', 'PostgreSQL', 'MySQL'] },
+  { title: 'Visualização de Dados', items: ['Tableau', 'Excel'] },
+  { title: 'Versionamento', items: ['Git', 'GitHub'] },
+  { title: 'Preparação de Dados para BI', items: ['ETL', 'Extração', 'Limpeza e tratamento'] },
+];
+
+const all = groups.flatMap((g) => g.items);
+---
+
+<section id="habilidades" class="py-24">
+  <div class="mx-auto max-w-5xl px-6">
+    <SectionTitle index="05" label="Habilidades" title="Ferramentas do dia a dia" />
+  </div>
+
+  <div class="marquee-wrap mt-12 overflow-hidden border-y border-line py-6 [mask-image:linear-gradient(90deg,transparent,#000_15%,#000_85%,transparent)]">
+    <div class="marquee">
+      {
+        [...all, ...all].map((skill) => (
+          <span class="mx-6 flex items-center gap-6 text-3xl font-bold whitespace-nowrap text-white/15 sm:text-5xl">
+            {skill}
+            <span class="text-accent/50">✦</span>
+          </span>
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="mx-auto mt-12 grid max-w-5xl gap-4 px-6 sm:grid-cols-2">
+    {
+      groups.map((g, i) => (
+        <div
+          data-reveal
+          style={`--delay: ${i * 120}ms`}
+          class="spotlight rounded-2xl border border-line bg-surface p-6"
+        >
+          <p class="flex items-center gap-3 font-semibold text-white">
+            <span class="font-mono text-xs text-accent-2">{String(i + 1).padStart(2, '0')}</span>
+            {g.title}
+          </p>
+          <div class="mt-4 flex flex-wrap gap-2">
+            {g.items.map((item) => (
+              <span class="rounded-md border border-line bg-bg px-3 py-1.5 font-mono text-sm text-zinc-300">{item}</span>
+            ))}
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</section>
