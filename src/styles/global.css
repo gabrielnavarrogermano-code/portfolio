@@ -132,21 +132,6 @@ body {
   to { stroke-dashoffset: 0; }
 }
 
-/* Faixa infinita de habilidades */
-.marquee {
-  display: flex;
-  width: max-content;
-  animation: marquee 35s linear infinite;
-}
-
-.marquee-wrap:hover .marquee {
-  animation-play-state: paused;
-}
-
-@keyframes marquee {
-  to { transform: translateX(-50%); }
-}
-
 /* Linha animada do fluxo "Como eu trabalho" */
 .flow-line {
   background:
