@@ -4,6 +4,13 @@ Portfólio pessoal com foco em **Análise de Dados**, **Business Intelligence** 
 
 Construído com [Astro](https://astro.build) e [Tailwind CSS](https://tailwindcss.com).
 
+| Ambiente | Endereço |
+| --- | --- |
+| Produção | https://gabrielnavarrogermano.vercel.app |
+| Local | http://localhost:4321 (`npm run dev`) |
+
+Hospedado na [Vercel](https://vercel.com): todo push na branch `main` é publicado automaticamente em produção.
+
 ## Estrutura
 
 ```text
