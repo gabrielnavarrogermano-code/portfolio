@@ -2,15 +2,43 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
-  /* Paleta cinza chumbo */
-  --color-bg: #18191c;
-  --color-surface: #202125;
-  --color-line: #2f3136;
-  --color-muted: #9a9ca3;
-  --color-accent: #d4d7dd;
-  --color-accent-2: #8fa5bb;
+  /* Fundo preto, detalhes em branco; blocos de destaque invertidos (brancos). Sem degradês. */
+  --color-bg: #0a0a0b;
+  --color-ink: #0a0a0b;
+  --color-heading: #ffffff;
+  --color-line: #2a2b30;
+  --color-fg: #e8eaee;
+  --color-muted: #a3a6ae;
+  --color-accent: #ffffff;
+}
+
+/* Blocos claros: invertem as cores do site (fundo branco, informações em preto) */
+.on-light {
+  --color-bg: #ffffff;
+  --color-heading: #0a0a0b;
+  --color-fg: #2a2e36;
+  --color-muted: #5a5f6b;
+  --color-line: #e3e5e9;
+  --color-accent: #0a0a0b;
+}
+
+/* Blocos pretos (menu e rodapé) */
+.on-black {
+  --color-heading: #ffffff;
+  --color-fg: #e8eaee;
+  --color-muted: #a3a6ae;
+  --color-accent: #ffffff;
+  --color-bg: #0a0a0b;
+  --color-line: #2a2b30;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
 }
 
 html {
@@ -20,46 +48,10 @@ html {
 
 ::selection {
   background: var(--color-accent);
-  color: #000;
+  color: var(--color-bg);
 }
 
-/* Texto com degradê verde → ciano */
-.text-gradient {
-  background: linear-gradient(90deg, var(--color-accent), var(--color-accent-2));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-/* Grade de fundo do hero */
-.bg-grid {
-  background-image:
-    linear-gradient(to right, rgb(255 255 255 / 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgb(255 255 255 / 0.04) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
-}
-
-/* Manchas de luz flutuando */
-.glow {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(100px);
-  opacity: 0.12;
-  animation: float 14s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(40px, -30px); }
-}
-
-.float-slow {
-  animation: float 8s ease-in-out infinite;
-}
-
-/* Elementos que aparecem ao rolar a página.
-   Padrão: sobe. Variantes: data-reveal="left" | "right" | "zoom" */
+/* Elementos que aparecem ao rolar a página: só um fade */
 html,
 body {
   overflow-x: clip;
@@ -67,31 +59,12 @@ body {
 
 [data-reveal] {
   opacity: 0;
-  transform: translateY(48px);
-  filter: blur(6px);
-  transition:
-    opacity 0.9s ease,
-    transform 1s cubic-bezier(0.16, 1, 0.3, 1),
-    filter 0.9s ease;
+  transition: opacity 0.6s ease;
   transition-delay: var(--delay, 0ms);
-}
-
-[data-reveal="left"] {
-  transform: translateX(-56px);
-}
-
-[data-reveal="right"] {
-  transform: translateX(56px);
-}
-
-[data-reveal="zoom"] {
-  transform: scale(0.9);
 }
 
 [data-reveal].is-visible {
   opacity: 1;
-  transform: none;
-  filter: none;
 }
 
 /* Cursor piscando do efeito de digitação */
@@ -107,42 +80,6 @@ body {
 
 @keyframes blink {
   50% { opacity: 0; }
-}
-
-/* Mini dashboard do hero */
-.bar {
-  transform-box: fill-box;
-  transform-origin: bottom;
-  transform: scaleY(0);
-  animation: grow 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
-  animation-delay: var(--delay, 0ms);
-}
-
-@keyframes grow {
-  to { transform: scaleY(1); }
-}
-
-.line-draw {
-  stroke-dasharray: 600;
-  stroke-dashoffset: 600;
-  animation: draw 2.2s ease forwards 0.8s;
-}
-
-@keyframes draw {
-  to { stroke-dashoffset: 0; }
-}
-
-/* Linha animada do fluxo "Como eu trabalho" */
-.flow-line {
-  background:
-    linear-gradient(90deg, transparent, var(--color-accent), var(--color-accent-2), transparent) 0 0 / 40% 100% no-repeat,
-    var(--color-line);
-  animation: flow 3.5s linear infinite;
-}
-
-@keyframes flow {
-  from { background-position: -60% 0, 0 0; }
-  to { background-position: 160% 0, 0 0; }
 }
 
 /* Barras da escada "Do dado à decisão" */
@@ -200,33 +137,11 @@ body {
   transform-origin: left;
 }
 
-/* Luz que segue o mouse nos cards */
-.spotlight {
-  position: relative;
-  isolation: isolate;
-}
-
-.spotlight::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  opacity: 0;
-  transition: opacity 0.3s;
-  background: radial-gradient(400px circle at var(--x, 50%) var(--y, 50%), rgb(212 215 221 / 0.07), transparent 40%);
-  pointer-events: none;
-}
-
-.spotlight:hover::before {
-  opacity: 1;
-}
-
 /* Texto dos estudos de caso (Markdown) */
 .prose-case {
   font-size: 1.0625rem;
   line-height: 1.8;
-  color: rgb(212 212 216);
+  color: var(--color-fg);
 }
 
 .prose-case h2 {
@@ -236,7 +151,7 @@ body {
   margin: 3rem 0 1rem;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-heading);
 }
 
 .prose-case h2::before {
@@ -252,7 +167,7 @@ body {
   margin: 2rem 0 0.5rem;
   font-size: 1.15rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--color-heading);
 }
 
 .prose-case p {
@@ -277,7 +192,7 @@ body {
 }
 
 .prose-case strong {
-  color: #fff;
+  color: var(--color-heading);
 }
 
 .prose-case a {
@@ -289,10 +204,14 @@ body {
 .prose-case blockquote {
   margin: 1.5rem 0;
   padding: 1rem 1.25rem;
-  border-left: 2px solid var(--color-accent);
+  border-left: 2px solid #0a0a0b;
   border-radius: 0 0.75rem 0.75rem 0;
-  background: rgb(143 165 187 / 0.06);
-  color: rgb(228 228 231);
+  background: #ffffff;
+  color: #2a2e36;
+}
+
+.prose-case blockquote strong {
+  color: #0a0a0b;
 }
 
 .prose-case blockquote p {
@@ -303,7 +222,8 @@ body {
   padding: 0.1rem 0.35rem;
   border: 1px solid var(--color-line);
   border-radius: 0.375rem;
-  background: var(--color-surface);
+  background: rgb(255 255 255 / 0.08);
+  color: var(--color-heading);
   font-family: var(--font-mono);
   font-size: 0.875em;
 }
@@ -314,7 +234,7 @@ body {
   overflow-x: auto;
   border: 1px solid var(--color-line);
   border-radius: 0.75rem;
-  background: var(--color-surface) !important;
+  background: var(--color-ink) !important;
   font-size: 0.875rem;
   line-height: 1.6;
 }
@@ -323,6 +243,7 @@ body {
   padding: 0;
   border: 0;
   background: none;
+  color: inherit;
 }
 
 @media (prefers-reduced-motion: reduce) {

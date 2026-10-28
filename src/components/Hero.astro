@@ -1,140 +1,70 @@
 ---
+import { Image } from 'astro:assets';
+import foto from '../assets/gabriel.png';
+
 const words = [
   'Análise e visualização de dados',
   'Soluções ETL',
   'Tomada de decisões através de insights',
 ];
 
-// Mini gráfico decorativo do "dashboard"
-const values = [38, 52, 45, 68, 60, 82, 74, 95];
-const bars = values.map((v, i) => {
-  const h = v * 1.15;
-  return { x: 14 + i * 38, y: 130 - h, h };
-});
-const linePoints = bars.map((b) => `${b.x + 12},${b.y - 8}`).join(' ');
-
-const kpis = [
-  { label: 'Registros', count: 12480, suffix: '' },
-  { label: 'Qualidade', count: 98, suffix: '%' },
-  { label: 'Tendência', count: 24, suffix: '%', prefix: '↑ ' },
+const facts = [
+  { label: 'Formação', value: 'Engenharia de Software · UniCesumar' },
+  { label: 'Hoje', value: "Estagiário de TI · Hebe's Life Science" },
+  { label: 'Buscando', value: 'Estágio ou vaga júnior em Dados' },
 ];
 ---
 
-<section id="inicio" class="relative overflow-hidden pt-36 pb-24 sm:pt-44 sm:pb-32">
-  <div class="bg-grid absolute inset-0 -z-10"></div>
-  <div class="glow -z-10 top-10 -left-24 h-72 w-72 bg-accent"></div>
-  <div class="glow -z-10 top-40 -right-16 h-80 w-80 bg-accent-2" style="animation-delay: -7s"></div>
+<section id="inicio" class="pt-36 pb-20 sm:pt-44 sm:pb-28">
+  <div class="mx-auto max-w-5xl px-6">
+    <div class="max-w-3xl">
+      <div data-reveal>
+        <Image
+          src={foto}
+          alt="Foto de Gabriel Navarro Germano"
+          width={256}
+          height={256}
+          format="webp"
+          loading="eager"
+          class="h-24 w-24 rounded-full border border-line object-cover object-[50%_30%] ring-2 ring-accent/30 ring-offset-2 ring-offset-bg sm:h-32 sm:w-32"
+        />
+      </div>
 
-  <div class="mx-auto grid max-w-5xl items-center gap-16 px-6 lg:grid-cols-[1.15fr_1fr]">
-    <div>
-      <p
-        data-reveal
-        class="inline-flex items-center gap-2 rounded-full border border-line bg-surface/60 px-3 py-1 font-mono text-xs text-muted"
-      >
-        <span class="relative flex h-2 w-2">
-          <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75"></span>
-          <span class="relative inline-flex h-2 w-2 rounded-full bg-accent"></span>
-        </span>
-        Aberto a oportunidades
-      </p>
-
-      <h1 data-reveal style="--delay: 100ms" class="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-6xl">
-        Gabriel <span class="text-gradient">Navarro Germano</span>
+      <h1 data-reveal style="--delay: 100ms" class="mt-8 text-4xl font-bold tracking-tight text-heading sm:text-6xl">
+        Gabriel Navarro Germano
       </h1>
 
-      <p data-reveal style="--delay: 200ms" class="mt-4 min-h-14 font-mono text-base text-zinc-300 sm:min-h-8 sm:text-xl">
-        <span class="text-accent">&gt;</span>
+      <p data-reveal style="--delay: 200ms" class="mt-4 min-h-14 text-lg text-accent sm:min-h-8 sm:text-xl">
         <span id="typed" data-words={JSON.stringify(words)}>{words[0]}</span><span class="caret"></span>
-      </p>
-
-      <p data-reveal style="--delay: 300ms" class="mt-6 text-lg text-muted">
-        Análise de Dados <span class="mx-2 text-accent-2">|</span> Engenharia de Software
       </p>
 
       <div data-reveal style="--delay: 400ms" class="mt-8 flex flex-wrap gap-3">
         <a
           href="#habilidades"
-          class="group inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-medium text-black transition hover:bg-white"
+          class="group inline-flex items-center gap-2 rounded-full bg-heading px-6 py-3 font-medium text-bg transition hover:bg-heading/80"
         >
           Ver habilidades
           <span class="transition-transform group-hover:translate-x-1">→</span>
         </a>
         <a
           href="#contato"
-          class="inline-flex items-center rounded-full border border-line px-6 py-3 font-medium text-white transition hover:border-white/40 hover:bg-white/5"
+          class="inline-flex items-center rounded-full border border-line px-6 py-3 font-medium text-heading transition hover:border-heading/40 hover:bg-heading/5"
         >
           Entre em contato
         </a>
       </div>
     </div>
 
-    <div data-reveal="zoom" style="--delay: 300ms" class="relative">
-      <div class="rounded-2xl border border-line bg-surface/80 p-5 shadow-2xl shadow-accent/5 backdrop-blur">
-        <div class="flex items-center justify-between">
-          <div class="flex gap-1.5">
-            <span class="h-2.5 w-2.5 rounded-full bg-zinc-700"></span>
-            <span class="h-2.5 w-2.5 rounded-full bg-zinc-700"></span>
-            <span class="h-2.5 w-2.5 rounded-full bg-zinc-700"></span>
+    <dl data-reveal style="--delay: 500ms" class="mt-16 grid gap-6 border-t border-line pt-8 sm:grid-cols-3">
+      {
+        facts.map((f) => (
+          <div>
+            <dt class="text-sm text-muted">{f.label}</dt>
+            <dd class="mt-1 text-heading">{f.value}</dd>
           </div>
-          <span class="font-mono text-xs text-muted">dashboard.py</span>
-        </div>
-
-        <div class="mt-5 grid grid-cols-3 gap-3">
-          {
-            kpis.map((kpi) => (
-              <div class="rounded-xl border border-line bg-bg/60 p-3">
-                <p class="text-[11px] tracking-wide text-muted uppercase">{kpi.label}</p>
-                <p class="mt-1 font-mono text-lg font-medium text-white">
-                  {kpi.prefix}
-                  <span data-count={kpi.count} data-suffix={kpi.suffix}>
-                    {kpi.count.toLocaleString('pt-BR')}
-                    {kpi.suffix}
-                  </span>
-                </p>
-              </div>
-            ))
-          }
-        </div>
-
-        <svg viewBox="0 0 320 140" class="mt-5 w-full" aria-hidden="true">
-          <defs>
-            <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#d4d7dd" stop-opacity="0.85"></stop>
-              <stop offset="100%" stop-color="#d4d7dd" stop-opacity="0.1"></stop>
-            </linearGradient>
-          </defs>
-          {[30, 65, 100].map((y) => <line x1="0" x2="320" y1={y} y2={y} stroke="#2f3136" stroke-dasharray="3 4" />)}
-          {
-            bars.map((b, i) => (
-              <rect
-                class="bar"
-                style={`--delay: ${500 + i * 90}ms`}
-                x={b.x}
-                y={b.y}
-                width="24"
-                height={b.h}
-                rx="4"
-                fill="url(#barGrad)"
-              />
-            ))
-          }
-          <polyline
-            class="line-draw"
-            points={linePoints}
-            fill="none"
-            stroke="#8fa5bb"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"></polyline>
-        </svg>
-      </div>
-
-      <div
-        class="float-slow absolute -bottom-5 -left-4 rounded-lg border border-line bg-bg px-3 py-2 font-mono text-xs text-zinc-300 shadow-xl sm:-left-8"
-      >
-        <span class="text-accent-2">SELECT</span> insights <span class="text-accent-2">FROM</span> dados;
-      </div>
-    </div>
+        ))
+      }
+    </dl>
   </div>
 </section>
 
@@ -142,48 +72,31 @@ const kpis = [
   let timer: number | undefined;
 
   function initHero() {
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     // Efeito de digitação
     const typed = document.getElementById('typed');
-    if (typed && !reduce) {
-      const words: string[] = JSON.parse(typed.dataset.words ?? '[]');
-      let w = 0;
-      let i = words[0].length;
-      let deleting = true;
-      const tick = () => {
-        const word = words[w];
-        i += deleting ? -1 : 1;
-        typed.textContent = word.slice(0, i);
-        let delay = deleting ? 45 : 90;
-        if (!deleting && i === word.length) {
-          deleting = true;
-          delay = 1800;
-        } else if (deleting && i === 0) {
-          deleting = false;
-          w = (w + 1) % words.length;
-          delay = 300;
-        }
-        timer = window.setTimeout(tick, delay);
-      };
-      timer = window.setTimeout(tick, 2000);
-    }
-
-    // Números do dashboard contando
-    if (reduce) return;
-    document.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
-      const target = Number(el.dataset.count);
-      const suffix = el.dataset.suffix ?? '';
-      const start = performance.now();
-      const duration = 1600;
-      const step = (now: number) => {
-        const p = Math.min((now - start) / duration, 1);
-        const eased = 1 - Math.pow(1 - p, 3);
-        el.textContent = Math.round(target * eased).toLocaleString('pt-BR') + suffix;
-        if (p < 1) requestAnimationFrame(step);
-      };
-      requestAnimationFrame(step);
-    });
+    if (!typed) return;
+    const words: string[] = JSON.parse(typed.dataset.words ?? '[]');
+    let w = 0;
+    let i = words[0].length;
+    let deleting = true;
+    const tick = () => {
+      const word = words[w];
+      i += deleting ? -1 : 1;
+      typed.textContent = word.slice(0, i);
+      let delay = deleting ? 45 : 90;
+      if (!deleting && i === word.length) {
+        deleting = true;
+        delay = 1800;
+      } else if (deleting && i === 0) {
+        deleting = false;
+        w = (w + 1) % words.length;
+        delay = 300;
+      }
+      timer = window.setTimeout(tick, delay);
+    };
+    timer = window.setTimeout(tick, 2000);
   }
 
   document.addEventListener('astro:page-load', initHero);

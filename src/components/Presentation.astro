@@ -16,48 +16,49 @@ const tools = ['Kanban', 'SharePoint', 'Microsoft 365 Admin', 'Entra ID'];
   <div class="grid gap-12 lg:grid-cols-5">
     <div class="lg:col-span-2">
       <div class="lg:sticky lg:top-28">
-        <SectionTitle index="01" label="Apresentação" title="Prazer, Gabriel" />
+        <SectionTitle title="Prazer, Gabriel" />
         <p data-reveal style="--delay: 100ms" class="mt-6 text-lg leading-relaxed text-muted">
-          Estou construindo minha formação em Engenharia de Software com um direcionamento claro:
-          <span class="text-white">desenvolver soluções para Inteligência e Análise de Dados</span>.
+          Cursando o segundo semestre de Engenharia de Software e direcionando minha formação para
+          <span class="text-heading">Inteligência e Análise de Dados</span>, colocando em prática extração e tratamento
+          de dados com SQL e Excel, com auxílio de Python para tratar bases de dados maiores, além da parte de
+          visualização com ferramentas de BI, como o Power BI, sempre buscando resolver perguntas e problemas de negócios
+          reais.
         </p>
         <div data-reveal style="--delay: 200ms" class="mt-8">
-          <p class="font-mono text-xs tracking-wider text-muted uppercase">Disponível para</p>
+          <p class="text-sm text-muted">Disponível para</p>
           <div class="mt-3 flex flex-wrap gap-2">
-            <span class="rounded-full border border-accent/40 px-4 py-1.5 text-sm text-white">Estágio em Dados</span>
-            <span class="rounded-full border border-accent/40 px-4 py-1.5 text-sm text-white">Júnior em Dados</span>
+            <span class="rounded-full border border-accent/40 px-4 py-1.5 text-sm text-heading">Estágio em Dados</span>
+            <span class="rounded-full border border-accent/40 px-4 py-1.5 text-sm text-heading">Júnior em Dados</span>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="space-y-4 lg:col-span-3">
-      <article data-reveal="right" class="spotlight rounded-2xl border border-line bg-surface p-6 sm:p-8">
-        <p class="font-mono text-xs tracking-wider text-accent-2 uppercase">Formação</p>
-        <h3 class="mt-3 text-xl font-semibold text-white">Engenharia de Software</h3>
+    <div class="divide-y divide-line border-y border-line lg:col-span-3">
+      <article data-reveal class="py-8">
+        <p class="text-sm text-accent">Formação</p>
+        <h3 class="mt-2 text-xl font-semibold text-heading">Engenharia de Software</h3>
         <p class="mt-1 text-muted">UniCesumar · 2º semestre</p>
-        <p class="mt-4 leading-relaxed text-zinc-300">
+        <p class="mt-4 leading-relaxed text-fg/85">
           Base técnica em lógica, programação e banco de dados, aplicada desde já a projetos de análise.
         </p>
       </article>
 
-      <article data-reveal="right" style="--delay: 100ms" class="spotlight rounded-2xl border border-line bg-surface p-6 sm:p-8">
-        <p class="font-mono text-xs tracking-wider text-accent-2 uppercase">Experiência atual</p>
-        <h3 class="mt-3 text-xl font-semibold text-white">Estagiário de TI</h3>
+      <article data-reveal style="--delay: 100ms" class="py-8">
+        <p class="text-sm text-accent">Experiência atual</p>
+        <h3 class="mt-2 text-xl font-semibold text-heading">Estagiário de TI</h3>
         <p class="mt-1 text-muted">Hebe's Life Science · Indústria farmacêutica</p>
         <ul class="mt-5 grid gap-2.5 sm:grid-cols-2">
           {
             experience.map((item) => (
-              <li class="flex gap-2.5 text-sm leading-relaxed text-zinc-300">
+              <li class="flex gap-2.5 text-sm leading-relaxed text-fg/85">
                 <span class="mt-2 h-1.5 w-1.5 flex-none rounded-full bg-accent" />
                 {item}
               </li>
             ))
           }
         </ul>
-        <div class="mt-6 flex flex-wrap gap-2 border-t border-line pt-5">
-          {tools.map((tool) => <span class="rounded-md bg-white/5 px-2 py-1 font-mono text-xs text-zinc-300">{tool}</span>)}
-        </div>
+        <p class="mt-6 text-sm text-muted">{tools.join(' · ')}</p>
       </article>
     </div>
   </div>

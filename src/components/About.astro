@@ -28,24 +28,24 @@ const steps = [
 ];
 ---
 
-<section id="sobre" class="border-y border-line bg-surface/40">
+<section id="sobre" class="border-y border-line">
   <div class="mx-auto max-w-5xl px-6 py-24">
     <div class="grid gap-12 lg:grid-cols-[1fr_1.4fr] lg:items-end">
       <div>
-        <SectionTitle index="02" label="Sobre o meu trabalho" title="Dados organizados, decisões melhores" />
+        <SectionTitle title="Dados organizados, decisões melhores" />
         <p data-reveal style="--delay: 100ms" class="mt-6 text-lg leading-relaxed text-muted">
-          Meu foco é a <span class="text-white">base de todo BI</span>: dados bem extraídos, tratados e organizados.
+          Meu foco é a <span class="text-heading">base de todo BI</span>: dados bem extraídos, tratados e organizados.
         </p>
       </div>
 
-      <div class="grid gap-4 sm:grid-cols-2">
+      <div class="grid gap-8 sm:grid-cols-2">
         {
           blocks.map((b, i) => (
-            <div data-reveal="right" style={`--delay: ${150 + i * 100}ms`} class="spotlight rounded-2xl border border-line bg-bg p-5">
-              <p class="border-b border-line pb-3 font-semibold text-white">{b.title}</p>
+            <div data-reveal style={`--delay: ${150 + i * 100}ms`}>
+              <p class="border-b border-line pb-3 font-semibold text-heading">{b.title}</p>
               <ul class="mt-4 space-y-2.5">
                 {b.items.map((item) => (
-                  <li class="flex gap-2.5 text-sm leading-relaxed text-zinc-300">
+                  <li class="flex gap-2.5 text-sm leading-relaxed text-fg/85">
                     <span class="mt-2 h-1.5 w-1.5 flex-none rounded-full bg-accent" />
                     {item}
                   </li>
@@ -58,17 +58,17 @@ const steps = [
     </div>
 
     <div class="mt-20">
-      <p data-reveal class="font-mono text-sm text-muted">Como eu trabalho</p>
+      <p data-reveal class="text-sm text-muted">Como eu trabalho</p>
       <div class="relative mt-6">
-        <div class="flow-line absolute top-5 right-[12%] left-[12%] hidden h-px lg:block"></div>
+        <div class="absolute top-5 right-[12%] left-[12%] hidden h-px bg-line lg:block"></div>
         <ol class="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {
             steps.map((s, i) => (
               <li data-reveal style={`--delay: ${i * 120}ms`} class="flex flex-col items-start lg:items-center lg:text-center">
-                <span class="flex h-10 w-10 items-center justify-center rounded-full border border-accent/40 bg-bg font-mono text-sm text-accent">
-                  {String(i + 1).padStart(2, '0')}
+                <span class="flex h-10 w-10 items-center justify-center rounded-full border border-accent/60 bg-bg text-sm font-medium text-accent">
+                  {i + 1}
                 </span>
-                <p class="mt-4 font-semibold text-white">{s.title}</p>
+                <p class="mt-4 font-semibold text-heading">{s.title}</p>
                 <p class="mt-1 text-sm leading-relaxed text-muted">{s.text}</p>
               </li>
             ))

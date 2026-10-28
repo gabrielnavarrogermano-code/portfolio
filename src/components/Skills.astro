@@ -1,15 +1,10 @@
 ---
 import SectionTitle from './SectionTitle.astro';
 
+// Competências: o que é feito com as ferramentas (as ferramentas ficam só no pipeline)
 const groups = [
-  { title: 'Banco de Dados & Automação', items: ['Python', 'SQL', 'PostgreSQL', 'MySQL'] },
-  {
-    title: 'Análise de Dados',
-    items: ['Análise de bases de dados com pandas', 'Estatística descritiva'],
-  },
-  { title: 'Visualização de Dados', items: ['Power BI', 'DAX', 'Excel'] },
-  { title: 'Preparação de Dados para BI', items: ['ETL', 'Extração', 'Limpeza e tratamento'] },
-  { title: 'Versionamento', items: ['Git', 'GitHub'] },
+  { title: 'Análise de Dados', items: ['Aplicação de regras de negócio', 'Estatística descritiva'] },
+  { title: 'Preparação de Dados para BI', items: ['ETL', 'Limpeza e tratamento'] },
 ];
 
 // Pipeline: onde cada ferramenta entra no processo
@@ -17,71 +12,55 @@ const pipeline = [
   { stage: 'Extração', tools: ['SQL', 'Python'] },
   { stage: 'Tratamento', tools: ['pandas', 'Excel'] },
   { stage: 'Armazenamento', tools: ['PostgreSQL', 'MySQL'] },
-  { stage: 'Visualização', tools: ['Power BI', 'Excel'] },
+  { stage: 'Visualização', tools: ['Power BI', 'DAX', 'Excel'] },
 ];
 ---
 
 <section id="habilidades" class="py-24">
   <div class="mx-auto max-w-5xl px-6">
-    <SectionTitle index="04" label="Habilidades" title="Ferramentas do dia a dia" />
+    <SectionTitle title="Ferramentas do dia a dia" />
 
     <div class="mt-12">
-      <p data-reveal class="font-mono text-sm text-muted">Onde cada ferramenta entra</p>
-      <div class="relative mt-6">
-        <div class="flow-line absolute top-1/2 right-0 left-0 hidden h-px lg:block"></div>
-        <ol class="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
-          {
-            pipeline.map((p, i) => (
-              <li data-reveal style={`--delay: ${i * 120}ms`} class="rounded-xl border border-line bg-surface p-4">
-                <p class="flex items-center justify-between font-mono text-xs text-muted uppercase">
-                  {p.stage}
-                  <span class="text-accent-2">{String(i + 1).padStart(2, '0')}</span>
-                </p>
-                <div class="mt-3 flex flex-wrap gap-2">
-                  {p.tools.map((tool) => (
-                    <span class="rounded-md border border-line bg-bg px-2.5 py-1 font-mono text-sm text-zinc-200">{tool}</span>
-                  ))}
-                </div>
-              </li>
-            ))
-          }
-        </ol>
-      </div>
-      <div
-        data-reveal
-        style="--delay: 500ms"
-        class="mt-4 flex items-center justify-center gap-3 rounded-xl border border-dashed border-line px-4 py-3 font-mono text-sm text-muted"
-      >
-        <span class="text-zinc-200">Git</span>
-        <span class="text-accent-2">·</span>
-        <span class="text-zinc-200">GitHub</span>
-        <span class="hidden sm:inline">— versionando todas as etapas</span>
-      </div>
+      <p data-reveal class="text-sm text-muted">Onde cada ferramenta entra</p>
+      <ol class="mt-6 grid border-y border-line sm:grid-cols-2 lg:grid-cols-4">
+        {
+          pipeline.map((p, i) => (
+            <li
+              data-reveal
+              style={`--delay: ${i * 100}ms`}
+              class="border-line py-5 not-first:border-t sm:even:pl-5 sm:nth-2:border-t-0 lg:pl-5 lg:first:pl-0 lg:not-first:border-t-0 lg:not-first:border-l"
+            >
+              <p class="text-sm font-medium text-heading">
+                <span class="mr-2 text-accent">{i + 1}</span>
+                {p.stage}
+              </p>
+              <p class="mt-2 text-fg/85">{p.tools.join(', ')}</p>
+            </li>
+          ))
+        }
+      </ol>
+      <p data-reveal class="mt-4 text-sm text-muted">
+        <span class="text-fg">Git</span> e <span class="text-fg">GitHub</span> versionando todas as etapas.
+      </p>
     </div>
-  </div>
 
-  <div class="mx-auto mt-12 grid max-w-5xl gap-4 px-6 sm:grid-cols-2">
-    {
-      groups.map((g, i) => (
-        <div
-          data-reveal
-          style={`--delay: ${i * 120}ms`}
-          class:list={[
-            'spotlight rounded-2xl border border-line bg-surface p-6',
-            i === groups.length - 1 && groups.length % 2 === 1 && 'sm:col-span-2',
-          ]}
-        >
-          <p class="flex items-center gap-3 font-semibold text-white">
-            <span class="font-mono text-xs text-accent-2">{String(i + 1).padStart(2, '0')}</span>
-            {g.title}
-          </p>
-          <div class="mt-4 flex flex-wrap gap-2">
-            {g.items.map((item) => (
-              <span class="rounded-md border border-line bg-bg px-3 py-1.5 font-mono text-sm text-zinc-300">{item}</span>
-            ))}
+    <p data-reveal class="mt-16 text-sm text-muted">O que faço com elas</p>
+    <div class="mt-6 grid gap-8 sm:grid-cols-2">
+      {
+        groups.map((g, i) => (
+          <div data-reveal style={`--delay: ${i * 100}ms`}>
+            <p class="border-b border-line pb-3 font-semibold text-heading">{g.title}</p>
+            <ul class="mt-4 space-y-2.5">
+              {g.items.map((item) => (
+                <li class="flex gap-2.5 text-fg/85">
+                  <span class="mt-2.5 h-1.5 w-1.5 flex-none rounded-full bg-accent" />
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-      ))
-    }
+        ))
+      }
+    </div>
   </div>
 </section>

@@ -7,8 +7,6 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
 
 <section id="projetos" class="mx-auto max-w-5xl px-6 py-24">
   <SectionTitle
-    index="02"
-    label="Projetos"
     title="Dados que viram decisão"
     subtitle="Estudos de caso curtos: o problema, a análise e o que eu descobri."
   />
@@ -19,28 +17,19 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
         <div data-reveal style={`--delay: ${i * 100}ms`} class:list={[i === 0 && projetos.length % 2 === 1 && 'md:col-span-2']}>
           <a
             href={`/projetos/${p.id}/`}
-            class="spotlight group flex h-full flex-col rounded-2xl border border-line bg-surface p-6 transition duration-300 hover:-translate-y-1 hover:border-accent/40 sm:p-8"
+            class="group flex h-full flex-col rounded-2xl border border-line bg-bg p-6 transition-colors hover:border-accent/40 sm:p-8"
           >
-            <div class="flex items-center justify-between font-mono text-xs text-muted">
-              <span>{String(i + 1).padStart(2, '0')}</span>
-              <div class="flex gap-2">
-                {p.data.exemplo && (
-                  <span class="rounded-full border border-amber-400/30 px-2 py-0.5 text-amber-300">exemplo</span>
-                )}
-                <span class="rounded-full border border-line px-2 py-0.5">{p.data.kind}</span>
-              </div>
+            <div class="flex justify-end gap-2 text-xs text-muted">
+              {p.data.exemplo && <span class="rounded-full border border-line px-2 py-0.5">exemplo</span>}
+              <span class="rounded-full border border-line px-2 py-0.5">{p.data.kind}</span>
             </div>
 
-            <h3 class="mt-8 text-xl font-semibold text-white transition-colors group-hover:text-accent sm:text-2xl">
+            <h3 class="mt-8 text-xl font-semibold text-heading transition-colors group-hover:text-accent sm:text-2xl">
               {p.data.title}
             </h3>
             <p class="mt-2 max-w-xl leading-relaxed text-muted">{p.data.summary}</p>
 
-            <div class="mt-6 flex flex-wrap gap-2">
-              {p.data.tools.map((tool) => (
-                <span class="rounded-md bg-white/5 px-2 py-1 font-mono text-xs text-zinc-300">{tool}</span>
-              ))}
-            </div>
+            <p class="mt-6 text-sm text-muted">{p.data.tools.join(' · ')}</p>
 
             <span class="mt-auto inline-flex items-center gap-1 pt-8 text-sm font-medium text-accent">
               Ler estudo de caso
