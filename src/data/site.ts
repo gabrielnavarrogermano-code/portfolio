@@ -8,4 +8,5 @@ export const site = {
   email: 'gabrielnavarrogermano@gmail.com',
   linkedin: 'https://www.linkedin.com/in/gabriel-navarro-germano/',
   github: 'https://github.com/gabrielnavarrogermano-code',
+  cv: '/cv.pdf',
 };
