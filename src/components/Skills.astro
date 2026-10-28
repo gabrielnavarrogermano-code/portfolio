@@ -1,66 +1,312 @@
 ---
 import SectionTitle from './SectionTitle.astro';
 
-// Competências: o que é feito com as ferramentas (as ferramentas ficam só no pipeline)
-const groups = [
-  { title: 'Análise de Dados', items: ['Aplicação de regras de negócio', 'Estatística descritiva'] },
-  { title: 'Preparação de Dados para BI', items: ['ETL', 'Limpeza e tratamento'] },
+// Pipeline: onde cada ferramenta entra e o que faço em cada etapa
+const pipeline = [
+  { stage: 'Extração', tools: ['SQL', 'Python'], does: 'Consulta às bases de origem e coleta dos dados brutos' },
+  { stage: 'Tratamento', tools: ['pandas', 'Excel'], does: 'Limpeza, padronização e aplicação de regras de negócio' },
+  { stage: 'Armazenamento', tools: ['PostgreSQL', 'MySQL'], does: 'Gravação dos dados tratados no banco, prontos para o BI' },
+  { stage: 'Visualização', tools: ['Power BI', 'DAX', 'Excel'], does: 'Indicadores, estatística descritiva e dashboards' },
 ];
 
-// Pipeline: onde cada ferramenta entra no processo
-const pipeline = [
-  { stage: 'Extração', tools: ['SQL', 'Python'] },
-  { stage: 'Tratamento', tools: ['pandas', 'Excel'] },
-  { stage: 'Armazenamento', tools: ['PostgreSQL', 'MySQL'] },
-  { stage: 'Visualização', tools: ['Power BI', 'DAX', 'Excel'] },
+// Caso fictício: vendas de uma distribuidora passando pelas 4 etapas.
+// A origem guarda os pedidos importados de planilhas com colunas em texto, por isso os formatos misturados.
+const rawCols = ['id', 'data', 'cliente', 'produto', 'qtd', 'valor_unit', 'uf'];
+const raw = [
+  { row: ['1001', '2026-09-02', 'Mercado Sol', 'Café 500g', '2', '18.90', 'SP'], bad: [] },
+  { row: ['1002', '02/09/2026', 'mercado sol', 'Café 500g', '1', '18,90', 'sp'], bad: [1, 2, 5, 6] },
+  { row: ['1003', '2026-09-03', 'Padaria Lua', 'Açúcar 1kg', '5', 'NULL', 'RJ'], bad: [5] },
+  { row: ['1004', '2026-09-04', 'Empório Vale', 'Leite 1L', '12', '4.79', 'MG'], bad: [] },
+  { row: ['1004', '2026-09-04', 'Empório Vale', 'Leite 1L', '12', '4.79', 'MG'], bad: [0, 1, 2, 3, 4, 5, 6] },
+  { row: ['1005', '2026-09-05', 'Padaria Lua', 'Café 500g', '3', '18.90', 'RJ'], bad: [] },
 ];
+
+const prices = [
+  ['Café 500g', '18.90'],
+  ['Açúcar 1kg', '5.49'],
+  ['Leite 1L', '4.79'],
+];
+
+// fixed: colunas corrigidas no tratamento (faturamento, índice 7, é sempre calculado)
+const cleanCols = ['id', 'data', 'cliente', 'produto', 'qtd', 'valor_unit', 'uf', 'faturamento'];
+const clean = [
+  { row: ['1001', '2026-09-02', 'Mercado Sol', 'Café 500g', '2', '18.90', 'SP', '37.80'], fixed: [7] },
+  { row: ['1002', '2026-09-02', 'Mercado Sol', 'Café 500g', '1', '18.90', 'SP', '18.90'], fixed: [1, 2, 5, 6, 7] },
+  { row: ['1003', '2026-09-03', 'Padaria Lua', 'Açúcar 1kg', '5', '5.49', 'RJ', '27.45'], fixed: [5, 7] },
+  { row: ['1004', '2026-09-04', 'Empório Vale', 'Leite 1L', '12', '4.79', 'MG', '57.48'], fixed: [7] },
+  { row: ['1005', '2026-09-05', 'Padaria Lua', 'Café 500g', '3', '18.90', 'RJ', '56.70'], fixed: [7] },
+];
+
+const kpis = [
+  { label: 'Faturamento', value: 'R$ 198,33' },
+  { label: 'Pedidos', value: '5' },
+  { label: 'Ticket médio', value: 'R$ 39,67' },
+];
+const byProduct = [
+  { name: 'Café 500g', value: 113.4 },
+  { name: 'Leite 1L', value: 57.48 },
+  { name: 'Açúcar 1kg', value: 27.45 },
+];
+const maxProduct = Math.max(...byProduct.map((p) => p.value));
+const brl = (n: number) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+const code = {
+  extract: `df = pd.read_sql("""
+    SELECT id, data, cliente, produto, qtd, valor_unit, uf
+    FROM erp.pedidos_importados
+""", conn)
+
+precos = pd.read_sql("SELECT produto, preco FROM erp.produtos", conn)`,
+  transform: `df = df.drop_duplicates()
+
+# datas: 02/09/2026 -> 2026-09-02
+df["data"] = pd.to_datetime(
+    df["data"].str.replace(r"(\\d{2})/(\\d{2})/(\\d{4})", r"\\3-\\2-\\1", regex=True)
+)
+df["cliente"] = df["cliente"].str.title()
+df["uf"] = df["uf"].str.upper()
+
+# texto -> número ("18,90" -> 18.90, NULL continua vazio)
+df["qtd"] = df["qtd"].astype(int)
+df["valor_unit"] = pd.to_numeric(df["valor_unit"].str.replace(",", "."))
+
+# regra de negócio: valor ausente assume o preço de tabela do produto
+df["valor_unit"] = df["valor_unit"].fillna(
+    df["produto"].map(precos.set_index("produto")["preco"])
+)
+df["faturamento"] = df["qtd"] * df["valor_unit"]`,
+  load: `# grava a base tratada como a tabela "vendas" no PostgreSQL
+df.to_sql("vendas", conn, if_exists="replace", index=False)
+
+-- conferência da carga no banco
+SELECT COUNT(*) AS linhas, SUM(faturamento) AS faturamento_total
+FROM vendas;`,
+  visualize: `Faturamento  = SUM ( vendas[faturamento] )
+Pedidos      = DISTINCTCOUNT ( vendas[id] )
+Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
+};
 ---
 
 <section id="habilidades" class="py-24">
   <div class="mx-auto max-w-5xl px-6">
     <SectionTitle title="Ferramentas do dia a dia" />
 
-    <div class="mt-12">
-      <p data-reveal class="text-sm text-muted">Onde cada ferramenta entra</p>
-      <ol class="mt-6 grid border-y border-line sm:grid-cols-2 lg:grid-cols-4">
+    <div class="mt-12" data-etl>
+      <p data-reveal class="text-sm text-muted">
+        Meu trabalho consiste em responder perguntas de negócio realizando consultas em bancos de dados e planilhas, e tratando esses dados para que o BI seja alimentado corretamente. Além disso, realizo a visualização por meio de dashboards com KPIs e gráficos dinâmicos, que ajudam na compreensão do cenário atual e facilitam a tomada de decisão.
+      </p>
+      <div role="tablist" class="mt-6 grid border-y border-line sm:grid-cols-2 lg:grid-cols-4">
         {
           pipeline.map((p, i) => (
-            <li
+            <button
+              type="button"
+              role="tab"
+              id={`etl-tab-${i}`}
+              aria-controls={`etl-panel-${i}`}
+              aria-selected={i === 0 ? 'true' : 'false'}
               data-reveal
               style={`--delay: ${i * 100}ms`}
-              class="border-line py-5 not-first:border-t sm:even:pl-5 sm:nth-2:border-t-0 lg:pl-5 lg:first:pl-0 lg:not-first:border-t-0 lg:not-first:border-l"
+              class="relative cursor-pointer border-line py-5 text-left transition-colors not-first:border-t hover:bg-white/5 aria-selected:bg-white/5 sm:px-5 sm:nth-2:border-t-0 lg:not-first:border-t-0 lg:not-first:border-l"
             >
               <p class="text-sm font-medium text-heading">
                 <span class="mr-2 text-accent">{i + 1}</span>
                 {p.stage}
               </p>
               <p class="mt-2 text-fg/85">{p.tools.join(', ')}</p>
-            </li>
+              <p class="mt-2 text-sm text-muted">{p.does}</p>
+              <span class="etl-progress" aria-hidden="true" />
+            </button>
           ))
         }
-      </ol>
-      <p data-reveal class="mt-4 text-sm text-muted">
-        <span class="text-fg">Git</span> e <span class="text-fg">GitHub</span> versionando todas as etapas.
-      </p>
-    </div>
+      </div>
 
-    <p data-reveal class="mt-16 text-sm text-muted">O que faço com elas</p>
-    <div class="mt-6 grid gap-8 sm:grid-cols-2">
-      {
-        groups.map((g, i) => (
-          <div data-reveal style={`--delay: ${i * 100}ms`}>
-            <p class="border-b border-line pb-3 font-semibold text-heading">{g.title}</p>
-            <ul class="mt-4 space-y-2.5">
-              {g.items.map((item) => (
-                <li class="flex gap-2.5 text-fg/85">
-                  <span class="mt-2.5 h-1.5 w-1.5 flex-none rounded-full bg-accent" />
-                  {item}
+      <div class="etl-panels mt-8">
+        <!-- 1. Extração -->
+        <div role="tabpanel" id="etl-panel-0" aria-labelledby="etl-tab-0">
+          <pre class="overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.extract}</pre>
+          <div class="mt-4 overflow-x-auto">
+            <table class="w-full font-mono text-sm">
+              <thead><tr>{rawCols.map((c) => <th class="border-b border-line px-3 py-2 text-left font-medium text-muted">{c}</th>)}</tr></thead>
+              <tbody>
+                {raw.map((r) => (
+                  <tr>{r.row.map((v, ci) => <td class:list={['border-b border-line px-3 py-2 whitespace-nowrap', r.bad.includes(ci) ? 'text-red-400' : 'text-fg/85']}>{v}</td>)}</tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p class="mt-3 text-sm text-muted">
+            <span class="font-mono text-fg/85">erp.pedidos_importados</span>: 6 linhas brutas. A tabela vem de planilhas importadas, com tudo em texto. Em vermelho: data e valor fora do padrão, nome e UF despadronizados, valor nulo e um pedido importado duas vezes.
+          </p>
+          <div class="mt-6 overflow-x-auto">
+            <table class="font-mono text-sm">
+              <thead><tr><th class="border-b border-line px-3 py-2 text-left font-medium text-muted">produto</th><th class="border-b border-line px-3 py-2 text-left font-medium text-muted">preco</th></tr></thead>
+              <tbody>
+                {prices.map((row) => (
+                  <tr>{row.map((v) => <td class="border-b border-line px-3 py-2 whitespace-nowrap text-fg/85">{v}</td>)}</tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p class="mt-3 text-sm text-muted">
+            <span class="font-mono text-fg/85">erp.produtos</span>: a tabela de preços, que é usada no tratamento para preencher valores ausentes.
+          </p>
+        </div>
+
+        <!-- 2. Tratamento -->
+        <div role="tabpanel" id="etl-panel-1" aria-labelledby="etl-tab-1" hidden>
+          <pre class="overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.transform}</pre>
+          <div class="mt-4 overflow-x-auto">
+            <table class="w-full font-mono text-sm">
+              <thead><tr>{cleanCols.map((c) => <th class="border-b border-line px-3 py-2 text-left font-medium text-muted">{c}</th>)}</tr></thead>
+              <tbody>
+                {clean.map((r) => (
+                  <tr>{r.row.map((v, ci) => <td class:list={['border-b border-line px-3 py-2 whitespace-nowrap', r.fixed.includes(ci) ? 'text-emerald-400' : 'text-fg/85']}>{v}</td>)}</tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p class="mt-3 text-sm text-muted">
+            5 linhas limpas. O pedido 1004 duplicado foi removido. Em verde, o que foi corrigido ou criado: datas, nome e UF padronizados, valores convertidos para número, o preço do Açúcar 1kg vindo de <span class="font-mono text-fg/85">erp.produtos</span> e o faturamento calculado (qtd × valor_unit).
+          </p>
+        </div>
+
+        <!-- 3. Armazenamento -->
+        <div role="tabpanel" id="etl-panel-2" aria-labelledby="etl-tab-2" hidden>
+          <pre class="overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.load}</pre>
+          <div class="mt-4 overflow-x-auto">
+            <table class="font-mono text-sm">
+              <thead><tr>{['linhas', 'faturamento_total'].map((c) => <th class="border-b border-line px-3 py-2 text-left font-medium text-muted">{c}</th>)}</tr></thead>
+              <tbody>
+                <tr>{[clean.length, '198.33'].map((v) => <td class="border-b border-line px-3 py-2 whitespace-nowrap text-fg/85">{v}</td>)}</tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="mt-3 text-sm text-muted">
+            A base tratada fica gravada no PostgreSQL como a tabela <span class="font-mono text-fg/85">vendas</span>. A conferência confirma a carga: as 5 linhas do tratamento chegaram, e o faturamento total é o mesmo que vai aparecer no Power BI.
+          </p>
+        </div>
+
+        <!-- 4. Visualização -->
+        <div role="tabpanel" id="etl-panel-3" aria-labelledby="etl-tab-3" hidden>
+          <pre class="overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.visualize}</pre>
+          <div class="mt-4 grid gap-4 sm:grid-cols-3">
+            {kpis.map((k) => (
+              <div class="rounded border border-line px-4 py-3">
+                <p class="text-sm text-muted">{k.label}</p>
+                <p class="mt-1 text-2xl font-semibold text-heading">{k.value}</p>
+              </div>
+            ))}
+          </div>
+          <div class="mt-4 rounded border border-line px-4 py-4">
+            <p class="text-sm text-muted">Faturamento por produto</p>
+            <ul class="mt-3 space-y-2">
+              {byProduct.map((p) => (
+                <li class="grid grid-cols-[6.5rem_1fr_4.5rem] items-center gap-3 text-sm">
+                  <span class="text-fg/85">{p.name}</span>
+                  <span class="h-2 rounded bg-accent" style={`width: ${(p.value / maxProduct) * 100}%`} />
+                  <span class="text-right font-mono text-fg/85">{brl(p.value)}</span>
                 </li>
               ))}
             </ul>
           </div>
-        ))
-      }
+          <p class="mt-3 text-sm text-muted">
+            A tabela <span class="font-mono text-fg/85">vendas</span> é exportada direto do SQL para o Power BI. Lá, as medidas DAX calculam os indicadores e o gráfico soma o faturamento por produto.
+          </p>
+        </div>
+      </div>
+
+      <p data-reveal class="mt-6 text-sm text-muted">
+        <span class="text-fg">Git</span> e <span class="text-fg">GitHub</span> versionando todas as etapas.
+      </p>
     </div>
   </div>
 </section>
+
+<style>
+  /* Linha embaixo do card ativo */
+  .etl-progress {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--color-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s ease;
+  }
+
+  [aria-selected='true'] .etl-progress {
+    transform: scaleX(1);
+  }
+
+  /* Painéis empilhados no mesmo espaço: a área fica com a altura do maior e a página não pula ao trocar */
+  .etl-panels {
+    display: grid;
+  }
+
+  .etl-panels > [role='tabpanel'] {
+    grid-area: 1 / 1;
+    min-width: 0;
+  }
+
+  .etl-panels > [role='tabpanel'][hidden] {
+    display: block;
+    visibility: hidden;
+  }
+
+  .etl-panels > [role='tabpanel']:not([hidden]) {
+    animation: etl-fade 0.3s ease;
+  }
+
+  @keyframes etl-fade {
+    from {
+      opacity: 0;
+    }
+  }
+</style>
+
+<script>
+  // Caso de ETL: troca o painel ao clicar em uma etapa
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLElement>('[data-etl]').forEach((root) => {
+      const tabs = [...root.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+      let clicked = false;
+
+      const select = (tab: HTMLButtonElement) =>
+        tabs.forEach((t) => {
+          const selected = t === tab;
+          t.setAttribute('aria-selected', String(selected));
+          root.querySelector<HTMLElement>(`#${t.getAttribute('aria-controls')}`)!.hidden = !selected;
+        });
+
+      tabs.forEach((tab) =>
+        tab.addEventListener('click', () => {
+          clicked = true;
+          select(tab);
+        }),
+      );
+
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      // Na primeira vez que os cards aparecem, passa pelas etapas 2, 3 e 4 e volta à 1,
+      // mostrando que os cards são clicáveis. Um clique interrompe a passagem.
+      const sweep = () =>
+        [...tabs.slice(1), tabs[0]].forEach((tab, step) =>
+          setTimeout(() => !clicked && select(tab), (step + 1) * 1200),
+        );
+
+      const tablist = root.querySelector('[role="tablist"]')!;
+      const io = new IntersectionObserver(
+        ([entry]) => {
+          if (!entry.isIntersecting) return;
+          io.disconnect();
+          // Espera o fade de entrada dos cards terminar
+          setTimeout(() => !clicked && sweep(), 500);
+        },
+        { threshold: 0.6 },
+      );
+      io.observe(tablist);
+    });
+  });
+</script>
