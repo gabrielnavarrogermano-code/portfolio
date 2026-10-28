@@ -9,7 +9,7 @@ const links = [
 
 <header class="fixed inset-x-0 top-0 z-50 px-4 pt-4">
   <nav
-    class="mx-auto flex max-w-5xl items-center justify-between rounded-full border border-line/80 bg-bg/70 py-2 pr-2 pl-5 backdrop-blur-md"
+    class="relative mx-auto flex max-w-5xl items-center justify-between overflow-hidden rounded-full border border-line/80 bg-bg/70 py-2 pr-2 pl-5 backdrop-blur-md"
   >
     <a href="/" class="font-mono text-sm font-medium tracking-tight text-white">
       gabriel<span class="text-accent">.</span>dados
@@ -20,7 +20,8 @@ const links = [
         links.map((link) => (
           <a
             href={link.href}
-            class="hidden rounded-full px-4 py-2 text-sm text-muted transition-colors hover:bg-white/5 hover:text-white sm:block"
+            data-nav-link={link.href.split('#')[1]}
+            class="hidden rounded-full px-4 py-2 text-sm text-muted transition-colors hover:bg-white/5 hover:text-white aria-[current=location]:bg-white/5 aria-[current=location]:text-white sm:block"
           >
             {link.label}
           </a>
@@ -33,5 +34,55 @@ const links = [
         Contato
       </a>
     </div>
+
+    <div class="pointer-events-none absolute inset-x-8 bottom-0 h-px" aria-hidden="true">
+      <div id="read-progress" class="read-progress h-full bg-linear-to-r from-accent-2 to-accent"></div>
+    </div>
   </nav>
 </header>
+
+<script>
+  // Destaca o link da seção visível e mostra o progresso de leitura da página
+  let bar: HTMLElement | null = null;
+  let observer: IntersectionObserver | undefined;
+  let ticking = false;
+
+  const updateProgress = () => {
+    ticking = false;
+    if (!bar) return;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.setProperty('--progress', String(max > 0 ? Math.min(window.scrollY / max, 1) : 0));
+  };
+
+  const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(updateProgress);
+  };
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+
+  document.addEventListener('astro:page-load', () => {
+    bar = document.getElementById('read-progress');
+    updateProgress();
+
+    observer?.disconnect();
+    const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-nav-link]')];
+
+    // Considera "ativa" a seção que cruza a faixa central da tela
+    observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          links.forEach((link) => {
+            if (link.dataset.navLink === entry.target.id) link.setAttribute('aria-current', 'location');
+            else link.removeAttribute('aria-current');
+          });
+        }
+      },
+      { rootMargin: '-45% 0px -50% 0px' },
+    );
+    document.querySelectorAll('main section[id]').forEach((section) => observer!.observe(section));
+  });
+</script>
