@@ -3,15 +3,15 @@ import SectionTitle from './SectionTitle.astro';
 
 // Pipeline: onde cada ferramenta entra e o que faço em cada etapa
 const pipeline = [
-  { stage: 'Extração', tools: ['SQL', 'Python'], does: 'Consulta às bases de origem e coleta dos dados brutos' },
-  { stage: 'Tratamento', tools: ['pandas', 'Excel'], does: 'Limpeza, padronização e aplicação de regras de negócio' },
-  { stage: 'Armazenamento', tools: ['PostgreSQL', 'MySQL'], does: 'Gravação dos dados tratados no banco, prontos para o BI' },
-  { stage: 'Visualização', tools: ['Power BI', 'DAX', 'Excel'], does: 'Indicadores, estatística descritiva e dashboards' },
+  { stage: 'Extração', tools: ['SQL', 'Python'], does: 'Buscar os dados onde eles estão: sistemas e planilhas' },
+  { stage: 'Tratamento', tools: ['pandas', 'Excel'], does: 'Corrigir erros, remover repetições e padronizar' },
+  { stage: 'Armazenamento', tools: ['PostgreSQL', 'MySQL'], does: 'Guardar os dados prontos em um banco, para o BI usar' },
+  { stage: 'Visualização', tools: ['Power BI', 'DAX'], does: 'Transformar os dados em indicadores e gráficos' },
 ];
 
 // Caso fictício: vendas de uma distribuidora passando pelas 4 etapas.
 // A origem guarda os pedidos importados de planilhas com colunas em texto, por isso os formatos misturados.
-const rawCols = ['id', 'data', 'cliente', 'produto', 'qtd', 'valor_unit', 'uf'];
+const rawCols = ['Pedido', 'Data', 'Cliente', 'Produto', 'Qtd', 'Preço', 'UF'];
 const raw = [
   { row: ['1001', '2026-09-02', 'Mercado Sol', 'Café 500g', '2', '18.90', 'SP'], bad: [] },
   { row: ['1002', '02/09/2026', 'mercado sol', 'Café 500g', '1', '18,90', 'sp'], bad: [1, 2, 5, 6] },
@@ -21,14 +21,22 @@ const raw = [
   { row: ['1005', '2026-09-05', 'Padaria Lua', 'Café 500g', '3', '18.90', 'RJ'], bad: [] },
 ];
 
-const prices = [
-  ['Café 500g', '18.90'],
-  ['Açúcar 1kg', '5.49'],
-  ['Leite 1L', '4.79'],
+// Problemas da base bruta e o que o tratamento faz com cada um, em linguagem de negócio
+const problems = [
+  'O mesmo cliente escrito de dois jeitos',
+  'Datas e preços em formatos diferentes',
+  'Um pedido sem preço',
+  'Um pedido repetido',
+];
+const fixes = [
+  'Pedido repetido removido',
+  'Datas, nomes e estados padronizados',
+  'Preço que faltava preenchido pela tabela de preços',
+  'Faturamento de cada pedido calculado (quantidade × preço)',
 ];
 
 // fixed: colunas corrigidas no tratamento (faturamento, índice 7, é sempre calculado)
-const cleanCols = ['id', 'data', 'cliente', 'produto', 'qtd', 'valor_unit', 'uf', 'faturamento'];
+const cleanCols = ['Pedido', 'Data', 'Cliente', 'Produto', 'Qtd', 'Preço', 'UF', 'Faturamento'];
 const clean = [
   { row: ['1001', '2026-09-02', 'Mercado Sol', 'Café 500g', '2', '18.90', 'SP', '37.80'], fixed: [7] },
   { row: ['1002', '2026-09-02', 'Mercado Sol', 'Café 500g', '1', '18.90', 'SP', '18.90'], fixed: [1, 2, 5, 6, 7] },
@@ -123,9 +131,9 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
       <div class="etl-panels mt-8">
         <!-- 1. Extração -->
         <div role="tabpanel" id="etl-panel-0" aria-labelledby="etl-tab-0">
-          <pre class="overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.extract}</pre>
+          <p class="text-fg">Busco os pedidos no sistema da empresa. Eles chegam assim, com erros que atrapalhariam qualquer análise:</p>
           <div class="mt-4 overflow-x-auto">
-            <table class="w-full font-mono text-sm">
+            <table class="w-full text-sm tabular-nums">
               <thead><tr>{rawCols.map((c) => <th class="border-b border-line px-3 py-2 text-left font-medium text-muted">{c}</th>)}</tr></thead>
               <tbody>
                 {raw.map((r) => (
@@ -134,29 +142,20 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
               </tbody>
             </table>
           </div>
-          <p class="mt-3 text-sm text-muted">
-            <span class="font-mono text-fg/85">erp.pedidos_importados</span>: 6 linhas brutas. A tabela vem de planilhas importadas, com tudo em texto. Em vermelho: data e valor fora do padrão, nome e UF despadronizados, valor nulo e um pedido importado duas vezes.
-          </p>
-          <div class="mt-6 overflow-x-auto">
-            <table class="font-mono text-sm">
-              <thead><tr><th class="border-b border-line px-3 py-2 text-left font-medium text-muted">produto</th><th class="border-b border-line px-3 py-2 text-left font-medium text-muted">preco</th></tr></thead>
-              <tbody>
-                {prices.map((row) => (
-                  <tr>{row.map((v) => <td class="border-b border-line px-3 py-2 whitespace-nowrap text-fg/85">{v}</td>)}</tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p class="mt-3 text-sm text-muted">
-            <span class="font-mono text-fg/85">erp.produtos</span>: a tabela de preços, que é usada no tratamento para preencher valores ausentes.
-          </p>
+          <ul class="mt-4 grid gap-x-6 gap-y-1 text-sm text-muted sm:grid-cols-2">
+            {problems.map((p) => <li><span class="mr-2 text-red-400">✕</span>{p}</li>)}
+          </ul>
+          <details class="mt-5">
+            <summary class="w-fit cursor-pointer text-sm text-muted transition-colors hover:text-heading">Ver o código (Python + SQL)</summary>
+            <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.extract}</pre>
+          </details>
         </div>
 
         <!-- 2. Tratamento -->
         <div role="tabpanel" id="etl-panel-1" aria-labelledby="etl-tab-1" hidden>
-          <pre class="overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.transform}</pre>
+          <p class="text-fg">Corrijo os problemas e calculo o faturamento de cada pedido. O resultado é uma base confiável:</p>
           <div class="mt-4 overflow-x-auto">
-            <table class="w-full font-mono text-sm">
+            <table class="w-full text-sm tabular-nums">
               <thead><tr>{cleanCols.map((c) => <th class="border-b border-line px-3 py-2 text-left font-medium text-muted">{c}</th>)}</tr></thead>
               <tbody>
                 {clean.map((r) => (
@@ -165,30 +164,37 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
               </tbody>
             </table>
           </div>
-          <p class="mt-3 text-sm text-muted">
-            5 linhas limpas. O pedido 1004 duplicado foi removido. Em verde, o que foi corrigido ou criado: datas, nome e UF padronizados, valores convertidos para número, o preço do Açúcar 1kg vindo de <span class="font-mono text-fg/85">erp.produtos</span> e o faturamento calculado (qtd × valor_unit).
-          </p>
+          <ul class="mt-4 grid gap-x-6 gap-y-1 text-sm text-muted sm:grid-cols-2">
+            {fixes.map((f) => <li><span class="mr-2 text-emerald-400">✓</span>{f}</li>)}
+          </ul>
+          <details class="mt-5">
+            <summary class="w-fit cursor-pointer text-sm text-muted transition-colors hover:text-heading">Ver o código (Python)</summary>
+            <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.transform}</pre>
+          </details>
         </div>
 
         <!-- 3. Armazenamento -->
         <div role="tabpanel" id="etl-panel-2" aria-labelledby="etl-tab-2" hidden>
-          <pre class="overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.load}</pre>
-          <div class="mt-4 overflow-x-auto">
-            <table class="font-mono text-sm">
-              <thead><tr>{['linhas', 'faturamento_total'].map((c) => <th class="border-b border-line px-3 py-2 text-left font-medium text-muted">{c}</th>)}</tr></thead>
-              <tbody>
-                <tr>{[clean.length, '198.33'].map((v) => <td class="border-b border-line px-3 py-2 whitespace-nowrap text-fg/85">{v}</td>)}</tr>
-              </tbody>
-            </table>
+          <p class="text-fg">Guardo a base tratada em um banco de dados, de onde o BI sempre lê a versão mais atual. Antes de liberar, confiro se nada se perdeu no caminho:</p>
+          <div class="mt-4 grid gap-4 sm:grid-cols-2">
+            <div class="rounded border border-line px-4 py-3">
+              <p class="text-sm text-muted">Pedidos gravados</p>
+              <p class="mt-1 text-2xl font-semibold text-heading">{clean.length} <span class="text-sm font-normal text-emerald-400">✓ todos chegaram</span></p>
+            </div>
+            <div class="rounded border border-line px-4 py-3">
+              <p class="text-sm text-muted">Faturamento total</p>
+              <p class="mt-1 text-2xl font-semibold text-heading">R$ 198,33 <span class="text-sm font-normal text-emerald-400">✓ bate com o painel</span></p>
+            </div>
           </div>
-          <p class="mt-3 text-sm text-muted">
-            A base tratada fica gravada no PostgreSQL como a tabela <span class="font-mono text-fg/85">vendas</span>. A conferência confirma a carga: as 5 linhas do tratamento chegaram, e o faturamento total é o mesmo que vai aparecer no Power BI.
-          </p>
+          <details class="mt-5">
+            <summary class="w-fit cursor-pointer text-sm text-muted transition-colors hover:text-heading">Ver o código (Python + SQL)</summary>
+            <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.load}</pre>
+          </details>
         </div>
 
         <!-- 4. Visualização -->
         <div role="tabpanel" id="etl-panel-3" aria-labelledby="etl-tab-3" hidden>
-          <pre class="overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.visualize}</pre>
+          <p class="text-fg">No Power BI, os dados viram indicadores e gráficos que qualquer pessoa entende:</p>
           <div class="mt-4 grid gap-4 sm:grid-cols-3">
             {kpis.map((k) => (
               <div class="rounded border border-line px-4 py-3">
@@ -209,9 +215,10 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
               ))}
             </ul>
           </div>
-          <p class="mt-3 text-sm text-muted">
-            A tabela <span class="font-mono text-fg/85">vendas</span> é exportada direto do SQL para o Power BI. Lá, as medidas DAX calculam os indicadores e o gráfico soma o faturamento por produto.
-          </p>
+          <details class="mt-5">
+            <summary class="w-fit cursor-pointer text-sm text-muted transition-colors hover:text-heading">Ver as fórmulas (DAX)</summary>
+            <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.visualize}</pre>
+          </details>
         </div>
       </div>
 
@@ -277,7 +284,10 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
         tabs.forEach((t) => {
           const selected = t === tab;
           t.setAttribute('aria-selected', String(selected));
-          root.querySelector<HTMLElement>(`#${t.getAttribute('aria-controls')}`)!.hidden = !selected;
+          const panel = root.querySelector<HTMLElement>(`#${t.getAttribute('aria-controls')}`)!;
+          panel.hidden = !selected;
+          // Painéis dividem o mesmo espaço: código aberto num painel escondido deixaria a área alta e vazia
+          if (!selected) panel.querySelectorAll('details').forEach((d) => (d.open = false));
         });
 
       tabs.forEach((tab) =>
