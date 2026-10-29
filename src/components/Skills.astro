@@ -105,9 +105,9 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
 <section id="habilidades" class="py-16 sm:py-24">
   <div class="mx-auto max-w-5xl px-6">
     <SectionTitle title="Como eu trabalho" />
-    <p data-reveal class="mt-3 text-muted">Abra cada etapa para ver o exemplo na prática.</p>
+    <p data-reveal class="mt-3 text-muted md:hidden">Abra cada etapa para ver o exemplo na prática.</p>
 
-    <div class="mt-10 space-y-3" data-etl>
+    <div class="etl mt-10 space-y-3 md:mt-18 md:space-y-0" data-etl>
       <EtlStep index={0} {...pipeline[0]} open>
         <p class="text-fg">Os pedidos chegam do sistema assim, com erros que atrapalhariam qualquer análise:</p>
         <div class="mt-4 overflow-x-auto">
@@ -207,8 +207,72 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
 </section>
 
 <style>
-  /* Conteúdo do card aparece com um fade ao abrir */
-  :global(.etl-step[open] > .etl-body) {
+  /*
+    Celular: cards um embaixo do outro, cada um abre o próprio exemplo.
+    A partir de md: os cabeçalhos viram abas lado a lado e os exemplos ficam empilhados
+    no mesmo espaço embaixo delas, com a altura do maior, para a página não pular ao trocar.
+  */
+  :global(.etl-step:not([data-open]) > .etl-body) {
+    display: none;
+  }
+
+  @media (min-width: 48rem) {
+    .etl {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .etl :global(.etl-step) {
+      display: contents;
+    }
+
+    .etl :global(.etl-head) {
+      border-bottom-width: 1px;
+    }
+
+    .etl :global(.etl-step:nth-child(-n + 2) > .etl-head) {
+      border-top-width: 1px;
+    }
+
+    .etl :global(.etl-step:nth-child(even) > .etl-head) {
+      border-left-width: 1px;
+    }
+
+    .etl :global(.etl-body) {
+      grid-row: 3;
+      grid-column: 1 / -1;
+    }
+
+    .etl :global(.etl-step:not([data-open]) > .etl-body) {
+      display: block;
+      visibility: hidden;
+    }
+
+    .etl :global(.etl-step[data-open] > .etl-body) {
+      animation: etl-fade 0.3s ease;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .etl {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .etl :global(.etl-step > .etl-head) {
+      border-top-width: 1px;
+    }
+
+    .etl :global(.etl-step:not(:first-child) > .etl-head) {
+      border-left-width: 1px;
+    }
+
+    .etl :global(.etl-body) {
+      grid-row: 2;
+    }
+  }
+
+  /* No celular, o conteúdo do card aparece com um fade ao abrir */
+  :global(.etl-step[data-open] > .etl-body) {
     animation: etl-fade 0.3s ease;
   }
 
@@ -217,7 +281,6 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
       opacity: 0;
     }
   }
-
   /* Dica da célula: aparece acima dela ao passar o mouse, focar ou tocar */
   .cell-tip {
     position: relative;
@@ -267,7 +330,7 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
   }
 
   /* Tratamento: ao abrir o card, as células corrigidas passam de vermelho a verde */
-  :global(.etl-step[open]) .is-fixed {
+  :global(.etl-step[data-open]) .is-fixed {
     animation: cell-fix 0.9s ease both;
     animation-delay: var(--fix-delay, 0ms);
   }
@@ -280,7 +343,7 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
   }
 
   /* Visualização: as barras crescem ao abrir o card */
-  :global(.etl-step[open]) .etl-bar {
+  :global(.etl-step[data-open]) .etl-bar {
     transform-origin: left;
     animation: bar-grow 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
     animation-delay: var(--bar-delay, 0ms);
@@ -294,12 +357,15 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
 </style>
 
 <script>
+  const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // A partir daqui as etapas ficam lado a lado e só uma fica aberta por vez
+  const sideBySide = matchMedia('(min-width: 48rem)');
   const counting = new WeakMap<HTMLElement, number>();
 
-  // Números do card contam de 0 até o valor quando ele é aberto
-  const countUp = (card: HTMLElement) => {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    card.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
+  // Números do exemplo contam de 0 até o valor quando ele é aberto
+  const countUp = (body: HTMLElement) => {
+    if (reduceMotion()) return;
+    body.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
       const target = Number(el.dataset.count);
       const decimals = Number(el.dataset.decimals ?? 0);
       const prefix = el.dataset.prefix ?? '';
@@ -317,12 +383,56 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
   };
 
   document.addEventListener('astro:page-load', () => {
-    document.querySelectorAll<HTMLDetailsElement>('[data-etl] > .etl-step').forEach((card) => {
-      card.addEventListener('toggle', () => {
-        if (card.open) countUp(card);
-        // Fecha o código aberto, para o card voltar compacto na próxima vez
-        else card.querySelectorAll<HTMLDetailsElement>('.etl-body details').forEach((d) => (d.open = false));
+    document.querySelectorAll<HTMLElement>('[data-etl]').forEach((root) => {
+      const steps = [...root.querySelectorAll<HTMLElement>('.etl-step')];
+      const head = (step: HTMLElement) => step.querySelector<HTMLButtonElement>('.etl-head')!;
+      const body = (step: HTMLElement) => step.querySelector<HTMLElement>('.etl-body')!;
+      let clicked = false;
+
+      const setOpen = (step: HTMLElement, open: boolean) => {
+        if (open && !step.hasAttribute('data-open')) countUp(body(step));
+        step.toggleAttribute('data-open', open);
+        head(step).setAttribute('aria-expanded', String(open));
+        body(step).inert = !open;
+        // Código aberto num exemplo fechado deixaria a área alta e vazia
+        if (!open) body(step).querySelectorAll('details').forEach((d) => (d.open = false));
+      };
+
+      // Lado a lado: abre só a escolhida. Celular: cada card abre e fecha sozinho
+      const select = (step: HTMLElement) => steps.forEach((s) => setOpen(s, s === step));
+
+      steps.forEach((step) =>
+        head(step).addEventListener('click', () => {
+          clicked = true;
+          if (sideBySide.matches) select(step);
+          else setOpen(step, !step.hasAttribute('data-open'));
+        }),
+      );
+
+      // Ao virar lado a lado (girar o tablet, redimensionar), fica só uma etapa aberta
+      sideBySide.addEventListener('change', (e) => {
+        if (e.matches) select(steps.find((s) => s.hasAttribute('data-open')) ?? steps[0]);
       });
+
+      if (reduceMotion()) return;
+
+      // Lado a lado, na primeira vez que as abas aparecem, passa pelas etapas 2, 3 e 4 e volta à 1,
+      // mostrando que são clicáveis. Um clique interrompe a passagem.
+      const sweep = () =>
+        [...steps.slice(1), steps[0]].forEach((step, i) =>
+          setTimeout(() => !clicked && sideBySide.matches && select(step), (i + 1) * 1200),
+        );
+
+      const io = new IntersectionObserver(
+        ([entry]) => {
+          if (!entry.isIntersecting) return;
+          io.disconnect();
+          // Espera o fade de entrada das abas terminar
+          if (sideBySide.matches) setTimeout(() => !clicked && sweep(), 500);
+        },
+        { threshold: 0.6 },
+      );
+      io.observe(head(steps[0]));
     });
   });
 </script>

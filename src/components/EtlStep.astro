@@ -28,25 +28,36 @@ interface Props {
 const { index, stage, tools, does, open = false } = Astro.props;
 ---
 
-<!-- Card de uma etapa: o cabeçalho abre e fecha o exemplo, que aparece dentro do próprio card -->
-<details
-  data-reveal
-  style={`--delay: ${index * 100}ms`}
-  open={open}
-  class="etl-step group rounded-2xl border border-line transition-colors open:border-heading/30 open:bg-white/[0.03]"
+<!--
+  Etapa do ETL. No celular é um card que abre o exemplo dentro dele;
+  a partir de md o card some do layout (display: contents) e o cabeçalho vira uma aba lado a lado,
+  com o exemplo embaixo de todas (ver o layout em Skills.astro)
+-->
+<div
+  class="etl-step rounded-2xl border border-line transition-colors data-open:border-heading/30 data-open:bg-white/[0.03]"
+  data-open={open ? '' : undefined}
 >
-  <summary
-    class="flex cursor-pointer list-none items-start gap-4 rounded-2xl p-5 transition-colors hover:bg-white/5 sm:p-6 [&::-webkit-details-marker]:hidden"
+  <button
+    type="button"
+    id={`etl-head-${index}`}
+    aria-expanded={open ? 'true' : 'false'}
+    aria-controls={`etl-body-${index}`}
+    data-reveal
+    style={`--delay: ${index * 100}ms`}
+    class="etl-head group relative flex w-full cursor-pointer items-start gap-4 rounded-2xl p-5 text-left transition-colors hover:bg-white/5 sm:p-6 md:block md:rounded-none md:border-line md:p-5 md:aria-expanded:bg-white/5"
   >
     <span
-      class="flex h-8 w-8 flex-none items-center justify-center rounded-full border border-line text-sm text-heading transition-colors group-open:border-heading group-open:bg-heading group-open:text-bg"
+      class="flex h-8 w-8 flex-none items-center justify-center rounded-full border border-line text-sm text-heading transition-colors group-aria-expanded:border-heading group-aria-expanded:bg-heading group-aria-expanded:text-bg md:hidden"
     >
       {index + 1}
     </span>
 
     <div class="min-w-0 flex-1">
-      <p class="font-medium text-heading">{stage}</p>
-      <p class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-fg/85">
+      <p class="font-medium text-heading md:text-sm">
+        <span class="mr-2 hidden text-accent md:inline">{index + 1}</span>
+        {stage}
+      </p>
+      <p class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-fg/85 md:text-base">
         {
           tools.map((t) => (
             <span class="inline-flex items-center gap-1.5">
@@ -75,14 +86,41 @@ const { index, stage, tools, does, open = false } = Astro.props;
       fill="none"
       stroke="currentColor"
       stroke-width="2"
-      class="mt-1.5 h-5 w-5 flex-none text-muted transition-transform group-open:rotate-180"
+      class="mt-1.5 h-5 w-5 flex-none text-muted transition-transform group-aria-expanded:rotate-180 md:hidden"
       aria-hidden="true"
     >
       <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"></path>
     </svg>
-  </summary>
 
-  <div class="etl-body border-t border-line px-5 pt-5 pb-6 sm:px-6">
+    <span class="etl-progress hidden md:block" aria-hidden="true"></span>
+  </button>
+
+  <div
+    id={`etl-body-${index}`}
+    role="region"
+    aria-labelledby={`etl-head-${index}`}
+    inert={!open}
+    class="etl-body min-w-0 border-t border-line px-5 pt-5 pb-6 sm:px-6 md:mt-8 md:border-t-0 md:p-0"
+  >
     <slot />
   </div>
-</details>
+</div>
+
+<style>
+  /* Linha embaixo da aba ativa (só no layout lado a lado) */
+  .etl-progress {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--color-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s ease;
+  }
+
+  [aria-expanded='true'] .etl-progress {
+    transform: scaleX(1);
+  }
+</style>
