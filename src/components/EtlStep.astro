@@ -1,0 +1,88 @@
+---
+import { siMysql, siPandas, siPostgresql, siPython } from 'simple-icons';
+
+// Ícones das ferramentas: logos oficiais quando existem no Simple Icons (preenchidos);
+// Excel e Power BI saíram do Simple Icons, então eles, SQL e DAX usam ícones genéricos (traço)
+const toolIcons: Record<string, { path: string; stroke?: boolean }> = {
+  SQL: {
+    path: 'M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3Zm0 0v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',
+    stroke: true,
+  },
+  Python: { path: siPython.path },
+  pandas: { path: siPandas.path },
+  Excel: { path: 'M4 4h16v16H4ZM4 9.5h16M4 15h16M10 4v16', stroke: true },
+  PostgreSQL: { path: siPostgresql.path },
+  MySQL: { path: siMysql.path },
+  'Power BI': { path: 'M6 20v-7M12 20V8M18 20V4', stroke: true },
+  DAX: { path: 'M8 20c2 0 2.6-1.4 3-4l1.6-8.5C13 5 13.8 4 16 4M8 10h7M15 14l5 6M20 14l-5 6', stroke: true },
+};
+
+interface Props {
+  index: number;
+  stage: string;
+  tools: string[];
+  does: string;
+  open?: boolean;
+}
+
+const { index, stage, tools, does, open = false } = Astro.props;
+---
+
+<!-- Card de uma etapa: o cabeçalho abre e fecha o exemplo, que aparece dentro do próprio card -->
+<details
+  data-reveal
+  style={`--delay: ${index * 100}ms`}
+  open={open}
+  class="etl-step group rounded-2xl border border-line transition-colors open:border-heading/30 open:bg-white/[0.03]"
+>
+  <summary
+    class="flex cursor-pointer list-none items-start gap-4 rounded-2xl p-5 transition-colors hover:bg-white/5 sm:p-6 [&::-webkit-details-marker]:hidden"
+  >
+    <span
+      class="flex h-8 w-8 flex-none items-center justify-center rounded-full border border-line text-sm text-heading transition-colors group-open:border-heading group-open:bg-heading group-open:text-bg"
+    >
+      {index + 1}
+    </span>
+
+    <div class="min-w-0 flex-1">
+      <p class="font-medium text-heading">{stage}</p>
+      <p class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-fg/85">
+        {
+          tools.map((t) => (
+            <span class="inline-flex items-center gap-1.5">
+              <svg
+                viewBox="0 0 24 24"
+                class="h-4 w-4 flex-none"
+                fill={toolIcons[t].stroke ? 'none' : 'currentColor'}
+                stroke={toolIcons[t].stroke ? 'currentColor' : undefined}
+                stroke-width={toolIcons[t].stroke ? 1.8 : undefined}
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d={toolIcons[t].path} />
+              </svg>
+              {t}
+            </span>
+          ))
+        }
+      </p>
+      <p class="mt-2 text-sm text-muted">{does}</p>
+    </div>
+
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      class="mt-1.5 h-5 w-5 flex-none text-muted transition-transform group-open:rotate-180"
+      aria-hidden="true"
+    >
+      <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  </summary>
+
+  <div class="etl-body border-t border-line px-5 pt-5 pb-6 sm:px-6">
+    <slot />
+  </div>
+</details>

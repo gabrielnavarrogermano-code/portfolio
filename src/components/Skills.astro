@@ -1,22 +1,6 @@
 ---
-import { siMysql, siPandas, siPostgresql, siPython } from 'simple-icons';
 import SectionTitle from './SectionTitle.astro';
-
-// Ícones das ferramentas: logos oficiais quando existem no Simple Icons (preenchidos);
-// Excel e Power BI saíram do Simple Icons, então eles, SQL e DAX usam ícones genéricos (traço)
-const toolIcons: Record<string, { path: string; stroke?: boolean }> = {
-  SQL: {
-    path: 'M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3Zm0 0v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',
-    stroke: true,
-  },
-  Python: { path: siPython.path },
-  pandas: { path: siPandas.path },
-  Excel: { path: 'M4 4h16v16H4ZM4 9.5h16M4 15h16M10 4v16', stroke: true },
-  PostgreSQL: { path: siPostgresql.path },
-  MySQL: { path: siMysql.path },
-  'Power BI': { path: 'M6 20v-7M12 20V8M18 20V4', stroke: true },
-  DAX: { path: 'M8 20c2 0 2.6-1.4 3-4l1.6-8.5C13 5 13.8 4 16 4M8 10h7M15 14l5 6M20 14l-5 6', stroke: true },
-};
+import EtlStep from './EtlStep.astro';
 
 // Pipeline: onde cada ferramenta entra e o que faço em cada etapa
 const pipeline = [
@@ -118,195 +102,113 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
 };
 ---
 
-<section id="habilidades" class="py-24">
+<section id="habilidades" class="py-16 sm:py-24">
   <div class="mx-auto max-w-5xl px-6">
     <SectionTitle title="Como eu trabalho" />
+    <p data-reveal class="mt-3 text-muted">Abra cada etapa para ver o exemplo na prática.</p>
 
-    <div class="mt-12" data-etl>
-      <div role="tablist" class="mt-6 grid border-y border-line sm:grid-cols-2 lg:grid-cols-4">
-        {
-          pipeline.map((p, i) => (
-            <button
-              type="button"
-              role="tab"
-              id={`etl-tab-${i}`}
-              aria-controls={`etl-panel-${i}`}
-              aria-selected={i === 0 ? 'true' : 'false'}
-              data-reveal
-              style={`--delay: ${i * 100}ms`}
-              class="relative cursor-pointer border-line py-5 text-left transition-colors not-first:border-t hover:bg-white/5 aria-selected:bg-white/5 sm:px-5 sm:nth-2:border-t-0 lg:not-first:border-t-0 lg:not-first:border-l"
-            >
-              <p class="text-sm font-medium text-heading">
-                <span class="mr-2 text-accent">{i + 1}</span>
-                {p.stage}
-              </p>
-              <p class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-fg/85">
-                {p.tools.map((t) => (
-                  <span class="inline-flex items-center gap-1.5">
-                    <svg
-                      viewBox="0 0 24 24"
-                      class="h-4 w-4 flex-none"
-                      fill={toolIcons[t].stroke ? 'none' : 'currentColor'}
-                      stroke={toolIcons[t].stroke ? 'currentColor' : undefined}
-                      stroke-width={toolIcons[t].stroke ? 1.8 : undefined}
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d={toolIcons[t].path} />
-                    </svg>
-                    {t}
-                  </span>
-                ))}
-              </p>
-              <p class="mt-2 text-sm text-muted">{p.does}</p>
-              <span class="etl-progress" aria-hidden="true" />
-            </button>
-          ))
-        }
-      </div>
-
-      <div class="etl-panels mt-8">
-        <!-- 1. Extração -->
-        <div role="tabpanel" id="etl-panel-0" aria-labelledby="etl-tab-0">
-          <p class="text-fg">Os pedidos chegam do sistema assim, com erros que atrapalhariam qualquer análise:</p>
-          <div class="mt-4 overflow-x-auto">
-            <table class="w-full text-sm tabular-nums">
-              <thead><tr>{rawCols.map((c) => <th class="border-b border-line px-3 py-2 text-left font-medium text-muted">{c}</th>)}</tr></thead>
-              <tbody>
-                {raw.map((r) => (
-                  <tr>{r.row.map((v, ci) => r.bad[ci] ? (
-                    <td tabindex="0" class:list={['cell-tip border-b border-line px-3 py-2 whitespace-nowrap text-red-400', tipSide(ci, rawCols.length)]}>{v}<span class="tip">{r.bad[ci]}</span></td>
-                  ) : (
-                    <td class="border-b border-line px-3 py-2 whitespace-nowrap text-fg/85">{v}</td>
-                  ))}</tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p class="mt-4 text-sm text-muted"><span class="mr-2 text-red-400">✕</span>Passe o mouse (ou toque) nas células em vermelho para ver cada erro</p>
-          <details class="mt-5">
-            <summary class="w-fit cursor-pointer text-sm text-muted transition-colors hover:text-heading">Ver o código (Python + SQL)</summary>
-            <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.extract}</pre>
-          </details>
-        </div>
-
-        <!-- 2. Tratamento -->
-        <div role="tabpanel" id="etl-panel-1" aria-labelledby="etl-tab-1" data-inactive inert>
-          <p class="text-fg">Corrijo os problemas e calculo o faturamento. O resultado é uma base confiável:</p>
-          <div class="mt-4 overflow-x-auto">
-            <table class="w-full text-sm tabular-nums">
-              <thead><tr>{cleanCols.map((c) => <th class="border-b border-line px-3 py-2 text-left font-medium text-muted">{c}</th>)}</tr></thead>
-              <tbody>
-                {clean.map((r, ri) => (
-                  <tr>{r.row.map((v, ci) => r.fixed[ci] ? (
-                    <td tabindex="0" style={`--fix-delay: ${ri * 90}ms`} class:list={['cell-tip is-fixed border-b border-line px-3 py-2 whitespace-nowrap text-emerald-400', tipSide(ci, cleanCols.length)]}>{v}<span class="tip">{r.fixed[ci]}</span></td>
-                  ) : (
-                    <td class="border-b border-line px-3 py-2 whitespace-nowrap text-fg/85">{v}</td>
-                  ))}</tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p class="mt-4 text-sm text-muted"><span class="mr-2 text-emerald-400">✓</span>Pedido repetido removido · passe o mouse nas células em verde para ver cada correção</p>
-          <details class="mt-5">
-            <summary class="w-fit cursor-pointer text-sm text-muted transition-colors hover:text-heading">Ver o código (Python)</summary>
-            <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.transform}</pre>
-          </details>
-        </div>
-
-        <!-- 3. Armazenamento -->
-        <div role="tabpanel" id="etl-panel-2" aria-labelledby="etl-tab-2" data-inactive inert>
-          <p class="text-fg">Gravo a base no banco, de onde o BI lê sempre a versão atual, e confiro se nada se perdeu:</p>
-          <div class="mt-4 grid gap-4 sm:grid-cols-2">
-            <div class="rounded border border-line px-4 py-3">
-              <p class="text-sm text-muted">Pedidos gravados</p>
-              <p class="mt-1 text-2xl font-semibold text-heading tabular-nums"><span data-count={clean.length}>{clean.length}</span> <span class="text-sm font-normal text-emerald-400">✓ todos chegaram</span></p>
-            </div>
-            <div class="rounded border border-line px-4 py-3">
-              <p class="text-sm text-muted">Faturamento total</p>
-              <p class="mt-1 text-2xl font-semibold text-heading tabular-nums"><span data-count="198.33" data-decimals="2" data-prefix="R$ ">R$ 198,33</span> <span class="text-sm font-normal text-emerald-400">✓ bate com o painel</span></p>
-            </div>
-          </div>
-          <details class="mt-5">
-            <summary class="w-fit cursor-pointer text-sm text-muted transition-colors hover:text-heading">Ver o código (Python + SQL)</summary>
-            <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.load}</pre>
-          </details>
-        </div>
-
-        <!-- 4. Visualização -->
-        <div role="tabpanel" id="etl-panel-3" aria-labelledby="etl-tab-3" data-inactive inert>
-          <p class="text-fg">No Power BI, os dados viram indicadores e gráficos que qualquer pessoa entende:</p>
-          <div class="mt-4 grid gap-4 sm:grid-cols-3">
-            {kpis.map((k) => (
-              <div class="rounded border border-line px-4 py-3">
-                <p class="text-sm text-muted">{k.label}</p>
-                <p class="mt-1 text-2xl font-semibold text-heading tabular-nums">
-                  <span data-count={k.value} data-decimals={k.decimals} data-prefix={k.prefix}>{k.prefix}{brl(k.value, k.decimals)}</span>
-                </p>
-              </div>
-            ))}
-          </div>
-          <div class="mt-4 rounded border border-line px-4 py-4">
-            <p class="text-sm text-muted">Faturamento por produto</p>
-            <ul class="mt-3 space-y-2">
-              {byProduct.map((p, i) => (
-                <li class="grid grid-cols-[6.5rem_1fr_4.5rem] items-center gap-3 text-sm">
-                  <span class="text-fg/85">{p.name}</span>
-                  <span class="etl-bar h-2 rounded bg-accent" style={`width: ${(p.value / maxProduct) * 100}%; --bar-delay: ${i * 120}ms`} />
-                  <span class="text-right font-mono text-fg/85">{brl(p.value)}</span>
-                </li>
+    <div class="mt-10 space-y-3" data-etl>
+      <EtlStep index={0} {...pipeline[0]} open>
+        <p class="text-fg">Os pedidos chegam do sistema assim, com erros que atrapalhariam qualquer análise:</p>
+        <div class="mt-4 overflow-x-auto">
+          <table class="w-full text-sm tabular-nums">
+            <thead><tr>{rawCols.map((c) => <th class="border-b border-line px-3 py-2 text-left font-medium text-muted">{c}</th>)}</tr></thead>
+            <tbody>
+              {raw.map((r) => (
+                <tr>{r.row.map((v, ci) => r.bad[ci] ? (
+                  <td tabindex="0" class:list={['cell-tip border-b border-line px-3 py-2 whitespace-nowrap text-red-400', tipSide(ci, rawCols.length)]}>{v}<span class="tip">{r.bad[ci]}</span></td>
+                ) : (
+                  <td class="border-b border-line px-3 py-2 whitespace-nowrap text-fg/85">{v}</td>
+                ))}</tr>
               ))}
-            </ul>
-          </div>
-          <details class="mt-5">
-            <summary class="w-fit cursor-pointer text-sm text-muted transition-colors hover:text-heading">Ver as fórmulas (DAX)</summary>
-            <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.visualize}</pre>
-          </details>
+            </tbody>
+          </table>
         </div>
-      </div>
-
-      <p data-reveal class="mt-6 text-sm text-muted">
-        <span class="text-fg">Git</span> e <span class="text-fg">GitHub</span> versionando todas as etapas.
-      </p>
+        <p class="mt-4 text-sm text-muted"><span class="mr-2 text-red-400">✕</span>Passe o mouse (ou toque) nas células em vermelho para ver cada erro</p>
+        <details class="mt-3">
+          <summary class="w-fit cursor-pointer py-2 text-sm text-muted transition-colors hover:text-heading">Ver o código (Python + SQL)</summary>
+          <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.extract}</pre>
+        </details>
+      </EtlStep>
+      <EtlStep index={1} {...pipeline[1]}>
+        <p class="text-fg">Corrijo os problemas e calculo o faturamento. O resultado é uma base confiável:</p>
+        <div class="mt-4 overflow-x-auto">
+          <table class="w-full text-sm tabular-nums">
+            <thead><tr>{cleanCols.map((c) => <th class="border-b border-line px-3 py-2 text-left font-medium text-muted">{c}</th>)}</tr></thead>
+            <tbody>
+              {clean.map((r, ri) => (
+                <tr>{r.row.map((v, ci) => r.fixed[ci] ? (
+                  <td tabindex="0" style={`--fix-delay: ${ri * 90}ms`} class:list={['cell-tip is-fixed border-b border-line px-3 py-2 whitespace-nowrap text-emerald-400', tipSide(ci, cleanCols.length)]}>{v}<span class="tip">{r.fixed[ci]}</span></td>
+                ) : (
+                  <td class="border-b border-line px-3 py-2 whitespace-nowrap text-fg/85">{v}</td>
+                ))}</tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-4 text-sm text-muted"><span class="mr-2 text-emerald-400">✓</span>Pedido repetido removido · passe o mouse nas células em verde para ver cada correção</p>
+        <details class="mt-3">
+          <summary class="w-fit cursor-pointer py-2 text-sm text-muted transition-colors hover:text-heading">Ver o código (Python)</summary>
+          <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.transform}</pre>
+        </details>
+      </EtlStep>
+      <EtlStep index={2} {...pipeline[2]}>
+        <p class="text-fg">Gravo a base no banco, de onde o BI lê sempre a versão atual, e confiro se nada se perdeu:</p>
+        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+          <div class="rounded border border-line px-4 py-3">
+            <p class="text-sm text-muted">Pedidos gravados</p>
+            <p class="mt-1 text-2xl font-semibold text-heading tabular-nums"><span data-count={clean.length}>{clean.length}</span> <span class="text-sm font-normal text-emerald-400">✓ todos chegaram</span></p>
+          </div>
+          <div class="rounded border border-line px-4 py-3">
+            <p class="text-sm text-muted">Faturamento total</p>
+            <p class="mt-1 text-2xl font-semibold text-heading tabular-nums"><span data-count="198.33" data-decimals="2" data-prefix="R$ ">R$ 198,33</span> <span class="text-sm font-normal text-emerald-400">✓ bate com o painel</span></p>
+          </div>
+        </div>
+        <details class="mt-3">
+          <summary class="w-fit cursor-pointer py-2 text-sm text-muted transition-colors hover:text-heading">Ver o código (Python + SQL)</summary>
+          <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.load}</pre>
+        </details>
+      </EtlStep>
+      <EtlStep index={3} {...pipeline[3]}>
+        <p class="text-fg">No Power BI, os dados viram indicadores e gráficos que qualquer pessoa entende:</p>
+        <div class="mt-4 grid gap-4 sm:grid-cols-3">
+          {kpis.map((k) => (
+            <div class="rounded border border-line px-4 py-3">
+              <p class="text-sm text-muted">{k.label}</p>
+              <p class="mt-1 text-2xl font-semibold text-heading tabular-nums">
+                <span data-count={k.value} data-decimals={k.decimals} data-prefix={k.prefix}>{k.prefix}{brl(k.value, k.decimals)}</span>
+              </p>
+            </div>
+          ))}
+        </div>
+        <div class="mt-4 rounded border border-line px-4 py-4">
+          <p class="text-sm text-muted">Faturamento por produto</p>
+          <ul class="mt-3 space-y-2">
+            {byProduct.map((p, i) => (
+              <li class="grid grid-cols-[6.5rem_1fr_4.5rem] items-center gap-3 text-sm">
+                <span class="text-fg/85">{p.name}</span>
+                <span class="etl-bar h-2 rounded bg-accent" style={`width: ${(p.value / maxProduct) * 100}%; --bar-delay: ${i * 120}ms`} />
+                <span class="text-right font-mono text-fg/85">{brl(p.value)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <details class="mt-3">
+          <summary class="w-fit cursor-pointer py-2 text-sm text-muted transition-colors hover:text-heading">Ver as fórmulas (DAX)</summary>
+          <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.visualize}</pre>
+        </details>
+      </EtlStep>
     </div>
+
+    <p data-reveal class="mt-6 text-sm text-muted">
+      <span class="text-fg">Git</span> e <span class="text-fg">GitHub</span> versionando todas as etapas.
+    </p>
   </div>
 </section>
 
 <style>
-  /* Linha embaixo do card ativo */
-  .etl-progress {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    height: 2px;
-    background: var(--color-accent);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.25s ease;
-  }
-
-  [aria-selected='true'] .etl-progress {
-    transform: scaleX(1);
-  }
-
-  /* Painéis empilhados no mesmo espaço: a área fica com a altura do maior e a página não pula ao trocar */
-  .etl-panels {
-    display: grid;
-  }
-
-  .etl-panels > [role='tabpanel'] {
-    grid-area: 1 / 1;
-    min-width: 0;
-  }
-
-  /* Sem o atributo hidden: o Tailwind força display: none nele e o painel deixaria de ocupar espaço */
-  .etl-panels > [role='tabpanel'][data-inactive] {
-    visibility: hidden;
-  }
-
-  .etl-panels > [role='tabpanel']:not([data-inactive]) {
+  /* Conteúdo do card aparece com um fade ao abrir */
+  :global(.etl-step[open] > .etl-body) {
     animation: etl-fade 0.3s ease;
   }
 
@@ -364,8 +266,8 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
     }
   }
 
-  /* Tratamento: ao abrir o painel, as células corrigidas passam de vermelho a verde */
-  .etl-panels > [role='tabpanel']:not([data-inactive]) .is-fixed {
+  /* Tratamento: ao abrir o card, as células corrigidas passam de vermelho a verde */
+  :global(.etl-step[open]) .is-fixed {
     animation: cell-fix 0.9s ease both;
     animation-delay: var(--fix-delay, 0ms);
   }
@@ -377,8 +279,8 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
     }
   }
 
-  /* Visualização: as barras crescem ao abrir o painel */
-  .etl-panels > [role='tabpanel']:not([data-inactive]) .etl-bar {
+  /* Visualização: as barras crescem ao abrir o card */
+  :global(.etl-step[open]) .etl-bar {
     transform-origin: left;
     animation: bar-grow 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
     animation-delay: var(--bar-delay, 0ms);
@@ -392,13 +294,12 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
 </style>
 
 <script>
-  const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const counting = new WeakMap<HTMLElement, number>();
 
-  // Números do painel contam de 0 até o valor quando ele é aberto
-  const countUp = (panel: HTMLElement) => {
-    if (reduceMotion()) return;
-    panel.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
+  // Números do card contam de 0 até o valor quando ele é aberto
+  const countUp = (card: HTMLElement) => {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    card.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
       const target = Number(el.dataset.count);
       const decimals = Number(el.dataset.decimals ?? 0);
       const prefix = el.dataset.prefix ?? '';
@@ -415,51 +316,13 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
     });
   };
 
-  // Caso de ETL: troca o painel ao clicar em uma etapa
   document.addEventListener('astro:page-load', () => {
-    document.querySelectorAll<HTMLElement>('[data-etl]').forEach((root) => {
-      const tabs = [...root.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
-      let clicked = false;
-
-      const select = (tab: HTMLButtonElement) =>
-        tabs.forEach((t) => {
-          const selected = t === tab;
-          t.setAttribute('aria-selected', String(selected));
-          const panel = root.querySelector<HTMLElement>(`#${t.getAttribute('aria-controls')}`)!;
-          if (selected && panel.hasAttribute('data-inactive')) countUp(panel);
-          panel.toggleAttribute('data-inactive', !selected);
-          panel.inert = !selected;
-          // Painéis dividem o mesmo espaço: código aberto num painel escondido deixaria a área alta e vazia
-          if (!selected) panel.querySelectorAll('details').forEach((d) => (d.open = false));
-        });
-
-      tabs.forEach((tab) =>
-        tab.addEventListener('click', () => {
-          clicked = true;
-          select(tab);
-        }),
-      );
-
-      if (reduceMotion()) return;
-
-      // Na primeira vez que os cards aparecem, passa pelas etapas 2, 3 e 4 e volta à 1,
-      // mostrando que os cards são clicáveis. Um clique interrompe a passagem.
-      const sweep = () =>
-        [...tabs.slice(1), tabs[0]].forEach((tab, step) =>
-          setTimeout(() => !clicked && select(tab), (step + 1) * 1200),
-        );
-
-      const tablist = root.querySelector('[role="tablist"]')!;
-      const io = new IntersectionObserver(
-        ([entry]) => {
-          if (!entry.isIntersecting) return;
-          io.disconnect();
-          // Espera o fade de entrada dos cards terminar
-          setTimeout(() => !clicked && sweep(), 500);
-        },
-        { threshold: 0.6 },
-      );
-      io.observe(tablist);
+    document.querySelectorAll<HTMLDetailsElement>('[data-etl] > .etl-step').forEach((card) => {
+      card.addEventListener('toggle', () => {
+        if (card.open) countUp(card);
+        // Fecha o código aberto, para o card voltar compacto na próxima vez
+        else card.querySelectorAll<HTMLDetailsElement>('.etl-body details').forEach((d) => (d.open = false));
+      });
     });
   });
 </script>

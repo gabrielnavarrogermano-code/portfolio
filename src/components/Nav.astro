@@ -28,16 +28,48 @@ const links = [
       }
       <a
         href="/#contato"
-        class="rounded-full bg-heading px-4 py-2 text-sm font-medium text-bg transition-colors hover:bg-heading/80"
+        class="rounded-full bg-heading px-4 py-2.5 text-sm font-medium text-bg transition-colors hover:bg-heading/80"
       >
         Contato
       </a>
+      <button
+        type="button"
+        id="menu-toggle"
+        aria-label="Abrir menu"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+        class="group inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-heading transition-colors hover:bg-heading/5 sm:hidden"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-5 w-5" aria-hidden="true">
+          <path class="group-aria-expanded:hidden" d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"></path>
+          <path class="hidden group-aria-expanded:block" d="M6 6l12 12M18 6 6 18" stroke-linecap="round"></path>
+        </svg>
+      </button>
     </div>
 
     <div class="pointer-events-none absolute inset-x-8 bottom-0 h-px" aria-hidden="true">
       <div id="read-progress" class="read-progress h-full bg-accent"></div>
     </div>
   </nav>
+
+  <!-- Menu do celular: no desktop os links já aparecem na barra -->
+  <div
+    id="mobile-menu"
+    hidden
+    class="on-black mx-auto mt-2 max-w-5xl rounded-3xl border border-line/80 bg-ink/95 p-2 sm:hidden"
+  >
+    {
+      links.map((link) => (
+        <a
+          href={link.href}
+          data-nav-link={link.href.split('#')[1]}
+          class="block rounded-2xl px-4 py-3 text-muted transition-colors hover:bg-heading/5 hover:text-heading aria-[current=location]:bg-heading/5 aria-[current=location]:text-heading"
+        >
+          {link.label}
+        </a>
+      ))
+    }
+  </div>
 </header>
 
 <script>
@@ -78,6 +110,19 @@ const links = [
     bar = document.getElementById('read-progress');
     measure();
     updateProgress();
+
+    // Menu do celular: abre/fecha no botão e fecha ao escolher um link
+    const toggle = document.getElementById('menu-toggle');
+    const menu = document.getElementById('mobile-menu');
+    if (toggle && menu) {
+      const setOpen = (open: boolean) => {
+        menu.hidden = !open;
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.setAttribute('aria-label', open ? 'Fechar menu' : 'Abrir menu');
+      };
+      toggle.addEventListener('click', () => setOpen(menu.hidden));
+      menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
+    }
 
     observer?.disconnect();
     const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-nav-link]')];

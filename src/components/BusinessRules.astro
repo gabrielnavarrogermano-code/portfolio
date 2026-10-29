@@ -54,7 +54,7 @@ const metrics = [
 ---
 
 <section id="negocio" class="border-y border-line">
-  <div class="mx-auto max-w-5xl px-6 py-24">
+  <div class="mx-auto max-w-5xl px-6 py-16 sm:py-24">
     <div class="grid items-start gap-14 lg:grid-cols-[1fr_1.2fr]">
       <div>
         <SectionTitle
@@ -90,7 +90,7 @@ const metrics = [
                 aria-controls={`metric-panel-${i}`}
                 aria-selected={i === 0 ? 'true' : 'false'}
                 tabindex={i === 0 ? 0 : -1}
-                class="cursor-pointer rounded-full border border-line px-4 py-1.5 text-sm text-muted transition-colors hover:text-heading aria-selected:border-heading aria-selected:bg-heading aria-selected:text-bg"
+                class="cursor-pointer rounded-full border border-line px-4 py-2.5 text-sm text-muted sm:py-1.5 transition-colors hover:text-heading aria-selected:border-heading aria-selected:bg-heading aria-selected:text-bg"
               >
                 {m.name}
               </button>
