@@ -86,12 +86,21 @@ const minutes = Math.max(1, Math.ceil((p.body ?? '').split(/\s+/).length / 200))
     const bar = document.getElementById('progress');
     if (!bar) return;
 
-    // Barra de progresso de leitura
+    // Barra de progresso de leitura (no máximo uma atualização por quadro)
+    let ticking = false;
     const update = () => {
+      ticking = false;
       const max = document.documentElement.scrollHeight - innerHeight;
       bar.style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
     };
-    addEventListener('scroll', update, { passive: true });
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+    addEventListener('scroll', onScroll, { passive: true });
+    // Com o ClientRouter a página não recarrega: sem isso, cada visita somaria mais um listener
+    document.addEventListener('astro:before-swap', () => removeEventListener('scroll', onScroll), { once: true });
     update();
 
     // Destaca no índice a seção que está sendo lida
