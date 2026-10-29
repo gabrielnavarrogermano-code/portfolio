@@ -1,0 +1,180 @@
+---
+import SectionTitle from './SectionTitle.astro';
+
+// Como contribuo para o negócio: da pergunta de quem decide até a regra aplicada na análise
+const steps = [
+  {
+    title: 'Entender a pergunta',
+    text: 'Começo pelo que a área precisa decidir, não pelo dado que está disponível.',
+  },
+  {
+    title: 'Definir a métrica junto com a área',
+    text: 'Uma métrica só é útil se todo mundo calcula do mesmo jeito. Proponho o cálculo e valido com quem vai usar.',
+  },
+  {
+    title: 'Colocar as regras na análise',
+    text: 'Cancelamentos, devoluções e outras exceções do negócio entram no tratamento dos dados e ficam documentadas.',
+  },
+];
+
+// Fichas de métrica do caso da distribuidora (o mesmo de "Como eu trabalho")
+const metrics = [
+  {
+    name: 'Faturamento líquido',
+    question: 'Quanto a empresa realmente vendeu no mês?',
+    formula: 'Σ (quantidade × preço) − devoluções',
+    rules: [
+      'Pedidos cancelados não entram',
+      'Bonificações (produto enviado sem custo) ficam fora do faturamento',
+      'Devolução é descontada no mês da venda original',
+      'Preço ausente assume o preço de tabela do produto',
+    ],
+  },
+  {
+    name: 'Ticket médio',
+    question: 'Quanto vale, em média, cada pedido?',
+    formula: 'Faturamento líquido ÷ pedidos distintos',
+    rules: [
+      'Pedido repetido na base conta uma única vez',
+      'Pedidos internos e de teste são excluídos',
+      'Comparação sempre com o mesmo mês do ano anterior, por causa da sazonalidade',
+    ],
+  },
+  {
+    name: 'Clientes ativos',
+    question: 'Quantos clientes continuam comprando?',
+    formula: 'Clientes com ao menos 1 pedido nos últimos 90 dias',
+    rules: [
+      'Mesmo cliente escrito de jeitos diferentes é unificado pelo CNPJ',
+      'Janela de 90 dias definida com a área comercial',
+      'Cliente que só fez devolução no período não conta como ativo',
+    ],
+  },
+];
+---
+
+<section id="negocio" class="border-y border-line">
+  <div class="mx-auto max-w-5xl px-6 py-24">
+    <div class="grid items-start gap-14 lg:grid-cols-[1fr_1.2fr]">
+      <div>
+        <SectionTitle
+          title="Inteligência de negócios"
+          subtitle="Número só vira decisão quando todo mundo concorda com o que ele significa."
+        />
+        <ol class="mt-10 space-y-6">
+          {
+            steps.map((s, i) => (
+              <li data-reveal style={`--delay: ${i * 100}ms`} class="flex gap-4">
+                <span class="flex h-8 w-8 flex-none items-center justify-center rounded-full border border-line text-sm text-heading">
+                  {i + 1}
+                </span>
+                <div>
+                  <p class="font-semibold text-heading">{s.title}</p>
+                  <p class="mt-1 text-sm leading-relaxed text-muted">{s.text}</p>
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+
+      <div data-reveal style="--delay: 150ms" data-metrics>
+        <p class="text-sm text-muted">Ficha de métrica <span class="text-accent">· escolha uma</span></p>
+        <div role="tablist" aria-label="Métricas" class="mt-4 flex flex-wrap gap-2">
+          {
+            metrics.map((m, i) => (
+              <button
+                type="button"
+                role="tab"
+                id={`metric-tab-${i}`}
+                aria-controls={`metric-panel-${i}`}
+                aria-selected={i === 0 ? 'true' : 'false'}
+                tabindex={i === 0 ? 0 : -1}
+                class="cursor-pointer rounded-full border border-line px-4 py-1.5 text-sm text-muted transition-colors hover:text-heading aria-selected:border-heading aria-selected:bg-heading aria-selected:text-bg"
+              >
+                {m.name}
+              </button>
+            ))
+          }
+        </div>
+
+        <div class="metric-panels mt-5">
+          {
+            metrics.map((m, i) => (
+              <div
+                role="tabpanel"
+                id={`metric-panel-${i}`}
+                aria-labelledby={`metric-tab-${i}`}
+                hidden={i !== 0}
+                class="on-light rounded-2xl bg-bg p-6"
+              >
+                <p class="text-[11px] tracking-wide text-muted uppercase">Pergunta de negócio</p>
+                <p class="mt-1 font-display text-xl font-medium text-heading">{m.question}</p>
+
+                <p class="mt-5 text-[11px] tracking-wide text-muted uppercase">Cálculo</p>
+                <p class="mt-1 font-mono text-sm text-heading">{m.formula}</p>
+
+                <p class="mt-5 text-[11px] tracking-wide text-muted uppercase">Regras de negócio</p>
+                <ul class="mt-2 space-y-2">
+                  {m.rules.map((r) => (
+                    <li class="flex gap-2.5 text-sm leading-relaxed text-fg">
+                      <span class="mt-2 h-1.5 w-1.5 flex-none rounded-full bg-accent" />
+                      {r}
+                    </li>
+                  ))}
+                </ul>
+
+                <p class="mt-5 text-right text-[11px] text-muted/70">exemplo fictício</p>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Fichas empilhadas no mesmo espaço: a área fica com a altura da maior e a página não pula ao trocar */
+  .metric-panels {
+    display: grid;
+  }
+
+  .metric-panels > [role='tabpanel'] {
+    grid-area: 1 / 1;
+  }
+
+  .metric-panels > [role='tabpanel'][hidden] {
+    display: block;
+    visibility: hidden;
+  }
+</style>
+
+<script>
+  // Fichas de métrica: troca a ficha ao clicar (ou usar as setas) em uma métrica
+  document.addEventListener('astro:page-load', () => {
+    const root = document.querySelector<HTMLElement>('[data-metrics]');
+    if (!root) return;
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+
+    const select = (index: number) =>
+      tabs.forEach((tab, i) => {
+        const selected = i === index;
+        tab.setAttribute('aria-selected', String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+        document.getElementById(tab.getAttribute('aria-controls')!)!.hidden = !selected;
+      });
+
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => select(i));
+      tab.addEventListener('keydown', (ev) => {
+        const step = { ArrowRight: 1, ArrowLeft: -1 }[ev.key];
+        if (!step) return;
+        ev.preventDefault();
+        const next = (i + step + tabs.length) % tabs.length;
+        select(next);
+        tabs[next].focus();
+      });
+    });
+  });
+</script>
