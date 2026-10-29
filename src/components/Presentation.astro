@@ -1,12 +1,13 @@
 ---
 import SectionTitle from './SectionTitle.astro';
 
+// Atividades do estágio, curtas o bastante para virar tags
 const experience = [
-  'Suporte à infraestrutura de redes',
-  'Documentação de processos internos',
-  'Diagnóstico e correção de problemas de hardware',
-  'Atendimento a chamados dos colaboradores',
-  'Criação de contas e gestão de permissões de acesso',
+  'Infraestrutura de redes',
+  'Documentação de processos',
+  'Diagnóstico e reparo de hardware',
+  'Atendimento a chamados',
+  'Contas e permissões de acesso',
 ];
 
 const tools = ['Kanban', 'SharePoint', 'Microsoft 365 Admin', 'Entra ID'];
@@ -14,6 +15,14 @@ const tools = ['Kanban', 'SharePoint', 'Microsoft 365 Admin', 'Entra ID'];
 // Progresso do curso: atualize o semestre a cada período
 const semester = 2;
 const totalSemesters = 8;
+
+// Card "gabriel.py": a apresentação escrita como um dicionário Python
+const profile: [string, string | string[]][] = [
+  ['curso', 'Engenharia de Software'],
+  ['semestre', `${semester}º de ${totalSemesters}`],
+  ['foco', ['Inteligência de Dados', 'Análise de Dados']],
+  ['busca', ['Estágio em Dados', 'Júnior em Dados']],
+];
 ---
 
 <section id="apresentacao" class="mx-auto max-w-5xl px-6 py-24">
@@ -21,17 +30,29 @@ const totalSemesters = 8;
     <div class="lg:col-span-2">
       <div class="lg:sticky lg:top-28">
         <SectionTitle title="Prazer, Gabriel" />
-        <p data-reveal style="--delay: 100ms" class="mt-6 text-lg leading-relaxed text-muted">
-          Estou no 2º semestre de Engenharia de Software, direcionando minha formação para{' '}
-          <span class="text-heading"> Inteligência e Análise de Dados</span>. Gosto de partir de perguntas reais do negócio
-          e chegar a respostas confiáveis.
-        </p>
-        <div data-reveal style="--delay: 200ms" class="mt-8">
-          <p class="text-sm text-muted">Disponível para</p>
-          <div class="mt-3 flex flex-wrap gap-2">
-            <span class="rounded-full border border-accent/40 px-4 py-1.5 text-sm text-heading">Estágio em Dados</span>
-            <span class="rounded-full border border-accent/40 px-4 py-1.5 text-sm text-heading">Júnior em Dados</span>
+
+        <div data-reveal style="--delay: 100ms" class="mt-8 overflow-hidden rounded-2xl border border-line bg-white/[0.03]">
+          <div class="flex items-center gap-1.5 border-b border-line px-4 py-3">
+            <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
+            <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
+            <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
+            <span class="ml-2 font-mono text-xs text-muted">gabriel.py</span>
           </div>
+          <pre class="overflow-x-auto p-5 font-mono text-[13px] leading-relaxed text-muted"><code><span class="text-muted/70"># do negócio real a respostas confiáveis</span>
+<span class="text-heading">gabriel</span> = {'{'}
+{
+  profile.map(([key, value]) => (
+    <Fragment>
+      {'  '}<span class="text-fg">"{key}"</span>: {typeof value === 'string' ? (
+        <Fragment><span class="text-heading">"{value}"</span>,{'\n'}</Fragment>
+      ) : (
+        <Fragment>[{'\n'}{value.map((v) => (
+          <Fragment>{'    '}<span class="text-heading">"{v}"</span>,{'\n'}</Fragment>
+        ))}{'  '}],{'\n'}</Fragment>
+      )}
+    </Fragment>
+  ))
+}{'}'}</code></pre>
         </div>
       </div>
     </div>
@@ -60,17 +81,20 @@ const totalSemesters = 8;
         <p class="text-sm text-accent">Experiência atual</p>
         <h3 class="mt-2 text-xl font-semibold text-heading">Estagiário de TI</h3>
         <p class="mt-1 text-muted">Hebe's Life Science · Indústria farmacêutica</p>
-        <ul class="mt-5 grid gap-2.5 sm:grid-cols-2">
+        <ul class="mt-5 flex flex-wrap gap-2">
           {
             experience.map((item) => (
-              <li class="flex gap-2.5 text-sm leading-relaxed text-fg/85">
-                <span class="mt-2 h-1.5 w-1.5 flex-none rounded-full bg-accent" />
-                {item}
-              </li>
+              <li class="rounded-full border border-line px-3.5 py-1.5 text-sm text-fg/85">{item}</li>
             ))
           }
         </ul>
-        <p class="mt-6 text-sm text-muted">{tools.join(' · ')}</p>
+        <ul class="mt-4 flex flex-wrap gap-2" aria-label="Ferramentas">
+          {
+            tools.map((t) => (
+              <li class="rounded-md bg-white/[0.06] px-2.5 py-1 font-mono text-xs text-muted">{t}</li>
+            ))
+          }
+        </ul>
       </article>
     </div>
   </div>

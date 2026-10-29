@@ -28,44 +28,49 @@ const pipeline = [
 
 // Caso fictício: vendas de uma distribuidora passando pelas 4 etapas.
 // A origem guarda os pedidos importados de planilhas com colunas em texto, por isso os formatos misturados.
+// bad: coluna com problema → o motivo, mostrado ao passar o mouse na célula
 const rawCols = ['Pedido', 'Data', 'Cliente', 'Produto', 'Qtd', 'Preço', 'UF'];
-const raw = [
-  { row: ['1001', '2026-09-02', 'Mercado Sol', 'Café 500g', '2', '18.90', 'SP'], bad: [] },
-  { row: ['1002', '02/09/2026', 'mercado sol', 'Café 500g', '1', '18,90', 'sp'], bad: [1, 2, 5, 6] },
-  { row: ['1003', '2026-09-03', 'Padaria Lua', 'Açúcar 1kg', '5', 'NULL', 'RJ'], bad: [5] },
-  { row: ['1004', '2026-09-04', 'Empório Vale', 'Leite 1L', '12', '4.79', 'MG'], bad: [] },
-  { row: ['1004', '2026-09-04', 'Empório Vale', 'Leite 1L', '12', '4.79', 'MG'], bad: [0, 1, 2, 3, 4, 5, 6] },
-  { row: ['1005', '2026-09-05', 'Padaria Lua', 'Café 500g', '3', '18.90', 'RJ'], bad: [] },
+const repeated = 'Pedido repetido';
+const raw: { row: string[]; bad: Record<number, string> }[] = [
+  { row: ['1001', '2026-09-02', 'Mercado Sol', 'Café 500g', '2', '18.90', 'SP'], bad: {} },
+  {
+    row: ['1002', '02/09/2026', 'mercado sol', 'Café 500g', '1', '18,90', 'sp'],
+    bad: { 1: 'Data em outro formato', 2: 'Mesmo cliente, escrito de outro jeito', 5: 'Preço com vírgula', 6: 'Estado em minúsculas' },
+  },
+  { row: ['1003', '2026-09-03', 'Padaria Lua', 'Açúcar 1kg', '5', 'NULL', 'RJ'], bad: { 5: 'Pedido sem preço' } },
+  { row: ['1004', '2026-09-04', 'Empório Vale', 'Leite 1L', '12', '4.79', 'MG'], bad: {} },
+  {
+    row: ['1004', '2026-09-04', 'Empório Vale', 'Leite 1L', '12', '4.79', 'MG'],
+    bad: Object.fromEntries(rawCols.map((_, i) => [i, repeated])),
+  },
+  { row: ['1005', '2026-09-05', 'Padaria Lua', 'Café 500g', '3', '18.90', 'RJ'], bad: {} },
 ];
 
-// Problemas da base bruta e o que o tratamento faz com cada um, em linguagem de negócio
-const problems = [
-  'O mesmo cliente escrito de dois jeitos',
-  'Datas e preços em formatos diferentes',
-  'Um pedido sem preço',
-  'Um pedido repetido',
-];
-const fixes = [
-  'Pedido repetido removido',
-  'Datas, nomes e estados padronizados',
-  'Preço que faltava preenchido pela tabela de preços',
-  'Faturamento de cada pedido calculado (quantidade × preço)',
-];
-
-// fixed: colunas corrigidas no tratamento (faturamento, índice 7, é sempre calculado)
+// fixed: coluna corrigida no tratamento → o que foi feito (faturamento, índice 7, é sempre calculado)
 const cleanCols = ['Pedido', 'Data', 'Cliente', 'Produto', 'Qtd', 'Preço', 'UF', 'Faturamento'];
-const clean = [
-  { row: ['1001', '2026-09-02', 'Mercado Sol', 'Café 500g', '2', '18.90', 'SP', '37.80'], fixed: [7] },
-  { row: ['1002', '2026-09-02', 'Mercado Sol', 'Café 500g', '1', '18.90', 'SP', '18.90'], fixed: [1, 2, 5, 6, 7] },
-  { row: ['1003', '2026-09-03', 'Padaria Lua', 'Açúcar 1kg', '5', '5.49', 'RJ', '27.45'], fixed: [5, 7] },
-  { row: ['1004', '2026-09-04', 'Empório Vale', 'Leite 1L', '12', '4.79', 'MG', '57.48'], fixed: [7] },
-  { row: ['1005', '2026-09-05', 'Padaria Lua', 'Café 500g', '3', '18.90', 'RJ', '56.70'], fixed: [7] },
+const clean: { row: string[]; fixed: Record<number, string> }[] = [
+  { row: ['1001', '2026-09-02', 'Mercado Sol', 'Café 500g', '2', '18.90', 'SP', '37.80'], fixed: {} },
+  {
+    row: ['1002', '2026-09-02', 'Mercado Sol', 'Café 500g', '1', '18.90', 'SP', '18.90'],
+    fixed: { 1: 'Data padronizada', 2: 'Nome unificado', 5: 'Preço convertido em número', 6: 'Estado padronizado' },
+  },
+  {
+    row: ['1003', '2026-09-03', 'Padaria Lua', 'Açúcar 1kg', '5', '5.49', 'RJ', '27.45'],
+    fixed: { 5: 'Preenchido pela tabela de preços' },
+  },
+  { row: ['1004', '2026-09-04', 'Empório Vale', 'Leite 1L', '12', '4.79', 'MG', '57.48'], fixed: {} },
+  { row: ['1005', '2026-09-05', 'Padaria Lua', 'Café 500g', '3', '18.90', 'RJ', '56.70'], fixed: {} },
 ];
+for (const r of clean) r.fixed[7] = `Calculado: ${r.row[4]} × ${r.row[5]}`;
 
+// Dica fica alinhada à direita nas últimas colunas, para não sair da tabela
+const tipSide = (col: number, total: number) => (col >= total - 3 ? 'tip-end' : '');
+
+// value é número para a contagem animada; o texto inicial já vem formatado (funciona sem JS)
 const kpis = [
-  { label: 'Faturamento', value: 'R$ 198,33' },
-  { label: 'Pedidos', value: '5' },
-  { label: 'Ticket médio', value: 'R$ 39,67' },
+  { label: 'Faturamento', value: 198.33, decimals: 2, prefix: 'R$ ' },
+  { label: 'Pedidos', value: 5, decimals: 0, prefix: '' },
+  { label: 'Ticket médio', value: 39.67, decimals: 2, prefix: 'R$ ' },
 ];
 const byProduct = [
   { name: 'Café 500g', value: 113.4 },
@@ -73,7 +78,8 @@ const byProduct = [
   { name: 'Açúcar 1kg', value: 27.45 },
 ];
 const maxProduct = Math.max(...byProduct.map((p) => p.value));
-const brl = (n: number) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+const brl = (n: number, decimals = 2) =>
+  n.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 
 const code = {
   extract: `df = pd.read_sql("""
@@ -163,20 +169,22 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
       <div class="etl-panels mt-8">
         <!-- 1. Extração -->
         <div role="tabpanel" id="etl-panel-0" aria-labelledby="etl-tab-0">
-          <p class="text-fg">Busco os pedidos no sistema da empresa. Eles chegam assim, com erros que atrapalhariam qualquer análise:</p>
+          <p class="text-fg">Os pedidos chegam do sistema assim, com erros que atrapalhariam qualquer análise:</p>
           <div class="mt-4 overflow-x-auto">
             <table class="w-full text-sm tabular-nums">
               <thead><tr>{rawCols.map((c) => <th class="border-b border-line px-3 py-2 text-left font-medium text-muted">{c}</th>)}</tr></thead>
               <tbody>
                 {raw.map((r) => (
-                  <tr>{r.row.map((v, ci) => <td class:list={['border-b border-line px-3 py-2 whitespace-nowrap', r.bad.includes(ci) ? 'text-red-400' : 'text-fg/85']}>{v}</td>)}</tr>
+                  <tr>{r.row.map((v, ci) => r.bad[ci] ? (
+                    <td tabindex="0" class:list={['cell-tip border-b border-line px-3 py-2 whitespace-nowrap text-red-400', tipSide(ci, rawCols.length)]}>{v}<span class="tip">{r.bad[ci]}</span></td>
+                  ) : (
+                    <td class="border-b border-line px-3 py-2 whitespace-nowrap text-fg/85">{v}</td>
+                  ))}</tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <ul class="mt-4 grid gap-x-6 gap-y-1 text-sm text-muted sm:grid-cols-2">
-            {problems.map((p) => <li><span class="mr-2 text-red-400">✕</span>{p}</li>)}
-          </ul>
+          <p class="mt-4 text-sm text-muted"><span class="mr-2 text-red-400">✕</span>Passe o mouse (ou toque) nas células em vermelho para ver cada erro</p>
           <details class="mt-5">
             <summary class="w-fit cursor-pointer text-sm text-muted transition-colors hover:text-heading">Ver o código (Python + SQL)</summary>
             <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.extract}</pre>
@@ -185,20 +193,22 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
 
         <!-- 2. Tratamento -->
         <div role="tabpanel" id="etl-panel-1" aria-labelledby="etl-tab-1" data-inactive inert>
-          <p class="text-fg">Corrijo os problemas e calculo o faturamento de cada pedido. O resultado é uma base confiável:</p>
+          <p class="text-fg">Corrijo os problemas e calculo o faturamento. O resultado é uma base confiável:</p>
           <div class="mt-4 overflow-x-auto">
             <table class="w-full text-sm tabular-nums">
               <thead><tr>{cleanCols.map((c) => <th class="border-b border-line px-3 py-2 text-left font-medium text-muted">{c}</th>)}</tr></thead>
               <tbody>
-                {clean.map((r) => (
-                  <tr>{r.row.map((v, ci) => <td class:list={['border-b border-line px-3 py-2 whitespace-nowrap', r.fixed.includes(ci) ? 'text-emerald-400' : 'text-fg/85']}>{v}</td>)}</tr>
+                {clean.map((r, ri) => (
+                  <tr>{r.row.map((v, ci) => r.fixed[ci] ? (
+                    <td tabindex="0" style={`--fix-delay: ${ri * 90}ms`} class:list={['cell-tip is-fixed border-b border-line px-3 py-2 whitespace-nowrap text-emerald-400', tipSide(ci, cleanCols.length)]}>{v}<span class="tip">{r.fixed[ci]}</span></td>
+                  ) : (
+                    <td class="border-b border-line px-3 py-2 whitespace-nowrap text-fg/85">{v}</td>
+                  ))}</tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <ul class="mt-4 grid gap-x-6 gap-y-1 text-sm text-muted sm:grid-cols-2">
-            {fixes.map((f) => <li><span class="mr-2 text-emerald-400">✓</span>{f}</li>)}
-          </ul>
+          <p class="mt-4 text-sm text-muted"><span class="mr-2 text-emerald-400">✓</span>Pedido repetido removido · passe o mouse nas células em verde para ver cada correção</p>
           <details class="mt-5">
             <summary class="w-fit cursor-pointer text-sm text-muted transition-colors hover:text-heading">Ver o código (Python)</summary>
             <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.transform}</pre>
@@ -207,15 +217,15 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
 
         <!-- 3. Armazenamento -->
         <div role="tabpanel" id="etl-panel-2" aria-labelledby="etl-tab-2" data-inactive inert>
-          <p class="text-fg">Guardo a base tratada em um banco de dados, de onde o BI sempre lê a versão mais atual. Antes de liberar, confiro se nada se perdeu no caminho:</p>
+          <p class="text-fg">Gravo a base no banco, de onde o BI lê sempre a versão atual, e confiro se nada se perdeu:</p>
           <div class="mt-4 grid gap-4 sm:grid-cols-2">
             <div class="rounded border border-line px-4 py-3">
               <p class="text-sm text-muted">Pedidos gravados</p>
-              <p class="mt-1 text-2xl font-semibold text-heading">{clean.length} <span class="text-sm font-normal text-emerald-400">✓ todos chegaram</span></p>
+              <p class="mt-1 text-2xl font-semibold text-heading tabular-nums"><span data-count={clean.length}>{clean.length}</span> <span class="text-sm font-normal text-emerald-400">✓ todos chegaram</span></p>
             </div>
             <div class="rounded border border-line px-4 py-3">
               <p class="text-sm text-muted">Faturamento total</p>
-              <p class="mt-1 text-2xl font-semibold text-heading">R$ 198,33 <span class="text-sm font-normal text-emerald-400">✓ bate com o painel</span></p>
+              <p class="mt-1 text-2xl font-semibold text-heading tabular-nums"><span data-count="198.33" data-decimals="2" data-prefix="R$ ">R$ 198,33</span> <span class="text-sm font-normal text-emerald-400">✓ bate com o painel</span></p>
             </div>
           </div>
           <details class="mt-5">
@@ -231,17 +241,19 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
             {kpis.map((k) => (
               <div class="rounded border border-line px-4 py-3">
                 <p class="text-sm text-muted">{k.label}</p>
-                <p class="mt-1 text-2xl font-semibold text-heading">{k.value}</p>
+                <p class="mt-1 text-2xl font-semibold text-heading tabular-nums">
+                  <span data-count={k.value} data-decimals={k.decimals} data-prefix={k.prefix}>{k.prefix}{brl(k.value, k.decimals)}</span>
+                </p>
               </div>
             ))}
           </div>
           <div class="mt-4 rounded border border-line px-4 py-4">
             <p class="text-sm text-muted">Faturamento por produto</p>
             <ul class="mt-3 space-y-2">
-              {byProduct.map((p) => (
+              {byProduct.map((p, i) => (
                 <li class="grid grid-cols-[6.5rem_1fr_4.5rem] items-center gap-3 text-sm">
                   <span class="text-fg/85">{p.name}</span>
-                  <span class="h-2 rounded bg-accent" style={`width: ${(p.value / maxProduct) * 100}%`} />
+                  <span class="etl-bar h-2 rounded bg-accent" style={`width: ${(p.value / maxProduct) * 100}%; --bar-delay: ${i * 120}ms`} />
                   <span class="text-right font-mono text-fg/85">{brl(p.value)}</span>
                 </li>
               ))}
@@ -303,9 +315,106 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
       opacity: 0;
     }
   }
+
+  /* Dica da célula: aparece acima dela ao passar o mouse, focar ou tocar */
+  .cell-tip {
+    position: relative;
+    cursor: help;
+    outline: none;
+  }
+
+  .cell-tip:focus-visible {
+    box-shadow: inset 0 0 0 1px currentColor;
+  }
+
+  .tip {
+    position: absolute;
+    bottom: calc(100% - 4px);
+    left: 0.5rem;
+    z-index: 10;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    background: #ffffff;
+    color: #0a0a0b;
+    font-size: 12px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(4px);
+    transition:
+      opacity 0.15s ease,
+      transform 0.15s ease;
+  }
+
+  .tip-end .tip {
+    left: auto;
+    right: 0.5rem;
+  }
+
+  .cell-tip:hover .tip,
+  .cell-tip:focus .tip {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Em telas de toque, o cursor "pointer" faz o toque ativar o :hover */
+  @media (hover: none) {
+    .cell-tip {
+      cursor: pointer;
+    }
+  }
+
+  /* Tratamento: ao abrir o painel, as células corrigidas passam de vermelho a verde */
+  .etl-panels > [role='tabpanel']:not([data-inactive]) .is-fixed {
+    animation: cell-fix 0.9s ease both;
+    animation-delay: var(--fix-delay, 0ms);
+  }
+
+  @keyframes cell-fix {
+    0%,
+    35% {
+      color: var(--color-red-400);
+    }
+  }
+
+  /* Visualização: as barras crescem ao abrir o painel */
+  .etl-panels > [role='tabpanel']:not([data-inactive]) .etl-bar {
+    transform-origin: left;
+    animation: bar-grow 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: var(--bar-delay, 0ms);
+  }
+
+  @keyframes bar-grow {
+    from {
+      transform: scaleX(0);
+    }
+  }
 </style>
 
 <script>
+  const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const counting = new WeakMap<HTMLElement, number>();
+
+  // Números do painel contam de 0 até o valor quando ele é aberto
+  const countUp = (panel: HTMLElement) => {
+    if (reduceMotion()) return;
+    panel.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
+      const target = Number(el.dataset.count);
+      const decimals = Number(el.dataset.decimals ?? 0);
+      const prefix = el.dataset.prefix ?? '';
+      const format = (n: number) =>
+        prefix + n.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+      const start = performance.now();
+      const frame = (now: number) => {
+        const t = Math.min((now - start) / 900, 1);
+        el.textContent = format(target * (1 - (1 - t) ** 3));
+        if (t < 1) counting.set(el, requestAnimationFrame(frame));
+      };
+      cancelAnimationFrame(counting.get(el) ?? 0);
+      counting.set(el, requestAnimationFrame(frame));
+    });
+  };
+
   // Caso de ETL: troca o painel ao clicar em uma etapa
   document.addEventListener('astro:page-load', () => {
     document.querySelectorAll<HTMLElement>('[data-etl]').forEach((root) => {
@@ -317,6 +426,7 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
           const selected = t === tab;
           t.setAttribute('aria-selected', String(selected));
           const panel = root.querySelector<HTMLElement>(`#${t.getAttribute('aria-controls')}`)!;
+          if (selected && panel.hasAttribute('data-inactive')) countUp(panel);
           panel.toggleAttribute('data-inactive', !selected);
           panel.inert = !selected;
           // Painéis dividem o mesmo espaço: código aberto num painel escondido deixaria a área alta e vazia
@@ -330,7 +440,7 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
         }),
       );
 
-      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (reduceMotion()) return;
 
       // Na primeira vez que os cards aparecem, passa pelas etapas 2, 3 e 4 e volta à 1,
       // mostrando que os cards são clicáveis. Um clique interrompe a passagem.
