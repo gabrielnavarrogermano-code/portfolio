@@ -184,7 +184,7 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
         </div>
 
         <!-- 2. Tratamento -->
-        <div role="tabpanel" id="etl-panel-1" aria-labelledby="etl-tab-1" hidden>
+        <div role="tabpanel" id="etl-panel-1" aria-labelledby="etl-tab-1" data-inactive inert>
           <p class="text-fg">Corrijo os problemas e calculo o faturamento de cada pedido. O resultado é uma base confiável:</p>
           <div class="mt-4 overflow-x-auto">
             <table class="w-full text-sm tabular-nums">
@@ -206,7 +206,7 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
         </div>
 
         <!-- 3. Armazenamento -->
-        <div role="tabpanel" id="etl-panel-2" aria-labelledby="etl-tab-2" hidden>
+        <div role="tabpanel" id="etl-panel-2" aria-labelledby="etl-tab-2" data-inactive inert>
           <p class="text-fg">Guardo a base tratada em um banco de dados, de onde o BI sempre lê a versão mais atual. Antes de liberar, confiro se nada se perdeu no caminho:</p>
           <div class="mt-4 grid gap-4 sm:grid-cols-2">
             <div class="rounded border border-line px-4 py-3">
@@ -225,7 +225,7 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
         </div>
 
         <!-- 4. Visualização -->
-        <div role="tabpanel" id="etl-panel-3" aria-labelledby="etl-tab-3" hidden>
+        <div role="tabpanel" id="etl-panel-3" aria-labelledby="etl-tab-3" data-inactive inert>
           <p class="text-fg">No Power BI, os dados viram indicadores e gráficos que qualquer pessoa entende:</p>
           <div class="mt-4 grid gap-4 sm:grid-cols-3">
             {kpis.map((k) => (
@@ -289,12 +289,12 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
     min-width: 0;
   }
 
-  .etl-panels > [role='tabpanel'][hidden] {
-    display: block;
+  /* Sem o atributo hidden: o Tailwind força display: none nele e o painel deixaria de ocupar espaço */
+  .etl-panels > [role='tabpanel'][data-inactive] {
     visibility: hidden;
   }
 
-  .etl-panels > [role='tabpanel']:not([hidden]) {
+  .etl-panels > [role='tabpanel']:not([data-inactive]) {
     animation: etl-fade 0.3s ease;
   }
 
@@ -317,7 +317,8 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
           const selected = t === tab;
           t.setAttribute('aria-selected', String(selected));
           const panel = root.querySelector<HTMLElement>(`#${t.getAttribute('aria-controls')}`)!;
-          panel.hidden = !selected;
+          panel.toggleAttribute('data-inactive', !selected);
+          panel.inert = !selected;
           // Painéis dividem o mesmo espaço: código aberto num painel escondido deixaria a área alta e vazia
           if (!selected) panel.querySelectorAll('details').forEach((d) => (d.open = false));
         });
