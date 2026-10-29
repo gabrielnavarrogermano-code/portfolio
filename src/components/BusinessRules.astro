@@ -98,15 +98,16 @@ const metrics = [
           }
         </div>
 
-        <div class="metric-panels mt-5">
+        <div class="on-light mt-5 rounded-2xl bg-bg p-6">
+          <div class="metric-panels">
           {
             metrics.map((m, i) => (
               <div
                 role="tabpanel"
                 id={`metric-panel-${i}`}
                 aria-labelledby={`metric-tab-${i}`}
-                hidden={i !== 0}
-                class="on-light rounded-2xl bg-bg p-6"
+                data-inactive={i !== 0 ? '' : undefined}
+                inert={i !== 0}
               >
                 <p class="text-[11px] tracking-wide text-muted uppercase">Pergunta de negócio</p>
                 <p class="mt-1 font-display text-xl font-medium text-heading">{m.question}</p>
@@ -123,11 +124,12 @@ const metrics = [
                     </li>
                   ))}
                 </ul>
-
-                <p class="mt-5 text-right text-[11px] text-muted/70">exemplo fictício</p>
               </div>
             ))
           }
+          </div>
+
+          <p class="mt-5 text-right text-[11px] text-muted/70">exemplo fictício</p>
         </div>
       </div>
     </div>
@@ -144,9 +146,29 @@ const metrics = [
     grid-area: 1 / 1;
   }
 
-  .metric-panels > [role='tabpanel'][hidden] {
-    display: block;
+  /* Sem o atributo hidden: o Tailwind força display: none nele e a ficha deixaria de ocupar espaço */
+  .metric-panels > [role='tabpanel'][data-inactive] {
     visibility: hidden;
+  }
+
+  /* Troca em duas etapas: a descrição atual some rápido e a nova entra subindo de leve */
+  .metric-panels > [role='tabpanel']:not([data-inactive]) {
+    animation: metric-in 0.45s ease-out;
+  }
+
+  .metric-panels > [role='tabpanel'].is-leaving {
+    opacity: 0;
+    transform: translateY(-4px);
+    transition:
+      opacity 0.3s ease-in,
+      transform 0.3s ease-in;
+  }
+
+  @keyframes metric-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
   }
 </style>
 
@@ -156,25 +178,70 @@ const metrics = [
     const root = document.querySelector<HTMLElement>('[data-metrics]');
     if (!root) return;
     const tabs = [...root.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    let clicked = false;
 
-    const select = (index: number) =>
+    const panels = tabs.map((tab) => document.getElementById(tab.getAttribute('aria-controls')!)!);
+    let swapTimer: number | undefined;
+
+    // O botão muda na hora; a descrição atual some e só então a nova aparece
+    const select = (index: number) => {
       tabs.forEach((tab, i) => {
-        const selected = i === index;
-        tab.setAttribute('aria-selected', String(selected));
-        tab.tabIndex = selected ? 0 : -1;
-        document.getElementById(tab.getAttribute('aria-controls')!)!.hidden = !selected;
+        tab.setAttribute('aria-selected', String(i === index));
+        tab.tabIndex = i === index ? 0 : -1;
       });
 
+      const next = panels[index];
+      const current = panels.find((p) => !p.hasAttribute('data-inactive'));
+      clearTimeout(swapTimer);
+      if (current === next) {
+        next.classList.remove('is-leaving');
+        return;
+      }
+
+      current?.classList.add('is-leaving');
+      swapTimer = window.setTimeout(() => {
+        panels.forEach((p) => {
+          p.toggleAttribute('data-inactive', p !== next);
+          p.inert = p !== next;
+          p.classList.remove('is-leaving');
+        });
+      }, 300);
+    };
+
     tabs.forEach((tab, i) => {
-      tab.addEventListener('click', () => select(i));
+      tab.addEventListener('click', () => {
+        clicked = true;
+        select(i);
+      });
       tab.addEventListener('keydown', (ev) => {
         const step = { ArrowRight: 1, ArrowLeft: -1 }[ev.key];
         if (!step) return;
         ev.preventDefault();
+        clicked = true;
         const next = (i + step + tabs.length) % tabs.length;
         select(next);
         tabs[next].focus();
       });
     });
+
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    // Na primeira vez que as fichas aparecem, passa pelas métricas 2 e 3 e volta à 1,
+    // mostrando que são clicáveis. Um clique interrompe a passagem.
+    const sweep = () =>
+      [...tabs.keys()].slice(1).concat(0).forEach((index, step) =>
+        setTimeout(() => !clicked && select(index), (step + 1) * 1200),
+      );
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        io.disconnect();
+        // Espera o fade de entrada da ficha terminar
+        setTimeout(() => !clicked && sweep(), 500);
+      },
+      { threshold: 0.6 },
+    );
+    io.observe(root);
   });
 </script>

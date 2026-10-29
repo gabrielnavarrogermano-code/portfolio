@@ -10,6 +10,10 @@ const experience = [
 ];
 
 const tools = ['Kanban', 'SharePoint', 'Microsoft 365 Admin', 'Entra ID'];
+
+// Progresso do curso: atualize o semestre a cada período
+const semester = 2;
+const totalSemesters = 8;
 ---
 
 <section id="apresentacao" class="mx-auto max-w-5xl px-6 py-24">
@@ -36,7 +40,17 @@ const tools = ['Kanban', 'SharePoint', 'Microsoft 365 Admin', 'Entra ID'];
       <article data-reveal class="py-8">
         <p class="text-sm text-accent">Formação</p>
         <h3 class="mt-2 text-xl font-semibold text-heading">Engenharia de Software</h3>
-        <p class="mt-1 text-muted">UniCesumar · 2º semestre</p>
+        <p class="mt-1 text-muted">UniCesumar</p>
+        <div class="mt-4 flex items-center gap-3">
+          <div class="flex flex-1 gap-1" role="img" aria-label={`${semester}º de ${totalSemesters} semestres`}>
+            {
+              Array.from({ length: totalSemesters }, (_, i) => (
+                <span class:list={['h-1.5 flex-1 rounded-full', i < semester ? 'bg-accent' : 'bg-line']} />
+              ))
+            }
+          </div>
+          <span class="flex-none text-sm text-muted">{semester}º de {totalSemesters} semestres</span>
+        </div>
         <p class="mt-4 leading-relaxed text-fg/85">
           Base técnica em lógica, programação e banco de dados, aplicada desde já a projetos de análise.
         </p>
