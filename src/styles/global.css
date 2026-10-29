@@ -67,6 +67,18 @@ body {
   opacity: 1;
 }
 
+/* Textura de pontos no fundo da capa (pontos sólidos, sem degradê visível) */
+.hero-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(circle, var(--color-line) 1px, transparent 1.5px);
+  background-size: 28px 28px;
+  opacity: 0.6;
+}
+
 /* Cursor piscando do efeito de digitação */
 .caret {
   display: inline-block;
