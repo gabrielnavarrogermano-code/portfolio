@@ -1,13 +1,14 @@
 ---
 import SectionTitle from './SectionTitle.astro';
 import EtlStep from './EtlStep.astro';
+import { siGit, siGithub } from 'simple-icons';
 
-// Pipeline: onde cada ferramenta entra e o que faço em cada etapa
+// Pipeline: as etapas e as ferramentas usadas em cada uma
 const pipeline = [
-  { stage: 'Extração', tools: ['SQL', 'Python'], does: 'Buscar os dados onde eles estão: sistemas e planilhas' },
-  { stage: 'Tratamento', tools: ['pandas', 'Excel'], does: 'Corrigir erros, remover repetições e padronizar' },
-  { stage: 'Armazenamento', tools: ['PostgreSQL', 'MySQL'], does: 'Guardar os dados prontos em um banco, para o BI usar' },
-  { stage: 'Visualização', tools: ['Power BI', 'DAX'], does: 'Transformar os dados em indicadores e gráficos' },
+  { stage: 'Extração', tools: ['SQL', 'Python'] },
+  { stage: 'Tratamento', tools: ['pandas', 'Excel'] },
+  { stage: 'Armazenamento', tools: ['PostgreSQL', 'MySQL'] },
+  { stage: 'Visualização', tools: ['Power BI', 'DAX'] },
 ];
 
 // Caso fictício: vendas de uma distribuidora passando pelas 4 etapas.
@@ -107,10 +108,28 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
     <SectionTitle title="Como eu trabalho" />
     <p data-reveal class="mt-3 text-muted md:hidden">Abra cada etapa para ver o exemplo na prática.</p>
 
-    <div class="etl mt-10 space-y-3 md:mt-18 md:space-y-0" data-etl>
+    <!-- Git e GitHub em cima, com uma linha descendo para cada uma das 4 etapas -->
+    <div data-reveal class="git-link mt-10 md:mt-14">
+      <p class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm text-muted">
+        <span class="inline-flex items-center gap-1.5 text-fg">
+          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor" aria-hidden="true"><path d={siGit.path} /></svg>Git
+        </span>
+        e
+        <span class="inline-flex items-center gap-1.5 text-fg">
+          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor" aria-hidden="true"><path d={siGithub.path} /></svg>GitHub
+        </span>
+        versionando todas as etapas
+      </p>
+      <div class="git-lines relative mt-3 hidden h-8 lg:block" aria-hidden="true">
+        <span class="git-stem"></span>
+        <span class="git-hline"></span>
+        {[0, 1, 2, 3].map((i) => <span class="git-drop" data-i={i} style={`left: ${12.5 + i * 25}%; --i: ${i}`} />)}
+      </div>
+    </div>
+
+    <div class="etl mt-6 space-y-3 md:mt-8 md:space-y-0 lg:mt-0" data-etl>
       <EtlStep index={0} {...pipeline[0]} open>
-        <p class="text-fg">Os pedidos chegam do sistema assim, com erros que atrapalhariam qualquer análise:</p>
-        <div class="mt-4 overflow-x-auto">
+        <div class="overflow-x-auto">
           <table class="w-full text-sm tabular-nums">
             <thead><tr>{rawCols.map((c) => <th class="border-b border-line px-3 py-2 text-left font-medium text-muted">{c}</th>)}</tr></thead>
             <tbody>
@@ -131,8 +150,7 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
         </details>
       </EtlStep>
       <EtlStep index={1} {...pipeline[1]}>
-        <p class="text-fg">Corrijo os problemas e calculo o faturamento. O resultado é uma base confiável:</p>
-        <div class="mt-4 overflow-x-auto">
+        <div class="overflow-x-auto">
           <table class="w-full text-sm tabular-nums">
             <thead><tr>{cleanCols.map((c) => <th class="border-b border-line px-3 py-2 text-left font-medium text-muted">{c}</th>)}</tr></thead>
             <tbody>
@@ -153,8 +171,7 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
         </details>
       </EtlStep>
       <EtlStep index={2} {...pipeline[2]}>
-        <p class="text-fg">Gravo a base no banco, de onde o BI lê sempre a versão atual, e confiro se nada se perdeu:</p>
-        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+        <div class="grid gap-4 sm:grid-cols-2">
           <div class="rounded border border-line px-4 py-3">
             <p class="text-sm text-muted">Pedidos gravados</p>
             <p class="mt-1 text-2xl font-semibold text-heading tabular-nums"><span data-count={clean.length}>{clean.length}</span> <span class="text-sm font-normal text-emerald-400">✓ todos chegaram</span></p>
@@ -170,8 +187,7 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
         </details>
       </EtlStep>
       <EtlStep index={3} {...pipeline[3]}>
-        <p class="text-fg">No Power BI, os dados viram indicadores e gráficos que qualquer pessoa entende:</p>
-        <div class="mt-4 grid gap-4 sm:grid-cols-3">
+        <div class="grid gap-4 sm:grid-cols-3">
           {kpis.map((k) => (
             <div class="rounded border border-line px-4 py-3">
               <p class="text-sm text-muted">{k.label}</p>
@@ -199,14 +215,75 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
         </details>
       </EtlStep>
     </div>
-
-    <p data-reveal class="mt-6 text-sm text-muted">
-      <span class="text-fg">Git</span> e <span class="text-fg">GitHub</span> versionando todas as etapas.
-    </p>
   </div>
 </section>
 
 <style>
+  /* Linhas do Git até as etapas: descem do texto, abrem para os lados e caem em cada aba */
+  .git-stem,
+  .git-hline,
+  .git-drop {
+    position: absolute;
+    background: var(--color-line);
+    transition:
+      transform 0.5s ease,
+      background-color 0.25s ease;
+  }
+
+  .git-stem {
+    top: 0;
+    left: 50%;
+    width: 1px;
+    height: 0.75rem;
+    transform-origin: top;
+    transform: scaleY(0);
+    transition-delay: 0.2s;
+  }
+
+  .git-hline {
+    top: 0.75rem;
+    left: 12.5%;
+    right: 12.5%;
+    height: 1px;
+    transform: scaleX(0);
+    transition-delay: 0.6s;
+  }
+
+  .git-drop {
+    top: 0.75rem;
+    bottom: 0;
+    width: 1px;
+    transform-origin: top;
+    transform: scaleY(0);
+    transition-delay: calc(1s + var(--i) * 80ms), 0s;
+  }
+
+  .git-link:global(.is-visible) .git-stem,
+  .git-link:global(.is-visible) .git-drop {
+    transform: scaleY(1);
+  }
+
+  .git-link:global(.is-visible) .git-hline {
+    transform: scaleX(1);
+  }
+
+  /* A linha da etapa aberta fica destacada */
+  section:has(:global(.etl-step:nth-child(1)[data-open])) .git-drop[data-i='0'],
+  section:has(:global(.etl-step:nth-child(2)[data-open])) .git-drop[data-i='1'],
+  section:has(:global(.etl-step:nth-child(3)[data-open])) .git-drop[data-i='2'],
+  section:has(:global(.etl-step:nth-child(4)[data-open])) .git-drop[data-i='3'] {
+    background: var(--color-heading);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .git-stem,
+    .git-hline,
+    .git-drop {
+      transition: none;
+      transform: none;
+    }
+  }
+
   /*
     Celular: cards um embaixo do outro, cada um abre o próprio exemplo.
     A partir de md: os cabeçalhos viram abas lado a lado e os exemplos ficam empilhados

@@ -21,11 +21,10 @@ interface Props {
   index: number;
   stage: string;
   tools: string[];
-  does: string;
   open?: boolean;
 }
 
-const { index, stage, tools, does, open = false } = Astro.props;
+const { index, stage, tools, open = false } = Astro.props;
 ---
 
 <!--
@@ -78,7 +77,6 @@ const { index, stage, tools, does, open = false } = Astro.props;
           ))
         }
       </p>
-      <p class="mt-2 text-sm text-muted">{does}</p>
     </div>
 
     <svg

@@ -29,16 +29,17 @@ const dots = [true, true, false, true, true, true, true, false, true, true, true
       </div>
     </div>
 
-    <!-- Os cards começam empilhados no centro e se separam quando a área aparece na tela -->
-    <div data-reveal class="biz-deck mt-14 grid gap-5 md:grid-cols-3">
+    <!-- Os cards começam empilhados no centro e se separam quando a área aparece na tela.
+         No celular viram faixas baixas (pergunta à esquerda, gráfico pequeno à direita) para o texto ter o destaque -->
+    <div data-reveal class="biz-deck mt-10 grid gap-3 md:mt-14 md:grid-cols-3 md:gap-5">
       {
         cards.map(({ visual, question }, i) => (
           <div
             style={`--delay: ${900 + i * 120}ms`}
-            class="biz-card flex aspect-[4/3] flex-col gap-5 rounded-2xl border border-line bg-bg p-6 text-heading transition-colors hover:border-muted"
+            class="biz-card flex items-center gap-4 rounded-2xl border border-line bg-bg px-4 py-3 text-heading md:aspect-[4/3] md:flex-col md:items-stretch md:gap-5 md:p-6 transition-colors hover:border-muted"
           >
-            <p class="text-xs text-muted">{question}</p>
-            <div class="min-h-0 flex-1" aria-hidden="true">
+            <p class="flex-1 text-xs text-muted md:flex-none">{question}</p>
+            <div class="h-10 w-24 flex-none md:h-auto md:min-h-0 md:w-auto md:flex-1" aria-hidden="true">
             {visual === 'bars' && (
               <svg viewBox="0 0 200 80" class="h-full w-full" preserveAspectRatio="none">
                 {bars.map((h, b) => (
