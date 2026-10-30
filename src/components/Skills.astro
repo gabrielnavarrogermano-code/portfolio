@@ -143,10 +143,12 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
             </tbody>
           </table>
         </div>
+        <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
         <p class="mt-4 text-sm text-muted"><span class="mr-2 text-red-400">✕</span>Passe o mouse (ou toque) nas células em vermelho para ver cada erro</p>
         <details class="mt-3">
           <summary class="w-fit cursor-pointer py-2 text-sm text-muted transition-colors hover:text-heading">Ver o código (Python + SQL)</summary>
           <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.extract}</pre>
+          <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
         </details>
       </EtlStep>
       <EtlStep index={1} {...pipeline[1]}>
@@ -164,10 +166,12 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
             </tbody>
           </table>
         </div>
+        <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
         <p class="mt-4 text-sm text-muted"><span class="mr-2 text-emerald-400">✓</span>Pedido repetido removido · passe o mouse nas células em verde para ver cada correção</p>
         <details class="mt-3">
           <summary class="w-fit cursor-pointer py-2 text-sm text-muted transition-colors hover:text-heading">Ver o código (Python)</summary>
           <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.transform}</pre>
+          <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
         </details>
       </EtlStep>
       <EtlStep index={2} {...pipeline[2]}>
@@ -184,6 +188,7 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
         <details class="mt-3">
           <summary class="w-fit cursor-pointer py-2 text-sm text-muted transition-colors hover:text-heading">Ver o código (Python + SQL)</summary>
           <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.load}</pre>
+          <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
         </details>
       </EtlStep>
       <EtlStep index={3} {...pipeline[3]}>
@@ -212,6 +217,7 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
         <details class="mt-3">
           <summary class="w-fit cursor-pointer py-2 text-sm text-muted transition-colors hover:text-heading">Ver as fórmulas (DAX)</summary>
           <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.visualize}</pre>
+          <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
         </details>
       </EtlStep>
     </div>
