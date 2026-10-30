@@ -1,6 +1,6 @@
 # Portfólio · Gabriel Navarro Germano
 
-Portfólio pessoal com foco em **Análise de Dados**, **Business Intelligence** e **soluções ETL**.
+Portfólio pessoal com foco em **Análise de Dados**, **Business Intelligence** e **extração e tratamento de dados**.
 
 Construído com [Astro](https://astro.build) e [Tailwind CSS](https://tailwindcss.com).
 
@@ -14,13 +14,28 @@ Hospedado na [Vercel](https://vercel.com): todo push na branch `main` é publica
 ## Estrutura
 
 ```text
+public/                        # Ícones da aba do navegador (favicon)
 src/
-├── components/        # Seções da página (Hero, Apresentação, Projetos, BI...)
-├── content/projetos/  # Estudos de caso em Markdown (um arquivo = um projeto)
-├── data/site.ts       # Nome, e-mail e links de contato
-├── layouts/           # Layout base
-├── pages/             # Página inicial e páginas dos projetos
-└── styles/global.css  # Paleta de cores e animações
+├── assets/gabriel.png         # Foto da capa
+├── components/
+│   ├── Nav.astro              # Menu fixo no topo, com barra de progresso
+│   ├── Hero.astro             # Capa: foto, nome e efeito de digitação
+│   ├── Presentation.astro     # Apresentação: card gabriel.py, por que dados, formação e estágio
+│   ├── Skills.astro           # "Como eu trabalho": as 4 etapas do ETL com exemplo interativo
+│   ├── EtlStep.astro          # Uma etapa do ETL (usada dentro de Skills)
+│   ├── Projects.astro         # Lista de projetos (cards)
+│   ├── NotebookSheet.astro    # Simulação animada da planilha do controle de notebooks
+│   ├── Contact.astro          # Contato
+│   ├── Footer.astro           # Rodapé
+│   └── SectionTitle.astro     # Título padrão das seções
+├── content/projetos/          # Estudos de caso em Markdown (um arquivo = um projeto)
+├── content.config.ts          # Campos aceitos no cabeçalho de cada projeto
+├── data/site.ts               # Nome, e-mail e links de contato
+├── layouts/Layout.astro       # Estrutura base de todas as páginas (fontes, animações de entrada)
+├── pages/
+│   ├── index.astro            # Página inicial (ordem das seções)
+│   └── projetos/[id].astro    # Página de cada projeto
+└── styles/global.css          # Paleta de cores, animações e estilo dos estudos de caso
 ```
 
 ## Como rodar localmente
@@ -43,16 +58,26 @@ npm run build    # gera o site final em ./dist
 
 ## Adicionar um projeto
 
-Crie um arquivo `.md` em `src/content/projetos/` com o cabeçalho:
+Crie um arquivo `.md` em `src/content/projetos/`. O nome do arquivo vira o endereço da página (`controle-de-notebooks.md` → `/projetos/controle-de-notebooks/`).
 
 ```md
 ---
 title: Nome do projeto
 summary: Uma frase sobre o problema resolvido.
 kind: Dashboard
-tools: [SQL, Tableau]
-order: 1
+tools: [SQL, Excel]
+order: 2                # posição na lista (menor aparece primeiro)
+# dashboard: https://...  (opcional: link para o dashboard publicado)
+# repo: https://github.com/...  (opcional: link para o código)
 ---
+
+## O problema
+
+## Os dados
+
+## A solução
+
+## Resultado
 ```
 
 ## Contato

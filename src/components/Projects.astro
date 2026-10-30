@@ -2,8 +2,7 @@
 import { getCollection } from 'astro:content';
 import SectionTitle from './SectionTitle.astro';
 
-// Projetos marcados como exemplo ficam fora do site
-const projetos = (await getCollection('projetos', (p) => !p.data.exemplo)).sort((a, b) => a.data.order - b.data.order);
+const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order - b.data.order);
 ---
 
 <section id="projetos" class="mx-auto max-w-5xl px-6 py-16 sm:py-24">
@@ -21,7 +20,6 @@ const projetos = (await getCollection('projetos', (p) => !p.data.exemplo)).sort(
             class="group flex h-full flex-col rounded-2xl border border-line bg-bg p-6 transition-colors hover:border-accent/40 sm:p-8"
           >
             <div class="flex justify-end gap-2 text-xs text-muted">
-              {p.data.exemplo && <span class="rounded-full border border-line px-2 py-0.5">exemplo</span>}
               <span class="rounded-full border border-line px-2 py-0.5">{p.data.kind}</span>
             </div>
 
