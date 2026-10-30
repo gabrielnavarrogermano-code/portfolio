@@ -1,0 +1,29 @@
+---
+interface Props {
+  label: string;
+  target: string;
+}
+
+const { label, target } = Astro.props;
+---
+
+<!-- Cobre o cabeçalho do card no celular: a partir de sm o conteúdo fica sempre aberto e o botão some -->
+<button
+  type="button"
+  data-collapse-toggle
+  aria-label={label}
+  aria-expanded="false"
+  aria-controls={target}
+  class="group absolute inset-0 flex cursor-pointer items-start justify-end sm:hidden"
+>
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    class="mt-0.5 h-5 w-5 flex-none text-muted transition-transform group-aria-expanded:rotate-180"
+    aria-hidden="true"
+  >
+    <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"></path>
+  </svg>
+</button>

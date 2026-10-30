@@ -1,4 +1,5 @@
 ---
+import CardToggle from './CardToggle.astro';
 import SectionTitle from './SectionTitle.astro';
 
 // Atividades do estágio, curtas o bastante para virar tags
@@ -53,71 +54,125 @@ const profile: [string, string | string[]][] = [
       </div>
     </div>
 
-    <div class="divide-y divide-line border-y border-line lg:col-span-3">
-      <article data-reveal class="py-8">
+    <div class="max-sm:space-y-3 sm:divide-y sm:divide-line sm:border-y sm:border-line lg:col-span-3">
+      <article data-reveal data-collapse class="pb-2 sm:py-8">
         <p class="leading-relaxed text-fg/85">
           Eu sempre fui uma pessoa que gostou de tecnologia, mas principalmente de números e de como eles se relacionam
           com a área de negócio. Por isso, resolvi seguir o caminho da análise de dados, para conseguir trazer uma visão
           do cenário atual da empresa para pessoas não técnicas, relacionando regras de negócio com processos de análise
           de dados.
         </p>
-        <p class="mt-4 leading-relaxed text-fg/85">
+        <p id="sobre-mais" data-collapse-body class="mt-4 leading-relaxed text-fg/85">
           Na empresa onde trabalho atualmente, ainda temos um volume considerado pequeno de dados, então vi que era a
           hora perfeita para começar a centralizar algumas informações, para que mais para frente isso não vire um
           problema. Isso me levou para a parte de extração e tratamento, principalmente de dados relacionados aos
           colaboradores.
         </p>
+        <button
+          type="button"
+          data-collapse-toggle
+          data-less="Ler menos"
+          aria-expanded="false"
+          aria-controls="sobre-mais"
+          class="mt-3 cursor-pointer py-1 text-sm font-medium text-accent sm:hidden"
+        >
+          Continuar lendo
+        </button>
       </article>
 
-      <article data-reveal style="--delay: 100ms" class="py-8">
-        <p class="text-sm text-accent">Formação</p>
-        <h3 class="mt-2 text-xl font-semibold text-heading">Engenharia de Software</h3>
-        <p class="mt-1 text-muted">UniCesumar</p>
-        <div class="mt-4 flex items-center gap-3">
-          <div class="flex flex-1 gap-1" role="img" aria-label={`${semester}º de ${totalSemesters} semestres`}>
+      <article data-reveal data-collapse style="--delay: 100ms" class="max-sm:rounded-2xl max-sm:border max-sm:border-line max-sm:p-5 max-sm:transition-colors max-sm:data-open:border-heading/30 max-sm:data-open:bg-white/[0.03] sm:py-8">
+        <div class="relative max-sm:pr-8">
+          <p class="text-sm text-accent">Formação</p>
+          <h3 class="mt-2 text-xl font-semibold text-heading">Engenharia de Software</h3>
+          <p class="mt-1 text-muted">UniCesumar</p>
+          <CardToggle label="Formação: ver detalhes" target="formacao-detalhes" />
+        </div>
+        <div id="formacao-detalhes" data-collapse-body>
+          <div class="mt-4 flex items-center gap-3">
+            <div class="flex flex-1 gap-1" role="img" aria-label={`${semester}º de ${totalSemesters} semestres`}>
+              {
+                Array.from({ length: totalSemesters }, (_, i) => (
+                  <span class:list={['h-1.5 flex-1 rounded-full', i < semester ? 'bg-accent' : 'bg-line']} />
+                ))
+              }
+            </div>
+            <span class="flex-none text-sm text-muted">{semester}º de {totalSemesters} semestres</span>
+          </div>
+          <p class="mt-4 leading-relaxed text-fg/85">
+            Base técnica em lógica, programação e banco de dados, aplicada desde já a projetos de análise.
+          </p>
+        </div>
+      </article>
+
+      <article data-reveal data-collapse style="--delay: 200ms" class="max-sm:rounded-2xl max-sm:border max-sm:border-line max-sm:p-5 max-sm:transition-colors max-sm:data-open:border-heading/30 max-sm:data-open:bg-white/[0.03] sm:py-8">
+        <div class="relative max-sm:pr-8">
+          <p class="text-sm text-accent">Experiência atual</p>
+          <h3 class="mt-2 text-xl font-semibold text-heading">Estagiário de TI</h3>
+          <p class="mt-1 text-muted">Hebe's Life Science · Indústria farmacêutica</p>
+          <CardToggle label="Experiência atual: ver detalhes" target="experiencia-detalhes" />
+        </div>
+        <div id="experiencia-detalhes" data-collapse-body>
+          <p class="mt-4 leading-relaxed text-fg/85">
+            Meu dia a dia consiste em resolver chamados de helpdesk, gerenciar permissões e acessos de usuários na empresa
+            e documentar processos operacionais padrão.
+          </p>
+          <a
+            href="/projetos/controle-de-notebooks/"
+            class="group mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent"
+          >
+            Ver o projeto de controle de notebooks
+            <span class="transition-transform group-hover:translate-x-1">→</span>
+          </a>
+          <ul class="mt-5 flex flex-wrap gap-2">
             {
-              Array.from({ length: totalSemesters }, (_, i) => (
-                <span class:list={['h-1.5 flex-1 rounded-full', i < semester ? 'bg-accent' : 'bg-line']} />
+              experience.map((item) => (
+                <li class="rounded-full border border-line px-3.5 py-1.5 text-sm text-fg/85">{item}</li>
               ))
             }
-          </div>
-          <span class="flex-none text-sm text-muted">{semester}º de {totalSemesters} semestres</span>
+          </ul>
+          <ul class="mt-4 flex flex-wrap gap-2" aria-label="Ferramentas">
+            {
+              tools.map((t) => (
+                <li class="rounded-md bg-white/[0.06] px-2.5 py-1 font-mono text-xs text-muted">{t}</li>
+              ))
+            }
+          </ul>
         </div>
-        <p class="mt-4 leading-relaxed text-fg/85">
-          Base técnica em lógica, programação e banco de dados, aplicada desde já a projetos de análise.
-        </p>
-      </article>
-
-      <article data-reveal style="--delay: 200ms" class="py-8">
-        <p class="text-sm text-accent">Experiência atual</p>
-        <h3 class="mt-2 text-xl font-semibold text-heading">Estagiário de TI</h3>
-        <p class="mt-1 text-muted">Hebe's Life Science · Indústria farmacêutica</p>
-        <p class="mt-4 leading-relaxed text-fg/85">
-          Meu dia a dia consiste em resolver chamados de helpdesk, gerenciar permissões e acessos de usuários na empresa
-          e documentar processos operacionais padrão.
-        </p>
-        <a
-          href="/projetos/controle-de-notebooks/"
-          class="group mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent"
-        >
-          Ver o projeto de controle de notebooks
-          <span class="transition-transform group-hover:translate-x-1">→</span>
-        </a>
-        <ul class="mt-5 flex flex-wrap gap-2">
-          {
-            experience.map((item) => (
-              <li class="rounded-full border border-line px-3.5 py-1.5 text-sm text-fg/85">{item}</li>
-            ))
-          }
-        </ul>
-        <ul class="mt-4 flex flex-wrap gap-2" aria-label="Ferramentas">
-          {
-            tools.map((t) => (
-              <li class="rounded-md bg-white/[0.06] px-2.5 py-1 font-mono text-xs text-muted">{t}</li>
-            ))
-          }
-        </ul>
       </article>
     </div>
   </div>
 </section>
+
+<style>
+  /* No celular, o conteúdo extra fica fechado até o toque; a partir de sm aparece sempre */
+  @media (width < 40rem) {
+    [data-collapse]:not([data-open]) [data-collapse-body] {
+      display: none;
+    }
+
+    [data-collapse][data-open] [data-collapse-body] {
+      animation: collapse-fade 0.3s ease;
+    }
+  }
+
+  @keyframes collapse-fade {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLButtonElement>('[data-collapse-toggle]').forEach((button) => {
+      const card = button.closest<HTMLElement>('[data-collapse]')!;
+      const more = button.textContent;
+      button.addEventListener('click', () => {
+        const open = card.toggleAttribute('data-open');
+        button.setAttribute('aria-expanded', String(open));
+        if (button.dataset.less) button.textContent = open ? button.dataset.less : more;
+      });
+    });
+  });
+</script>
