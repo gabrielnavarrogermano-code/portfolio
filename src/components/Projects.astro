@@ -2,13 +2,14 @@
 import { getCollection } from 'astro:content';
 import SectionTitle from './SectionTitle.astro';
 
-const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order - b.data.order);
+// Projetos marcados como exemplo ficam fora do site
+const projetos = (await getCollection('projetos', (p) => !p.data.exemplo)).sort((a, b) => a.data.order - b.data.order);
 ---
 
 <section id="projetos" class="mx-auto max-w-5xl px-6 py-16 sm:py-24">
   <SectionTitle
     title="Dados que viram decisão"
-    subtitle="Estudos de caso curtos: o problema, a análise e o que eu descobri."
+    subtitle="Estudos de caso curtos: o problema, como os dados foram tratados e o resultado."
   />
 
   <div class="mt-12 grid gap-5 md:grid-cols-2">

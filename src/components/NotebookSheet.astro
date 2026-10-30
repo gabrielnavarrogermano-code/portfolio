@@ -1,0 +1,292 @@
+---
+// Simulação da planilha de controle de notebooks (dados fictícios).
+// Ordem das colunas igual à planilha real.
+const cols = ['Nome', 'E-mail', 'Licença', 'Computador', 'Dependências', 'Antivírus', 'LAPS', 'Windows', 'Patrimônio'];
+
+type Row = {
+  nome: string;
+  lic: 'Standard' | 'Basic';
+  pc: string;
+  dep: 'OK' | 'Pendente';
+  av: 'Ativo' | 'Inativo';
+  laps: 'Aplicado' | 'Pendente';
+  win: 'Pro' | 'Home';
+  pat: string;
+};
+const email = (nome: string) =>
+  nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(' ', '.') + '@empresa.com.br';
+
+// Colunas de status: o primeiro valor é o "ok" (verde), o outro precisa de atenção (amarelo)
+const status: Record<number, string> = { 4: 'OK', 5: 'Ativo', 6: 'Aplicado' };
+
+const initial: Row[] = [
+  { nome: 'Ana Souza', lic: 'Standard', pc: 'NTB-001', dep: 'OK', av: 'Ativo', laps: 'Aplicado', win: 'Pro', pat: 'PAT-0101' },
+  { nome: 'Bruno Lima', lic: 'Basic', pc: 'NTB-002', dep: 'OK', av: 'Ativo', laps: 'Aplicado', win: 'Pro', pat: 'PAT-0102' },
+  { nome: 'Carla Mendes', lic: 'Standard', pc: 'NTB-003', dep: 'Pendente', av: 'Ativo', laps: 'Pendente', win: 'Home', pat: 'PAT-0103' },
+  { nome: 'Diego Rocha', lic: 'Basic', pc: 'NTB-004', dep: 'OK', av: 'Inativo', laps: 'Aplicado', win: 'Pro', pat: 'PAT-0104' },
+  { nome: 'Elisa Prado', lic: 'Standard', pc: 'NTB-005', dep: 'OK', av: 'Ativo', laps: 'Aplicado', win: 'Home', pat: 'PAT-0105' },
+];
+
+// Colaboradores que "chegam" do Microsoft 365 durante a animação
+const incoming: Row[] = [
+  { nome: 'Felipe Costa', lic: 'Standard', pc: 'NTB-006', dep: 'OK', av: 'Ativo', laps: 'Aplicado', win: 'Pro', pat: 'PAT-0106' },
+  { nome: 'Giovana Nunes', lic: 'Basic', pc: 'NTB-007', dep: 'Pendente', av: 'Ativo', laps: 'Pendente', win: 'Pro', pat: 'PAT-0107' },
+  { nome: 'Henrique Alves', lic: 'Standard', pc: 'NTB-008', dep: 'OK', av: 'Ativo', laps: 'Aplicado', win: 'Pro', pat: 'PAT-0108' },
+];
+
+const rows = [...initial.map((r) => ({ ...r, isNew: false })), ...incoming.map((r) => ({ ...r, isNew: true }))];
+
+// Valores iniciais já vêm calculados (funciona sem JS)
+const count = (key: 'lic' | 'dep' | 'av' | 'laps' | 'win', value: string) => initial.filter((r) => r[key] === value).length;
+const total = initial.length;
+const kpis = [
+  { label: 'Notebooks', key: 'total', value: total },
+  { label: 'Dependências OK', key: 'dep:OK', value: count('dep', 'OK') },
+  { label: 'Antivírus ativo', key: 'av:Ativo', value: count('av', 'Ativo') },
+  { label: 'No Entra ID (LAPS)', key: 'laps:Aplicado', value: count('laps', 'Aplicado') },
+];
+const charts = [
+  { title: 'Licença Microsoft', key: 'lic', values: ['Standard', 'Basic'] },
+  { title: 'Versão do Windows', key: 'win', values: ['Pro', 'Home'] },
+] as const;
+---
+
+<div data-sheet data-reveal class="relative overflow-hidden rounded-2xl border border-line bg-white/[0.03]">
+  <div class="flex items-center gap-1.5 border-b border-line px-4 py-3">
+    <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
+    <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
+    <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
+    <span class="ml-2 font-mono text-xs text-muted">controle-notebooks.xlsx</span>
+    <span class="ml-auto text-xs text-muted">dados fictícios</span>
+  </div>
+
+  <!-- Aviso de novo colaborador vindo do Microsoft 365 -->
+  <div
+    data-toast
+    aria-live="polite"
+    class="sheet-toast absolute top-14 right-4 z-10 rounded-xl border border-line bg-bg px-4 py-3 text-sm shadow-lg"
+  >
+    <p class="text-xs text-muted">Microsoft 365 · novo colaborador</p>
+    <p data-toast-name class="mt-0.5 font-medium text-heading"></p>
+  </div>
+
+  <p class="px-4 pt-3 text-sm text-muted">Aba <span class="font-mono text-fg">Base</span></p>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm tabular-nums">
+      <thead>
+        <tr>
+          <th class="w-10 border-b border-line px-3 py-2 text-left font-mono text-xs font-normal text-muted/60">#</th>
+          {cols.map((c) => <th class="border-b border-line px-3 py-2 text-left font-medium whitespace-nowrap text-muted">{c}</th>)}
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((r, i) => (
+            <tr
+              data-new={r.isNew || undefined}
+              data-lic={r.lic}
+              data-dep={r.dep}
+              data-av={r.av}
+              data-laps={r.laps}
+              data-win={r.win}
+              hidden={r.isNew}
+            >
+              <td class="border-b border-line px-3 py-2 font-mono text-xs text-muted/60">{i + 1}</td>
+              {[r.nome, email(r.nome), r.lic, r.pc, r.dep, r.av, r.laps, r.win, r.pat].map((v, ci) => (
+                <td style={`--c: ${ci}`} class="border-b border-line px-3 py-2 whitespace-nowrap text-fg/85">
+                  {status[ci] ? (
+                    <span class:list={[v === status[ci] ? 'text-emerald-400' : 'text-amber-400']}>
+                      {v === status[ci] ? '✓' : '!'} {v}
+                    </span>
+                  ) : (
+                    v
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mini dashboard: recalculado a cada linha nova -->
+  <div class="border-t border-line p-4 sm:p-5">
+    <p class="text-sm text-muted">Aba <span class="font-mono text-fg">Dashboard</span> · mesmo arquivo, atualiza junto com a base</p>
+    <div class="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {
+        kpis.map((k) => (
+          <div class="rounded border border-line px-4 py-3">
+            <p class="text-sm text-muted">{k.label}</p>
+            <p data-kpi={k.key} class="sheet-kpi mt-1 text-2xl font-semibold text-heading tabular-nums">{k.value}</p>
+          </div>
+        ))
+      }
+    </div>
+    <div class="mt-3 grid gap-3 sm:grid-cols-2">
+      {
+        charts.map((c) => (
+          <div class="rounded border border-line px-4 py-4">
+            <p class="text-sm text-muted">{c.title}</p>
+            <ul class="mt-3 space-y-2">
+              {c.values.map((v) => {
+                const n = count(c.key, v);
+                return (
+                  <li class="grid grid-cols-[4.5rem_1fr_1.5rem] items-center gap-3 text-sm">
+                    <span class="text-fg/85">{v}</span>
+                    <span class="h-2 rounded bg-line">
+                      <span data-bar={`${c.key}:${v}`} class="sheet-bar block h-full rounded bg-accent" style={`width: ${(n / total) * 100}%`} />
+                    </span>
+                    <span data-kpi={`${c.key}:${v}`} class="sheet-kpi text-right font-mono text-fg/85">{n}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</div>
+
+<style>
+  .sheet-toast {
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    transition:
+      opacity 0.3s ease,
+      transform 0.3s ease;
+  }
+
+  .sheet-toast.is-on {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Linha nova: destaque que some e células entrando em sequência */
+  tr.is-in {
+    animation: row-flash 2.4s ease;
+  }
+
+  tr.is-in td {
+    animation: cell-in 0.4s ease both;
+    animation-delay: calc(var(--c, 0) * 70ms);
+  }
+
+  @keyframes row-flash {
+    from {
+      background: rgb(255 255 255 / 0.1);
+    }
+  }
+
+  @keyframes cell-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+
+  .sheet-bar {
+    transition: width 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .sheet-kpi.is-bump {
+    animation: kpi-bump 0.6s ease;
+  }
+
+  @keyframes kpi-bump {
+    30% {
+      transform: scale(1.12);
+    }
+  }
+
+  .sheet-kpi {
+    display: inline-block;
+    transform-origin: left;
+  }
+</style>
+
+<script>
+  let timer: number | undefined;
+
+  function initSheet() {
+    const root = document.querySelector<HTMLElement>('[data-sheet]');
+    if (!root || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const toast = root.querySelector<HTMLElement>('[data-toast]')!;
+    const toastName = root.querySelector<HTMLElement>('[data-toast-name]')!;
+    const rows = [...root.querySelectorAll<HTMLTableRowElement>('tbody tr')];
+    const fresh = rows.filter((r) => r.dataset.new !== undefined);
+    let next = 0;
+    let visible = false;
+
+    // Recalcula KPIs e barras a partir das linhas visíveis, como o dashboard do Excel
+    const update = () => {
+      const shown = rows.filter((r) => !r.hidden);
+      const values: Record<string, number> = { total: shown.length };
+      for (const r of shown) {
+        for (const key of ['lic', 'dep', 'av', 'laps', 'win'] as const) {
+          const k = `${key}:${r.dataset[key]}`;
+          values[k] = (values[k] ?? 0) + 1;
+        }
+      }
+      root.querySelectorAll<HTMLElement>('[data-kpi]').forEach((el) => {
+        const v = String(values[el.dataset.kpi!] ?? 0);
+        if (el.textContent === v) return;
+        el.textContent = v;
+        el.classList.remove('is-bump');
+        void el.offsetWidth;
+        el.classList.add('is-bump');
+      });
+      root.querySelectorAll<HTMLElement>('[data-bar]').forEach((el) => {
+        el.style.width = `${((values[el.dataset.bar!] ?? 0) / shown.length) * 100}%`;
+      });
+    };
+
+    // Um passo: avisa o novo colaborador, insere a linha e atualiza o dashboard.
+    // Depois do último, espera e volta ao estado inicial para recomeçar.
+    const step = () => {
+      if (!visible) return;
+      if (next < fresh.length) {
+        const row = fresh[next];
+        toastName.textContent = row.cells[1].textContent;
+        toast.classList.add('is-on');
+        timer = window.setTimeout(() => {
+          // Só avança aqui: se a planilha sair da tela durante o aviso, a mesma linha é retomada
+          next++;
+          toast.classList.remove('is-on');
+          row.hidden = false;
+          row.classList.add('is-in');
+          update();
+          timer = window.setTimeout(step, 3000);
+        }, 1400);
+      } else {
+        timer = window.setTimeout(() => {
+          fresh.forEach((r) => {
+            r.hidden = true;
+            r.classList.remove('is-in');
+          });
+          next = 0;
+          update();
+          timer = window.setTimeout(step, 1500);
+        }, 3000);
+      }
+    };
+
+    // Só anima enquanto a planilha está na tela
+    new IntersectionObserver(
+      ([entry]) => {
+        visible = entry.isIntersecting;
+        clearTimeout(timer);
+        toast.classList.remove('is-on');
+        if (visible) timer = window.setTimeout(step, 1200);
+      },
+      { threshold: 0.4 },
+    ).observe(root);
+  }
+
+  document.addEventListener('astro:page-load', initSheet);
+  document.addEventListener('astro:before-swap', () => clearTimeout(timer));
+</script>

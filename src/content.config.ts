@@ -14,6 +14,8 @@ const projetos = defineCollection({
     exemplo: z.boolean().default(false),
     repo: z.string().optional(),
     dashboard: z.string().optional(),
+    // Simulação interativa mostrada no topo do estudo de caso
+    demo: z.enum(['notebooks']).optional(),
   }),
 });
 

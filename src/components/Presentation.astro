@@ -21,6 +21,7 @@ const profile: [string, string | string[]][] = [
   ['curso', 'Engenharia de Software'],
   ['semestre', `${semester}º de ${totalSemesters}`],
   ['foco', ['Inteligência de Dados', 'Análise de Dados']],
+  ['estudando', ['Extração de dados', 'Tratamento de dados', 'Excel e SQL']],
   ['busca', ['Estágio em Dados', 'Júnior em Dados']],
 ];
 ---
@@ -38,27 +39,42 @@ const profile: [string, string | string[]][] = [
             <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
             <span class="ml-2 font-mono text-xs text-muted">gabriel.py</span>
           </div>
-          <pre class="overflow-x-auto p-5 font-mono text-[13px] leading-relaxed text-muted"><code><span class="text-muted/70"># do negócio real a respostas confiáveis</span>
-<span class="text-heading">gabriel</span> = {'{'}
+          <!-- Cores no estilo do tema GitHub Dark do VS Code: comentário cinza, variável laranja, strings azul-claro e colchetes coloridos por nível -->
+          <pre class="overflow-x-auto p-5 font-mono text-[13px] leading-relaxed text-[#c9d1d9]"><code><span class="text-[#8b949e]"># do negócio real a respostas confiáveis</span>
+<span class="text-[#ffa657]">gabriel</span> = <span class="text-[#79c0ff]">{'{'}</span>
 {
   profile.map(([key, value]) => (
     <Fragment>
-      {'  '}<span class="text-fg">"{key}"</span>: {typeof value === 'string' ? (
-        <Fragment><span class="text-heading">"{value}"</span>,{'\n'}</Fragment>
+      {'  '}<span class="text-[#a5d6ff]">"{key}"</span>: {typeof value === 'string' ? (
+        <Fragment><span class="text-[#a5d6ff]">"{value}"</span>,{'\n'}</Fragment>
       ) : (
-        <Fragment>[{'\n'}{value.map((v) => (
-          <Fragment>{'    '}<span class="text-heading">"{v}"</span>,{'\n'}</Fragment>
-        ))}{'  '}],{'\n'}</Fragment>
+        <Fragment><span class="text-[#56d364]">[</span>{'\n'}{value.map((v) => (
+          <Fragment>{'    '}<span class="text-[#a5d6ff]">"{v}"</span>,{'\n'}</Fragment>
+        ))}{'  '}<span class="text-[#56d364]">]</span>,{'\n'}</Fragment>
       )}
     </Fragment>
   ))
-}{'}'}</code></pre>
+}<span class="text-[#79c0ff]">{'}'}</span></code></pre>
         </div>
       </div>
     </div>
 
     <div class="divide-y divide-line border-y border-line lg:col-span-3">
       <article data-reveal class="py-8">
+        <p class="text-sm text-accent">Por que dados</p>
+        <h3 class="mt-2 text-xl font-semibold text-heading">A ponte entre o técnico e o negócio</h3>
+        <p class="mt-4 leading-relaxed text-fg/85">
+          Meu interesse por dados começou quando percebi que podia ser uma ponte entre a área técnica, de código e
+          infraestrutura, e a área de negócios, ajudando na tomada de decisão.
+        </p>
+        <p class="mt-4 leading-relaxed text-fg/85">
+          Por isso começo sempre pelo problema que a empresa quer resolver. Junto com o negócio, defino regras e
+          métricas que seguem do ETL/ELT até o BI. Assim todo mundo olha para o mesmo número e entende o que ele
+          significa, inclusive quem não é da área técnica.
+        </p>
+      </article>
+
+      <article data-reveal style="--delay: 100ms" class="py-8">
         <p class="text-sm text-accent">Formação</p>
         <h3 class="mt-2 text-xl font-semibold text-heading">Engenharia de Software</h3>
         <p class="mt-1 text-muted">UniCesumar</p>
@@ -77,10 +93,21 @@ const profile: [string, string | string[]][] = [
         </p>
       </article>
 
-      <article data-reveal style="--delay: 100ms" class="py-8">
+      <article data-reveal style="--delay: 200ms" class="py-8">
         <p class="text-sm text-accent">Experiência atual</p>
         <h3 class="mt-2 text-xl font-semibold text-heading">Estagiário de TI</h3>
         <p class="mt-1 text-muted">Hebe's Life Science · Indústria farmacêutica</p>
+        <p class="mt-4 leading-relaxed text-fg/85">
+          Além do suporte, extraí os dados dos colaboradores do Microsoft 365 para criar o controle de notebooks da
+          empresa: uma base em Excel atualizada a cada novo colaborador, com um mini dashboard de KPIs e gráficos dinâmicos no mesmo arquivo.
+        </p>
+        <a
+          href="/projetos/controle-de-notebooks/"
+          class="group mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent"
+        >
+          Ver o projeto
+          <span class="transition-transform group-hover:translate-x-1">→</span>
+        </a>
         <ul class="mt-5 flex flex-wrap gap-2">
           {
             experience.map((item) => (
