@@ -8,6 +8,8 @@ const projetos = defineCollection({
   schema: z.object({
     title: z.string(),
     summary: z.string(),
+    // Tópico "O problema" mostrado na home, acima do card do projeto
+    problem: z.string(),
     kind: z.string(),
     tools: z.array(z.string()),
     order: z.number().default(99),

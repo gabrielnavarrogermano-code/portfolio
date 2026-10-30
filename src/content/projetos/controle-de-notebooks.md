@@ -1,6 +1,7 @@
 ---
 title: Controle de Notebooks dos Colaboradores
 summary: Extração de dados do Microsoft 365 para uma base de colaboradores em Excel, com mini dashboard de KPIs no mesmo arquivo.
+problem: A equipe de TI precisava saber, de forma rápida, qual notebook estava com cada colaborador e se a máquina estava pronta para uso.
 kind: Extração e Tratamento
 tools: [Microsoft 365, Excel, Gráficos Dinâmicos]
 order: 1
@@ -32,13 +33,13 @@ As informações são tratadas e organizadas na aba de base do arquivo, com uma 
 - **Versão do Windows** (Pro ou Home)
 - **Selo de patrimônio**
 
-A base é atualizada sempre que um novo colaborador entra na empresa.
+A tabela possui **filtros** que facilitam a navegação, e a base é atualizada sempre que um novo colaborador entra na empresa.
 
 A coluna **LAPS** indica se o notebook já passou pelo script de segurança desenvolvido pelo gerente de TI. Depois que ele é executado, qualquer instalação fora das diretrizes da empresa passa a pedir liberação com a conta de administrador da TI. O script também registra o notebook no **Microsoft Entra ID**, plataforma onde a equipe faz a supervisão de todos os equipamentos.
 
 ## Dashboard
 
-O mini dashboard fica em outra aba, no mesmo arquivo da base de colaboradores, e reúne os **KPIs** e **gráficos dinâmicos** do controle de equipamentos. Quando a base é atualizada e tratada, o dashboard se atualiza junto.
+O mini dashboard fica em outra aba, no mesmo arquivo da base de colaboradores, e reúne os **KPIs** e **gráficos dinâmicos** do controle de equipamentos. Ele mostra os principais indicadores de forma clara e ajuda a definir os próximos passos para melhorar o controle dos dispositivos. Quando a base é atualizada e tratada, o dashboard se atualiza junto.
 
 ## Resultado
 
