@@ -1,10 +1,12 @@
 ---
 // Simulação da planilha de controle de notebooks (dados fictícios).
 // Ordem das colunas igual à planilha real.
-const cols = ['Nome', 'E-mail', 'Licença', 'Computador', 'Dependências', 'Antivírus', 'LAPS', 'Windows', 'Patrimônio'];
+const cols = ['Nome', 'E-mail', 'Setor', 'Tipo de usuário', 'Licença', 'Computador', 'Dependências', 'Antivírus', 'LAPS', 'Windows', 'Patrimônio'];
 
 type Row = {
   nome: string;
+  setor: string;
+  tipo: 'Interno' | 'Externo';
   lic: 'Standard' | 'Basic';
   pc: string;
   dep: 'OK' | 'Pendente';
@@ -17,21 +19,21 @@ const email = (nome: string) =>
   nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(' ', '.') + '@empresa.com.br';
 
 // Colunas de status: o primeiro valor é o "ok" (verde), o outro precisa de atenção (amarelo)
-const status: Record<number, string> = { 4: 'OK', 5: 'Ativo', 6: 'Aplicado' };
+const status: Record<number, string> = { 6: 'OK', 7: 'Ativo', 8: 'Aplicado' };
 
 const initial: Row[] = [
-  { nome: 'Ana Souza', lic: 'Standard', pc: 'NTB-001', dep: 'OK', av: 'Ativo', laps: 'Aplicado', win: 'Pro', pat: 'PAT-0101' },
-  { nome: 'Bruno Lima', lic: 'Basic', pc: 'NTB-002', dep: 'OK', av: 'Ativo', laps: 'Aplicado', win: 'Pro', pat: 'PAT-0102' },
-  { nome: 'Carla Mendes', lic: 'Standard', pc: 'NTB-003', dep: 'Pendente', av: 'Ativo', laps: 'Pendente', win: 'Home', pat: 'PAT-0103' },
-  { nome: 'Diego Rocha', lic: 'Basic', pc: 'NTB-004', dep: 'OK', av: 'Inativo', laps: 'Aplicado', win: 'Pro', pat: 'PAT-0104' },
-  { nome: 'Elisa Prado', lic: 'Standard', pc: 'NTB-005', dep: 'OK', av: 'Ativo', laps: 'Aplicado', win: 'Home', pat: 'PAT-0105' },
+  { nome: 'Ana Souza', setor: 'Financeiro', tipo: 'Interno', lic: 'Standard', pc: 'NTB-001', dep: 'OK', av: 'Ativo', laps: 'Aplicado', win: 'Pro', pat: 'PAT-0101' },
+  { nome: 'Bruno Lima', setor: 'Comercial', tipo: 'Interno', lic: 'Basic', pc: 'NTB-002', dep: 'OK', av: 'Ativo', laps: 'Aplicado', win: 'Pro', pat: 'PAT-0102' },
+  { nome: 'Carla Mendes', setor: 'Marketing', tipo: 'Externo', lic: 'Standard', pc: 'NTB-003', dep: 'Pendente', av: 'Ativo', laps: 'Pendente', win: 'Home', pat: 'PAT-0103' },
+  { nome: 'Diego Rocha', setor: 'Qualidade', tipo: 'Interno', lic: 'Basic', pc: 'NTB-004', dep: 'OK', av: 'Inativo', laps: 'Aplicado', win: 'Pro', pat: 'PAT-0104' },
+  { nome: 'Elisa Prado', setor: 'RH', tipo: 'Interno', lic: 'Standard', pc: 'NTB-005', dep: 'OK', av: 'Ativo', laps: 'Aplicado', win: 'Home', pat: 'PAT-0105' },
 ];
 
 // Colaboradores que "chegam" do Microsoft 365 durante a animação
 const incoming: Row[] = [
-  { nome: 'Felipe Costa', lic: 'Standard', pc: 'NTB-006', dep: 'OK', av: 'Ativo', laps: 'Aplicado', win: 'Pro', pat: 'PAT-0106' },
-  { nome: 'Giovana Nunes', lic: 'Basic', pc: 'NTB-007', dep: 'Pendente', av: 'Ativo', laps: 'Pendente', win: 'Pro', pat: 'PAT-0107' },
-  { nome: 'Henrique Alves', lic: 'Standard', pc: 'NTB-008', dep: 'OK', av: 'Ativo', laps: 'Aplicado', win: 'Pro', pat: 'PAT-0108' },
+  { nome: 'Felipe Costa', setor: 'TI', tipo: 'Interno', lic: 'Standard', pc: 'NTB-006', dep: 'OK', av: 'Ativo', laps: 'Aplicado', win: 'Pro', pat: 'PAT-0106' },
+  { nome: 'Giovana Nunes', setor: 'Comercial', tipo: 'Externo', lic: 'Basic', pc: 'NTB-007', dep: 'Pendente', av: 'Ativo', laps: 'Pendente', win: 'Pro', pat: 'PAT-0107' },
+  { nome: 'Henrique Alves', setor: 'Financeiro', tipo: 'Interno', lic: 'Standard', pc: 'NTB-008', dep: 'OK', av: 'Ativo', laps: 'Aplicado', win: 'Pro', pat: 'PAT-0108' },
 ];
 
 const rows = [...initial.map((r) => ({ ...r, isNew: false })), ...incoming.map((r) => ({ ...r, isNew: true }))];
@@ -93,7 +95,7 @@ const charts = [
               hidden={r.isNew}
             >
               <td class="border-b border-line px-3 py-2 font-mono text-xs text-muted/60">{i + 1}</td>
-              {[r.nome, email(r.nome), r.lic, r.pc, r.dep, r.av, r.laps, r.win, r.pat].map((v, ci) => (
+              {[r.nome, email(r.nome), r.setor, r.tipo, r.lic, r.pc, r.dep, r.av, r.laps, r.win, r.pat].map((v, ci) => (
                 <td style={`--c: ${ci}`} class="border-b border-line px-3 py-2 whitespace-nowrap text-fg/85">
                   {status[ci] ? (
                     <span class:list={[v === status[ci] ? 'text-emerald-400' : 'text-amber-400']}>

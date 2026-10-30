@@ -2,13 +2,7 @@
 import SectionTitle from './SectionTitle.astro';
 
 // Atividades do estágio, curtas o bastante para virar tags
-const experience = [
-  'Infraestrutura de redes',
-  'Documentação de processos',
-  'Diagnóstico e reparo de hardware',
-  'Atendimento a chamados',
-  'Contas e permissões de acesso',
-];
+const experience = ['Infraestrutura de redes', 'Diagnóstico e reparo de hardware'];
 
 const tools = ['Kanban', 'SharePoint', 'Microsoft 365 Admin', 'Entra ID'];
 
@@ -61,16 +55,17 @@ const profile: [string, string | string[]][] = [
 
     <div class="divide-y divide-line border-y border-line lg:col-span-3">
       <article data-reveal class="py-8">
-        <p class="text-sm text-accent">Por que dados</p>
-        <h3 class="mt-2 text-xl font-semibold text-heading">A ponte entre o técnico e o negócio</h3>
-        <p class="mt-4 leading-relaxed text-fg/85">
-          Meu interesse por dados começou quando percebi que podia ser uma ponte entre a área técnica, de código e
-          infraestrutura, e a área de negócios, ajudando na tomada de decisão.
+        <p class="leading-relaxed text-fg/85">
+          Eu sempre fui uma pessoa que gostou de tecnologia, mas principalmente de números e de como eles se relacionam
+          com a área de negócio. Por isso, resolvi seguir o caminho da análise de dados, para conseguir trazer uma visão
+          do cenário atual da empresa para pessoas não técnicas, relacionando regras de negócio com processos de análise
+          de dados.
         </p>
         <p class="mt-4 leading-relaxed text-fg/85">
-          Por isso começo sempre pelo problema que a empresa quer resolver. Junto com o negócio, defino regras e
-          métricas que seguem do ETL/ELT até o BI. Assim todo mundo olha para o mesmo número e entende o que ele
-          significa, inclusive quem não é da área técnica.
+          Na empresa onde trabalho atualmente, ainda temos um volume considerado pequeno de dados, então vi que era a
+          hora perfeita para começar a centralizar algumas informações, para que mais para frente isso não vire um
+          problema. Isso me levou para a parte de extração e tratamento, principalmente de dados relacionados aos
+          colaboradores.
         </p>
       </article>
 
@@ -98,14 +93,14 @@ const profile: [string, string | string[]][] = [
         <h3 class="mt-2 text-xl font-semibold text-heading">Estagiário de TI</h3>
         <p class="mt-1 text-muted">Hebe's Life Science · Indústria farmacêutica</p>
         <p class="mt-4 leading-relaxed text-fg/85">
-          Além do suporte, extraí os dados dos colaboradores do Microsoft 365 para criar o controle de notebooks da
-          empresa: uma base em Excel atualizada a cada novo colaborador, com um mini dashboard de KPIs e gráficos dinâmicos no mesmo arquivo.
+          Meu dia a dia consiste em resolver chamados de helpdesk, gerenciar permissões e acessos de usuários na empresa
+          e documentar processos operacionais padrão.
         </p>
         <a
           href="/projetos/controle-de-notebooks/"
           class="group mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent"
         >
-          Ver o projeto
+          Ver o projeto de controle de notebooks
           <span class="transition-transform group-hover:translate-x-1">→</span>
         </a>
         <ul class="mt-5 flex flex-wrap gap-2">

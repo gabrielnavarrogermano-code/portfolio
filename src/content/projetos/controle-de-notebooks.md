@@ -22,6 +22,8 @@ Os dados dos colaboradores são importados do **Microsoft 365**, que já é a fo
 As informações são tratadas e organizadas na aba de base do arquivo, com uma linha por colaborador:
 
 - **Nome** e **e-mail**
+- **Setor** do colaborador
+- **Tipo de usuário** (interno ou externo)
 - **Licença Microsoft** utilizada (Standard ou Basic)
 - **Nome do computador**
 - **Dependências** instaladas corretamente
@@ -40,4 +42,6 @@ O mini dashboard fica em outra aba, no mesmo arquivo da base de colaboradores, e
 
 ## Resultado
 
-A equipe de TI enxerga em um só lugar quem está com cada equipamento e quais máquinas ainda precisam de ajuste.
+Essa tabela é a **principal fonte de dados centralizados para consulta rápida** dos dispositivos, licenças e usuários da empresa. A única exceção é o banco de dados, que também possui algumas dessas informações.
+
+Com ela, a equipe de TI enxerga em um só lugar quem está com cada equipamento e quais máquinas ainda precisam de ajuste.
