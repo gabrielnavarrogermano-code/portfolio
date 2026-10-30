@@ -67,6 +67,11 @@ body {
   opacity: 1;
 }
 
+/* Seções fora da tela ficam para depois da abertura; o Layout as libera quando o navegador está ocioso */
+.render-later {
+  content-visibility: auto;
+}
+
 /* Textura de pontos no fundo da capa (pontos sólidos, sem degradê visível) */
 .hero-grid::before {
   content: "";

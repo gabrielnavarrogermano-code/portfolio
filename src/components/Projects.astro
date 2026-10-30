@@ -5,7 +5,7 @@ import SectionTitle from './SectionTitle.astro';
 const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order - b.data.order);
 ---
 
-<section id="projetos" class="mx-auto max-w-5xl px-6 py-16 sm:py-24">
+<section id="projetos" class="render-later mx-auto max-w-5xl px-6 py-16 [contain-intrinsic-size:auto_640px] sm:py-24">
   <SectionTitle
     title="Dados que viram decisão"
     subtitle="Processos que centralizam informações e apoiam a gestão e a análise."

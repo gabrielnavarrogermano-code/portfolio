@@ -103,7 +103,7 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
 };
 ---
 
-<section id="habilidades" class="py-16 sm:py-24">
+<section id="habilidades" class="render-later py-16 [contain-intrinsic-size:auto_1024px] sm:py-24 md:[contain-intrinsic-size:auto_880px]">
   <div class="mx-auto max-w-5xl px-6">
     <SectionTitle title="Como eu trabalho" />
     <p data-reveal class="mt-3 text-muted md:hidden">Abra cada etapa para ver o exemplo na prática.</p>
@@ -123,7 +123,7 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
       <div class="git-lines relative mt-3 hidden h-8 lg:block" aria-hidden="true">
         <span class="git-stem"></span>
         <span class="git-hline"></span>
-        {[0, 1, 2, 3].map((i) => <span class="git-drop" data-i={i} style={`left: ${12.5 + i * 25}%; --i: ${i}`} />)}
+        {[0, 1, 2, 3].map((i) => <span class:list={['git-drop', i === 0 && 'is-active']} data-i={i} style={`left: ${12.5 + i * 25}%; --i: ${i}`} />)}
       </div>
     </div>
 
@@ -274,10 +274,7 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
   }
 
   /* A linha da etapa aberta fica destacada */
-  section:has(:global(.etl-step:nth-child(1)[data-open])) .git-drop[data-i='0'],
-  section:has(:global(.etl-step:nth-child(2)[data-open])) .git-drop[data-i='1'],
-  section:has(:global(.etl-step:nth-child(3)[data-open])) .git-drop[data-i='2'],
-  section:has(:global(.etl-step:nth-child(4)[data-open])) .git-drop[data-i='3'] {
+  .git-drop.is-active {
     background: var(--color-heading);
   }
 
@@ -444,6 +441,7 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
   // A partir daqui as etapas ficam lado a lado e só uma fica aberta por vez
   const sideBySide = matchMedia('(min-width: 48rem)');
   const counting = new WeakMap<HTMLElement, number>();
+  let listeners: AbortController | undefined;
 
   // Números do exemplo contam de 0 até o valor quando ele é aberto
   const countUp = (body: HTMLElement) => {
@@ -452,8 +450,9 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
       const target = Number(el.dataset.count);
       const decimals = Number(el.dataset.decimals ?? 0);
       const prefix = el.dataset.prefix ?? '';
+      // Sem Intl: o formatador do navegador leva dezenas de ms para carregar e travava o toque
       const format = (n: number) =>
-        prefix + n.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+        prefix + n.toFixed(decimals).replace('.', ',').replace(/\B(?=(\d{3})(?!\d))/g, '.');
       const start = performance.now();
       const frame = (now: number) => {
         const t = Math.min((now - start) / 900, 1);
@@ -466,15 +465,22 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
   };
 
   document.addEventListener('astro:page-load', () => {
+    // Ao voltar para a home o listener anterior não pode ficar preso à página antiga
+    listeners?.abort();
+    listeners = new AbortController();
+    const { signal } = listeners;
+
     document.querySelectorAll<HTMLElement>('[data-etl]').forEach((root) => {
       const steps = [...root.querySelectorAll<HTMLElement>('.etl-step')];
       const head = (step: HTMLElement) => step.querySelector<HTMLButtonElement>('.etl-head')!;
       const body = (step: HTMLElement) => step.querySelector<HTMLElement>('.etl-body')!;
+      const drops = document.querySelectorAll<HTMLElement>('.git-drop');
       let clicked = false;
 
       const setOpen = (step: HTMLElement, open: boolean) => {
         if (open && !step.hasAttribute('data-open')) countUp(body(step));
         step.toggleAttribute('data-open', open);
+        drops[steps.indexOf(step)]?.classList.toggle('is-active', open);
         head(step).setAttribute('aria-expanded', String(open));
         body(step).inert = !open;
         // Código aberto num exemplo fechado deixaria a área alta e vazia
@@ -493,9 +499,13 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
       );
 
       // Ao virar lado a lado (girar o tablet, redimensionar), fica só uma etapa aberta
-      sideBySide.addEventListener('change', (e) => {
-        if (e.matches) select(steps.find((s) => s.hasAttribute('data-open')) ?? steps[0]);
-      });
+      sideBySide.addEventListener(
+        'change',
+        (e) => {
+          if (e.matches) select(steps.find((s) => s.hasAttribute('data-open')) ?? steps[0]);
+        },
+        { signal },
+      );
 
       if (reduceMotion()) return;
 

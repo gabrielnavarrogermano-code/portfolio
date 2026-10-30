@@ -55,29 +55,19 @@ const profile: [string, string | string[]][] = [
     </div>
 
     <div class="max-sm:space-y-3 sm:divide-y sm:divide-line sm:border-y sm:border-line lg:col-span-3">
-      <article data-reveal data-collapse class="pb-2 sm:py-8">
+      <article data-reveal class="pb-2 sm:py-8">
         <p class="leading-relaxed text-fg/85">
           Eu sempre fui uma pessoa que gostou de tecnologia, mas principalmente de números e de como eles se relacionam
           com a área de negócio. Por isso, resolvi seguir o caminho da análise de dados, para conseguir trazer uma visão
           do cenário atual da empresa para pessoas não técnicas, relacionando regras de negócio com processos de análise
           de dados.
         </p>
-        <p id="sobre-mais" data-collapse-body class="mt-4 leading-relaxed text-fg/85">
+        <p class="mt-4 leading-relaxed text-fg/85">
           Na empresa onde trabalho atualmente, ainda temos um volume considerado pequeno de dados, então vi que era a
           hora perfeita para começar a centralizar algumas informações, para que mais para frente isso não vire um
           problema. Isso me levou para a parte de extração e tratamento, principalmente de dados relacionados aos
           colaboradores.
         </p>
-        <button
-          type="button"
-          data-collapse-toggle
-          data-less="Ler menos"
-          aria-expanded="false"
-          aria-controls="sobre-mais"
-          class="mt-3 cursor-pointer py-1 text-sm font-medium text-accent sm:hidden"
-        >
-          Continuar lendo
-        </button>
       </article>
 
       <article data-reveal data-collapse style="--delay: 100ms" class="max-sm:rounded-2xl max-sm:border max-sm:border-line max-sm:p-5 max-sm:transition-colors max-sm:data-open:border-heading/30 max-sm:data-open:bg-white/[0.03] sm:py-8">
@@ -167,11 +157,9 @@ const profile: [string, string | string[]][] = [
   document.addEventListener('astro:page-load', () => {
     document.querySelectorAll<HTMLButtonElement>('[data-collapse-toggle]').forEach((button) => {
       const card = button.closest<HTMLElement>('[data-collapse]')!;
-      const more = button.textContent;
       button.addEventListener('click', () => {
         const open = card.toggleAttribute('data-open');
         button.setAttribute('aria-expanded', String(open));
-        if (button.dataset.less) button.textContent = open ? button.dataset.less : more;
       });
     });
   });

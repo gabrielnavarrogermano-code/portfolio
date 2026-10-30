@@ -91,6 +91,7 @@ const words = ['extração e tratamento de dados', 'pipelines de ETL', 'dashboar
 
 <script>
   let timer: number | undefined;
+  let observer: IntersectionObserver | undefined;
 
   function initHero() {
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -102,7 +103,9 @@ const words = ['extração e tratamento de dados', 'pipelines de ETL', 'dashboar
     let w = 0;
     let i = words[0].length;
     let deleting = true;
+    let visible = true;
     const tick = () => {
+      if (!visible) return;
       const word = words[w];
       i += deleting ? -1 : 1;
       typed.textContent = word.slice(0, i);
@@ -117,9 +120,22 @@ const words = ['extração e tratamento de dados', 'pipelines de ETL', 'dashboar
       }
       timer = window.setTimeout(tick, delay);
     };
-    timer = window.setTimeout(tick, 2000);
+
+    // Fora da tela não digita: cada letra faz o navegador recalcular a página
+    let started = false;
+    observer?.disconnect();
+    observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      clearTimeout(timer);
+      if (visible) timer = window.setTimeout(tick, started ? 300 : 2000);
+      started = true;
+    });
+    observer.observe(typed);
   }
 
   document.addEventListener('astro:page-load', initHero);
-  document.addEventListener('astro:before-swap', () => clearTimeout(timer));
+  document.addEventListener('astro:before-swap', () => {
+    clearTimeout(timer);
+    observer?.disconnect();
+  });
 </script>
