@@ -1,133 +1,94 @@
 ---
 import SectionTitle from './SectionTitle.astro';
 import EtlStep from './EtlStep.astro';
-import { siGit, siGithub } from 'simple-icons';
 
 // Pipeline: as etapas e as ferramentas usadas em cada uma
 const pipeline = [
-  { stage: 'Extração', tools: ['SQL', 'Python'] },
-  { stage: 'Tratamento', tools: ['pandas', 'Excel'] },
-  { stage: 'Armazenamento', tools: ['PostgreSQL', 'MySQL'] },
-  { stage: 'Visualização', tools: ['Power BI', 'DAX'] },
+  { stage: 'Extração', tools: ['Helpdesk', 'Excel'] },
+  { stage: 'Tratamento', tools: ['Excel', 'Fórmulas'] },
+  { stage: 'Visualização', tools: ['Excel', 'Gráficos Dinâmicos'] },
 ];
 
-// Caso fictício: vendas de uma distribuidora passando pelas 4 etapas.
-// A origem guarda os pedidos importados de planilhas com colunas em texto, por isso os formatos misturados.
+// Caso fictício: chamados de helpdesk passando pelas 3 etapas.
 // bad: coluna com problema → o motivo, mostrado ao passar o mouse na célula
-const rawCols = ['Pedido', 'Data', 'Cliente', 'Produto', 'Qtd', 'Preço', 'UF'];
-const repeated = 'Pedido repetido';
+const rawCols = ['Chamado', 'Data', 'Setor', 'Categoria', 'Status'];
+const repeated = 'Chamado repetido';
 const raw: { row: string[]; bad: Record<number, string> }[] = [
-  { row: ['1001', '2026-09-02', 'Mercado Sol', 'Café 500g', '2', '18.90', 'SP'], bad: {} },
+  { row: ['2041', '01/09/2026', 'Qualidade', 'Impressora', 'Resolvido'], bad: {} },
   {
-    row: ['1002', '02/09/2026', 'mercado sol', 'Café 500g', '1', '18,90', 'sp'],
-    bad: { 1: 'Data em outro formato', 2: 'Mesmo cliente, escrito de outro jeito', 5: 'Preço com vírgula', 6: 'Estado em minúsculas' },
+    row: ['2042', '2026-09-01', 'qualidade', 'imp.', 'Resolvido'],
+    bad: { 1: 'Data em outro formato', 2: 'Setor em minúsculas', 3: 'Categoria abreviada' },
   },
-  { row: ['1003', '2026-09-03', 'Padaria Lua', 'Açúcar 1kg', '5', 'NULL', 'RJ'], bad: { 5: 'Pedido sem preço' } },
-  { row: ['1004', '2026-09-04', 'Empório Vale', 'Leite 1L', '12', '4.79', 'MG'], bad: {} },
+  { row: ['2043', '02/09/2026', 'Produção', 'Acesso', '—'], bad: { 4: 'Chamado sem status' } },
+  { row: ['2044', '02/09/2026', 'Comercial', 'Acesso', 'Resolvido'], bad: {} },
   {
-    row: ['1004', '2026-09-04', 'Empório Vale', 'Leite 1L', '12', '4.79', 'MG'],
+    row: ['2044', '02/09/2026', 'Comercial', 'Acesso', 'Resolvido'],
     bad: Object.fromEntries(rawCols.map((_, i) => [i, repeated])),
   },
-  { row: ['1005', '2026-09-05', 'Padaria Lua', 'Café 500g', '3', '18.90', 'RJ'], bad: {} },
+  { row: ['2045', '03/09/2026', 'Producao', 'Impressora', 'Resolvido'], bad: { 2: 'Setor sem acento' } },
+  { row: ['2046', '03/09/2026', 'Qualidade', 'IMPRESSORA', 'Resolvido'], bad: { 3: 'Categoria em maiúsculas' } },
+  { row: ['2047', '03/09/2026', 'Comercial', 'Rede', 'Resolvido'], bad: {} },
 ];
 
-// fixed: coluna corrigida no tratamento → o que foi feito (faturamento, índice 7, é sempre calculado)
-const cleanCols = ['Pedido', 'Data', 'Cliente', 'Produto', 'Qtd', 'Preço', 'UF', 'Faturamento'];
+// fixed: coluna corrigida no tratamento → o que foi feito
 const clean: { row: string[]; fixed: Record<number, string> }[] = [
-  { row: ['1001', '2026-09-02', 'Mercado Sol', 'Café 500g', '2', '18.90', 'SP', '37.80'], fixed: {} },
+  { row: ['2041', '01/09/2026', 'Qualidade', 'Impressora', 'Resolvido'], fixed: {} },
   {
-    row: ['1002', '2026-09-02', 'Mercado Sol', 'Café 500g', '1', '18.90', 'SP', '18.90'],
-    fixed: { 1: 'Data padronizada', 2: 'Nome unificado', 5: 'Preço convertido em número', 6: 'Estado padronizado' },
+    row: ['2042', '01/09/2026', 'Qualidade', 'Impressora', 'Resolvido'],
+    fixed: { 1: 'Data padronizada', 2: 'Setor padronizado', 3: 'Categoria padronizada' },
   },
-  {
-    row: ['1003', '2026-09-03', 'Padaria Lua', 'Açúcar 1kg', '5', '5.49', 'RJ', '27.45'],
-    fixed: { 5: 'Preenchido pela tabela de preços' },
-  },
-  { row: ['1004', '2026-09-04', 'Empório Vale', 'Leite 1L', '12', '4.79', 'MG', '57.48'], fixed: {} },
-  { row: ['1005', '2026-09-05', 'Padaria Lua', 'Café 500g', '3', '18.90', 'RJ', '56.70'], fixed: {} },
+  { row: ['2043', '02/09/2026', 'Produção', 'Acesso', 'Em aberto'], fixed: { 4: 'Status conferido no Helpdesk' } },
+  { row: ['2044', '02/09/2026', 'Comercial', 'Acesso', 'Resolvido'], fixed: {} },
+  { row: ['2045', '03/09/2026', 'Produção', 'Impressora', 'Resolvido'], fixed: { 2: 'Setor padronizado' } },
+  { row: ['2046', '03/09/2026', 'Qualidade', 'Impressora', 'Resolvido'], fixed: { 3: 'Categoria padronizada' } },
+  { row: ['2047', '03/09/2026', 'Comercial', 'Rede', 'Resolvido'], fixed: {} },
 ];
-for (const r of clean) r.fixed[7] = `Calculado: ${r.row[4]} × ${r.row[5]}`;
 
 // Dica fica alinhada à direita nas últimas colunas, para não sair da tabela
-const tipSide = (col: number, total: number) => (col >= total - 3 ? 'tip-end' : '');
+const tipSide = (col: number, total: number) => (col >= total - 2 ? 'tip-end' : '');
 
-// value é número para a contagem animada; o texto inicial já vem formatado (funciona sem JS)
+// Conta quantos chamados tratados existem por valor de uma coluna, do maior para o menor
+const countBy = (col: number) => {
+  const totals: Record<string, number> = {};
+  for (const { row } of clean) totals[row[col]] = (totals[row[col]] ?? 0) + 1;
+  return Object.entries(totals)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
+};
+
+const byStatus = countBy(4);
+const open = byStatus.find((s) => s.name === 'Em aberto')?.value ?? 0;
+
+// value é número para a contagem animada; o texto inicial já vem preenchido (funciona sem JS)
 const kpis = [
-  { label: 'Faturamento', value: 198.33, decimals: 2, prefix: 'R$ ' },
-  { label: 'Pedidos', value: 5, decimals: 0, prefix: '' },
-  { label: 'Ticket médio', value: 39.67, decimals: 2, prefix: 'R$ ' },
+  { label: 'Chamados', value: clean.length },
+  { label: 'Resolvidos', value: clean.length - open },
+  { label: 'Em aberto', value: open },
 ];
-const byProduct = [
-  { name: 'Café 500g', value: 113.4 },
-  { name: 'Leite 1L', value: 57.48 },
-  { name: 'Açúcar 1kg', value: 27.45 },
+const charts = [
+  { title: 'Chamados por categoria', data: countBy(3) },
+  { title: 'Chamados por setor', data: countBy(2) },
 ];
-const maxProduct = Math.max(...byProduct.map((p) => p.value));
-const brl = (n: number, decimals = 2) =>
-  n.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 
-const code = {
-  extract: `df = pd.read_sql("""
-    SELECT id, data, cliente, produto, qtd, valor_unit, uf
-    FROM erp.pedidos_importados
-""", conn)
-
-precos = pd.read_sql("SELECT produto, preco FROM erp.produtos", conn)`,
-  transform: `df = df.drop_duplicates()
-
-# datas: 02/09/2026 -> 2026-09-02
-df["data"] = pd.to_datetime(
-    df["data"].str.replace(r"(\\d{2})/(\\d{2})/(\\d{4})", r"\\3-\\2-\\1", regex=True)
-)
-df["cliente"] = df["cliente"].str.title()
-df["uf"] = df["uf"].str.upper()
-
-# texto -> número ("18,90" -> 18.90, NULL continua vazio)
-df["qtd"] = df["qtd"].astype(int)
-df["valor_unit"] = pd.to_numeric(df["valor_unit"].str.replace(",", "."))
-
-# regra de negócio: valor ausente assume o preço de tabela do produto
-df["valor_unit"] = df["valor_unit"].fillna(
-    df["produto"].map(precos.set_index("produto")["preco"])
-)
-df["faturamento"] = df["qtd"] * df["valor_unit"]`,
-  load: `# grava a base tratada como a tabela "vendas" no PostgreSQL
-df.to_sql("vendas", conn, if_exists="replace", index=False)
-
--- conferência da carga no banco
-SELECT COUNT(*) AS linhas, SUM(faturamento) AS faturamento_total
-FROM vendas;`,
-  visualize: `Faturamento  = SUM ( vendas[faturamento] )
-Pedidos      = DISTINCTCOUNT ( vendas[id] )
-Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
+const formulas = {
+  transform: `Repetidos:   Dados > Remover Duplicatas
+Textos:      =PRI.MAIÚSCULA(ARRUMAR(C2))
+Variações:   =PROCV(D2; Categorias!A:B; 2; FALSO)`,
+  visualize: `Chamados:    =CONT.VALORES(Chamados[Chamado])
+Em aberto:   =CONT.SE(Chamados[Status]; "Em aberto")
+Por setor:   =CONT.SE(Chamados[Setor]; "Qualidade")`,
 };
 ---
 
 <section id="habilidades" class="render-later py-16 [contain-intrinsic-size:auto_1024px] sm:py-24 md:[contain-intrinsic-size:auto_880px]">
   <div class="mx-auto max-w-5xl px-6">
-    <SectionTitle title="Como eu trabalho" />
+    <SectionTitle
+      title="Como eu trabalho"
+      subtitle="Quem decide não deveria precisar desconfiar do número. Meu trabalho é fazer esse número chegar limpo e fácil de entender, para que a pessoa só pense na decisão. Este exemplo, com dados fictícios, aplica o processo a chamados de TI como os que atendo no estágio."
+    />
     <p data-reveal class="mt-3 text-muted md:hidden">Abra cada etapa para ver o exemplo na prática.</p>
 
-    <!-- Git e GitHub em cima, com uma linha descendo para cada uma das 4 etapas -->
-    <div data-reveal class="git-link mt-10 md:mt-14">
-      <p class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm text-muted">
-        <span class="inline-flex items-center gap-1.5 text-fg">
-          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor" aria-hidden="true"><path d={siGit.path} /></svg>Git
-        </span>
-        e
-        <span class="inline-flex items-center gap-1.5 text-fg">
-          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor" aria-hidden="true"><path d={siGithub.path} /></svg>GitHub
-        </span>
-        versionando todas as etapas
-      </p>
-      <div class="git-lines relative mt-3 hidden h-8 lg:block" aria-hidden="true">
-        <span class="git-stem"></span>
-        <span class="git-hline"></span>
-        {[0, 1, 2, 3].map((i) => <span class:list={['git-drop', i === 0 && 'is-active']} data-i={i} style={`left: ${12.5 + i * 25}%; --i: ${i}`} />)}
-      </div>
-    </div>
-
-    <div class="etl mt-6 space-y-3 md:mt-8 md:space-y-0 lg:mt-0" data-etl>
+    <div class="etl mt-6 space-y-3 md:mt-10 md:space-y-0" data-etl>
       <EtlStep index={0} {...pipeline[0]} open>
         <div class="overflow-x-auto">
           <table class="w-full text-sm tabular-nums">
@@ -145,20 +106,15 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
         </div>
         <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
         <p class="mt-4 text-sm text-muted"><span class="mr-2 text-red-400">✕</span>Passe o mouse (ou toque) nas células em vermelho para ver cada erro</p>
-        <details class="mt-3">
-          <summary class="w-fit cursor-pointer py-2 text-sm text-muted transition-colors hover:text-heading">Ver o código (Python + SQL)</summary>
-          <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.extract}</pre>
-          <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
-        </details>
       </EtlStep>
       <EtlStep index={1} {...pipeline[1]}>
         <div class="overflow-x-auto">
           <table class="w-full text-sm tabular-nums">
-            <thead><tr>{cleanCols.map((c) => <th class="border-b border-line px-3 py-2 text-left font-medium text-muted">{c}</th>)}</tr></thead>
+            <thead><tr>{rawCols.map((c) => <th class="border-b border-line px-3 py-2 text-left font-medium text-muted">{c}</th>)}</tr></thead>
             <tbody>
               {clean.map((r, ri) => (
                 <tr>{r.row.map((v, ci) => r.fixed[ci] ? (
-                  <td tabindex="0" style={`--fix-delay: ${ri * 90}ms`} class:list={['cell-tip is-fixed border-b border-line px-3 py-2 whitespace-nowrap text-emerald-400', tipSide(ci, cleanCols.length)]}>{v}<span class="tip">{r.fixed[ci]}</span></td>
+                  <td tabindex="0" style={`--fix-delay: ${ri * 90}ms`} class:list={['cell-tip is-fixed border-b border-line px-3 py-2 whitespace-nowrap text-emerald-400', tipSide(ci, rawCols.length)]}>{v}<span class="tip">{r.fixed[ci]}</span></td>
                 ) : (
                   <td class="border-b border-line px-3 py-2 whitespace-nowrap text-fg/85">{v}</td>
                 ))}</tr>
@@ -167,56 +123,48 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
           </table>
         </div>
         <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
-        <p class="mt-4 text-sm text-muted"><span class="mr-2 text-emerald-400">✓</span>Pedido repetido removido · passe o mouse nas células em verde para ver cada correção</p>
+        <p class="mt-4 text-sm text-muted"><span class="mr-2 text-emerald-400">✓</span>Chamado repetido removido · passe o mouse nas células em verde para ver cada correção</p>
         <details class="mt-3">
-          <summary class="w-fit cursor-pointer py-2 text-sm text-muted transition-colors hover:text-heading">Ver o código (Python)</summary>
-          <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.transform}</pre>
+          <summary class="w-fit cursor-pointer py-2 text-sm text-muted transition-colors hover:text-heading">Ver como fazer no Excel</summary>
+          <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{formulas.transform}</pre>
           <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
         </details>
       </EtlStep>
       <EtlStep index={2} {...pipeline[2]}>
-        <div class="grid gap-4 sm:grid-cols-2">
-          <div class="rounded border border-line px-4 py-3">
-            <p class="text-sm text-muted">Pedidos gravados</p>
-            <p class="mt-1 text-2xl font-semibold text-heading tabular-nums"><span data-count={clean.length}>{clean.length}</span> <span class="text-sm font-normal text-emerald-400">✓ todos chegaram</span></p>
-          </div>
-          <div class="rounded border border-line px-4 py-3">
-            <p class="text-sm text-muted">Faturamento total</p>
-            <p class="mt-1 text-2xl font-semibold text-heading tabular-nums"><span data-count="198.33" data-decimals="2" data-prefix="R$ ">R$ 198,33</span> <span class="text-sm font-normal text-emerald-400">✓ bate com o painel</span></p>
-          </div>
-        </div>
-        <details class="mt-3">
-          <summary class="w-fit cursor-pointer py-2 text-sm text-muted transition-colors hover:text-heading">Ver o código (Python + SQL)</summary>
-          <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.load}</pre>
-          <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
-        </details>
-      </EtlStep>
-      <EtlStep index={3} {...pipeline[3]}>
-        <div class="grid gap-4 sm:grid-cols-3">
+        <div class="grid grid-cols-3 gap-2 sm:gap-4">
           {kpis.map((k) => (
-            <div class="rounded border border-line px-4 py-3">
+            <div class="rounded border border-line px-3 py-3 sm:px-4">
               <p class="text-sm text-muted">{k.label}</p>
-              <p class="mt-1 text-2xl font-semibold text-heading tabular-nums">
-                <span data-count={k.value} data-decimals={k.decimals} data-prefix={k.prefix}>{k.prefix}{brl(k.value, k.decimals)}</span>
-              </p>
+              <p class="mt-1 text-2xl font-semibold text-heading tabular-nums"><span data-count={k.value}>{k.value}</span></p>
             </div>
           ))}
         </div>
-        <div class="mt-4 rounded border border-line px-4 py-4">
-          <p class="text-sm text-muted">Faturamento por produto</p>
-          <ul class="mt-3 space-y-2">
-            {byProduct.map((p, i) => (
-              <li class="grid grid-cols-[6.5rem_1fr_4.5rem] items-center gap-3 text-sm">
-                <span class="text-fg/85">{p.name}</span>
-                <span class="etl-bar h-2 rounded bg-accent" style={`width: ${(p.value / maxProduct) * 100}%; --bar-delay: ${i * 120}ms`} />
-                <span class="text-right font-mono text-fg/85">{brl(p.value)}</span>
-              </li>
-            ))}
-          </ul>
+        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+          {charts.map((chart) => {
+            const max = Math.max(...chart.data.map((d) => d.value));
+            return (
+              <div class="rounded border border-line px-4 py-4">
+                <p class="text-sm text-muted">{chart.title}</p>
+                <ul class="mt-3 space-y-2">
+                  {chart.data.map((d, i) => (
+                    <li class="grid grid-cols-[5.5rem_1fr_1.5rem] items-center gap-3 text-sm">
+                      <span class="text-fg/85">{d.name}</span>
+                      <span class="etl-bar h-2 rounded bg-accent" style={`width: ${(d.value / max) * 100}%; --bar-delay: ${i * 120}ms`} />
+                      <span class="text-right font-mono text-fg/85">{d.value}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
         </div>
+        <p class="mt-4 leading-relaxed text-fg/85">
+          O que isso mostra: impressora é o problema mais comum, e a Qualidade concentra 3 desses 4 chamados. Em vez de
+          resolver um por um, a TI pode investigar a causa nesse setor.
+        </p>
         <details class="mt-3">
-          <summary class="w-fit cursor-pointer py-2 text-sm text-muted transition-colors hover:text-heading">Ver as fórmulas (DAX)</summary>
-          <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{code.visualize}</pre>
+          <summary class="w-fit cursor-pointer py-2 text-sm text-muted transition-colors hover:text-heading">Ver como fazer no Excel</summary>
+          <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{formulas.visualize}</pre>
           <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
         </details>
       </EtlStep>
@@ -225,68 +173,6 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
 </section>
 
 <style>
-  /* Linhas do Git até as etapas: descem do texto, abrem para os lados e caem em cada aba */
-  .git-stem,
-  .git-hline,
-  .git-drop {
-    position: absolute;
-    background: var(--color-line);
-    transition:
-      transform 0.5s ease,
-      background-color 0.25s ease;
-  }
-
-  .git-stem {
-    top: 0;
-    left: 50%;
-    width: 1px;
-    height: 0.75rem;
-    transform-origin: top;
-    transform: scaleY(0);
-    transition-delay: 0.2s;
-  }
-
-  .git-hline {
-    top: 0.75rem;
-    left: 12.5%;
-    right: 12.5%;
-    height: 1px;
-    transform: scaleX(0);
-    transition-delay: 0.6s;
-  }
-
-  .git-drop {
-    top: 0.75rem;
-    bottom: 0;
-    width: 1px;
-    transform-origin: top;
-    transform: scaleY(0);
-    transition-delay: calc(1s + var(--i) * 80ms), 0s;
-  }
-
-  .git-link:global(.is-visible) .git-stem,
-  .git-link:global(.is-visible) .git-drop {
-    transform: scaleY(1);
-  }
-
-  .git-link:global(.is-visible) .git-hline {
-    transform: scaleX(1);
-  }
-
-  /* A linha da etapa aberta fica destacada */
-  .git-drop.is-active {
-    background: var(--color-heading);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .git-stem,
-    .git-hline,
-    .git-drop {
-      transition: none;
-      transform: none;
-    }
-  }
-
   /*
     Celular: cards um embaixo do outro, cada um abre o próprio exemplo.
     A partir de md: os cabeçalhos viram abas lado a lado e os exemplos ficam empilhados
@@ -299,7 +185,7 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
   @media (min-width: 48rem) {
     .etl {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .etl :global(.etl-step) {
@@ -307,19 +193,15 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
     }
 
     .etl :global(.etl-head) {
-      border-bottom-width: 1px;
+      border-block-width: 1px;
     }
 
-    .etl :global(.etl-step:nth-child(-n + 2) > .etl-head) {
-      border-top-width: 1px;
-    }
-
-    .etl :global(.etl-step:nth-child(even) > .etl-head) {
+    .etl :global(.etl-step:not(:first-child) > .etl-head) {
       border-left-width: 1px;
     }
 
     .etl :global(.etl-body) {
-      grid-row: 3;
+      grid-row: 2;
       grid-column: 1 / -1;
     }
 
@@ -330,24 +212,6 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
 
     .etl :global(.etl-step[data-open] > .etl-body) {
       animation: etl-fade 0.3s ease;
-    }
-  }
-
-  @media (min-width: 64rem) {
-    .etl {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
-    .etl :global(.etl-step > .etl-head) {
-      border-top-width: 1px;
-    }
-
-    .etl :global(.etl-step:not(:first-child) > .etl-head) {
-      border-left-width: 1px;
-    }
-
-    .etl :global(.etl-body) {
-      grid-row: 2;
     }
   }
 
@@ -474,13 +338,11 @@ Ticket Médio = DIVIDE ( [Faturamento], [Pedidos] )`,
       const steps = [...root.querySelectorAll<HTMLElement>('.etl-step')];
       const head = (step: HTMLElement) => step.querySelector<HTMLButtonElement>('.etl-head')!;
       const body = (step: HTMLElement) => step.querySelector<HTMLElement>('.etl-body')!;
-      const drops = document.querySelectorAll<HTMLElement>('.git-drop');
       let clicked = false;
 
       const setOpen = (step: HTMLElement, open: boolean) => {
         if (open && !step.hasAttribute('data-open')) countUp(body(step));
         step.toggleAttribute('data-open', open);
-        drops[steps.indexOf(step)]?.classList.toggle('is-active', open);
         head(step).setAttribute('aria-expanded', String(open));
         body(step).inert = !open;
         // Código aberto num exemplo fechado deixaria a área alta e vazia

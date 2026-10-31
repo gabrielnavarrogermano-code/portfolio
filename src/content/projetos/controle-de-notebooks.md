@@ -43,6 +43,6 @@ O mini dashboard fica em outra aba, no mesmo arquivo da base de colaboradores, e
 
 ## Resultado
 
-Essa tabela é a **principal fonte de dados centralizados para consulta rápida** dos dispositivos, licenças e usuários da empresa. A única exceção é o banco de dados, que também possui algumas dessas informações.
+Esse arquivo, com a tabela e o dashboard, é a **principal fonte de consulta de dados centralizados** de cada colaborador. Nele estão todas as informações sobre o dispositivo e o setor onde a pessoa se encontra.
 
-Com ela, a equipe de TI enxerga em um só lugar quem está com cada equipamento e quais máquinas ainda precisam de ajuste.
+Antes disso, precisávamos consultar individualmente as informações dos usuários no 365 Admin, e ainda não tínhamos todas as informações referentes a um mesmo dispositivo, como o antivírus e o LAPS. Centralizamos tudo e, agora, quando precisamos consultar alguma informação de um colaborador, apenas filtramos pela planilha. Além disso, o dashboard nos mostra o que pode ser melhorado e o que já foi feito até agora, com uma visão tanto geral quanto afunilada pelos KPIs e gráficos.

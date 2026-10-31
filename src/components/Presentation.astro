@@ -57,88 +57,80 @@ const profile: [string, string | string[]][] = [
     <div class="lg:col-span-3">
       <article data-reveal>
         <p class="leading-relaxed text-fg/85">
-          Eu sempre fui uma pessoa que gostou de tecnologia, mas principalmente de números, estatísticas e de como eles
-          se relacionam com a área de negócio. Por isso, resolvi me aprofundar na análise de dados, buscando contribuir
-          diretamente para o crescimento da empresa, além de fornecer uma visão do cenário da empresa em uma parte que
-          pode ser difícil de entender para pessoas não técnicas: a análise e a inteligência de dados. Quero que quem
-          decide só se preocupe em tomar a melhor decisão com base nos dados trazidos por mim, confiando no meu trabalho.
+          Eu cresci em uma família de empreendedores, tanto meu pai quanto meu avô. Acompanhar esse processo de gestão
+          de perto me fez querer entender o que poderia melhorar em um negócio. Sempre fui alguém com uma certa
+          facilidade com números, só precisava descobrir onde poderia aplicá-los em uma empresa. Foi na faculdade que a
+          análise de dados se mostrou um caminho para isso.
         </p>
         <p class="mt-4 leading-relaxed text-fg/85">
-          Na empresa onde trabalho atualmente, ainda temos um volume considerado pequeno de dados, então vi que era a
-          hora perfeita para começar a centralizar algumas informações, para que mais para frente isso não vire um
-          problema. Isso me levou para a parte de extração e tratamento, principalmente de dados relacionados aos
-          colaboradores.
-        </p>
-        <p class="mt-4 leading-relaxed text-fg/85">
-          Meu estágio em TI em uma indústria farmacêutica me deu essa visão na prática. Atendendo chamados,
-          gerenciando acessos e documentando processos, vejo de perto como cada área trabalha e quais informações ela
-          precisa para seguir em frente. É nesse dia a dia que a tecnologia deixa de ser só ferramenta e passa a fazer
-          parte de como o negócio funciona.
+          Hoje sou estagiário de TI em uma indústria farmacêutica. Atendendo chamados e cuidando de acessos, busco
+          entender de perto como cada área trabalha e do que ela precisa para seguir em frente. Foi ali que entendi que
+          um dado só faz sentido quando ajuda alguém a resolver algum problema.
         </p>
       </article>
-    </div>
-  </div>
 
-  <div class="mt-6 grid grid-cols-1 gap-3 sm:mt-12 md:grid-cols-2 md:gap-6">
-    <article data-reveal data-collapse style="--delay: 100ms" class="rounded-2xl border border-line p-5 transition-colors max-sm:data-open:border-heading/30 max-sm:data-open:bg-white/[0.03] sm:p-6">
-      <div class="relative max-sm:pr-8">
-        <p class="text-sm text-accent">Formação</p>
-        <h3 class="mt-2 text-xl font-semibold text-heading">Engenharia de Software</h3>
-        <p class="mt-1 text-muted">UniCesumar</p>
-        <CardToggle label="Formação: ver detalhes" target="formacao-detalhes" />
-      </div>
-      <div id="formacao-detalhes" data-collapse-body>
-        <div class="mt-4 flex items-center gap-3">
-          <div class="flex flex-1 gap-1" role="img" aria-label={`${semester}º de ${totalSemesters} semestres`}>
-            {
-              Array.from({ length: totalSemesters }, (_, i) => (
-                <span class:list={['h-1.5 flex-1 rounded-full', i < semester ? 'bg-accent' : 'bg-line']} />
-              ))
-            }
+      <div class="mt-6 grid grid-cols-1 gap-3 sm:mt-8 md:grid-cols-2 md:gap-6 lg:grid-cols-1">
+        <article data-reveal data-collapse style="--delay: 100ms" class="rounded-2xl border border-line p-5 transition-colors max-sm:data-open:border-heading/30 max-sm:data-open:bg-white/[0.03] sm:p-6">
+          <div class="relative max-sm:pr-8">
+            <p class="text-sm text-accent">Formação</p>
+            <h3 class="mt-2 text-xl font-semibold text-heading">Engenharia de Software</h3>
+            <p class="mt-1 text-muted">UniCesumar</p>
+            <CardToggle label="Formação: ver detalhes" target="formacao-detalhes" />
           </div>
-          <span class="flex-none text-sm text-muted">{semester}º de {totalSemesters} semestres</span>
-        </div>
-        <p class="mt-4 leading-relaxed text-fg/85">
-          Base técnica em lógica, programação e banco de dados, aplicada desde já a projetos de análise.
-        </p>
+          <div id="formacao-detalhes" data-collapse-body>
+            <div class="mt-4 flex items-center gap-3">
+              <div class="flex flex-1 gap-1" role="img" aria-label={`${semester}º de ${totalSemesters} semestres`}>
+                {
+                  Array.from({ length: totalSemesters }, (_, i) => (
+                    <span class:list={['h-1.5 flex-1 rounded-full', i < semester ? 'bg-accent' : 'bg-line']} />
+                  ))
+                }
+              </div>
+              <span class="flex-none text-sm text-muted">{semester}º de {totalSemesters} semestres</span>
+            </div>
+            <p class="mt-4 leading-relaxed text-fg/85">
+              Base técnica em lógica, programação e banco de dados, aplicada desde já a projetos de análise.
+            </p>
+          </div>
+        </article>
+    
+        <article data-reveal data-collapse style="--delay: 200ms" class="rounded-2xl border border-line p-5 transition-colors max-sm:data-open:border-heading/30 max-sm:data-open:bg-white/[0.03] sm:p-6">
+          <div class="relative max-sm:pr-8">
+            <p class="text-sm text-accent">Experiência atual</p>
+            <h3 class="mt-2 text-xl font-semibold text-heading">Estagiário de TI</h3>
+            <p class="mt-1 text-muted">Hebe's Life Science · Indústria farmacêutica</p>
+            <CardToggle label="Experiência atual: ver detalhes" target="experiencia-detalhes" />
+          </div>
+          <div id="experiencia-detalhes" data-collapse-body>
+            <p class="mt-4 leading-relaxed text-fg/85">
+              Meu dia a dia consiste em resolver chamados de helpdesk, gerenciar permissões e acessos de usuários na empresa
+              e documentar processos operacionais padrão.
+            </p>
+            <a
+              href="/projetos/controle-de-notebooks/"
+              class="group mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent"
+            >
+              Ver o projeto de controle de notebooks
+              <span class="transition-transform group-hover:translate-x-1">→</span>
+            </a>
+            <ul class="mt-5 flex flex-wrap gap-2">
+              {
+                experience.map((item) => (
+                  <li class="rounded-full border border-line px-3.5 py-1.5 text-sm text-fg/85">{item}</li>
+                ))
+              }
+            </ul>
+            <ul class="mt-4 flex flex-wrap gap-2" aria-label="Ferramentas">
+              {
+                tools.map((t) => (
+                  <li class="rounded-md bg-white/[0.06] px-2.5 py-1 font-mono text-xs text-muted">{t}</li>
+                ))
+              }
+            </ul>
+          </div>
+        </article>
       </div>
-    </article>
-
-    <article data-reveal data-collapse style="--delay: 200ms" class="rounded-2xl border border-line p-5 transition-colors max-sm:data-open:border-heading/30 max-sm:data-open:bg-white/[0.03] sm:p-6">
-      <div class="relative max-sm:pr-8">
-        <p class="text-sm text-accent">Experiência atual</p>
-        <h3 class="mt-2 text-xl font-semibold text-heading">Estagiário de TI</h3>
-        <p class="mt-1 text-muted">Hebe's Life Science · Indústria farmacêutica</p>
-        <CardToggle label="Experiência atual: ver detalhes" target="experiencia-detalhes" />
-      </div>
-      <div id="experiencia-detalhes" data-collapse-body>
-        <p class="mt-4 leading-relaxed text-fg/85">
-          Meu dia a dia consiste em resolver chamados de helpdesk, gerenciar permissões e acessos de usuários na empresa
-          e documentar processos operacionais padrão.
-        </p>
-        <a
-          href="/projetos/controle-de-notebooks/"
-          class="group mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent"
-        >
-          Ver o projeto de controle de notebooks
-          <span class="transition-transform group-hover:translate-x-1">→</span>
-        </a>
-        <ul class="mt-5 flex flex-wrap gap-2">
-          {
-            experience.map((item) => (
-              <li class="rounded-full border border-line px-3.5 py-1.5 text-sm text-fg/85">{item}</li>
-            ))
-          }
-        </ul>
-        <ul class="mt-4 flex flex-wrap gap-2" aria-label="Ferramentas">
-          {
-            tools.map((t) => (
-              <li class="rounded-md bg-white/[0.06] px-2.5 py-1 font-mono text-xs text-muted">{t}</li>
-            ))
-          }
-        </ul>
-      </div>
-    </article>
+    </div>
   </div>
 </section>
 
