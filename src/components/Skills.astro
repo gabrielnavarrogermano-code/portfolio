@@ -6,7 +6,7 @@ import EtlStep from './EtlStep.astro';
 const pipeline = [
   { stage: 'Extração', tools: ['Helpdesk', 'Excel'] },
   { stage: 'Tratamento', tools: ['Excel', 'Fórmulas'] },
-  { stage: 'Visualização', tools: ['Excel', 'Gráficos Dinâmicos'] },
+  { stage: 'Visualização', tools: ['Power BI', 'Dashboard'] },
 ];
 
 // Caso fictício: chamados de helpdesk passando pelas 3 etapas.
@@ -47,36 +47,55 @@ const clean: { row: string[]; fixed: Record<number, string> }[] = [
 // Dica fica alinhada à direita nas últimas colunas, para não sair da tabela
 const tipSide = (col: number, total: number) => (col >= total - 2 ? 'tip-end' : '');
 
-// Conta quantos chamados tratados existem por valor de uma coluna, do maior para o menor
-const countBy = (col: number) => {
+// As tabelas mostram só o começo da base; os totais abaixo são da base inteira
+const base: { category: string; sector: string; total: number }[] = [
+  { category: 'Impressora', sector: 'Qualidade', total: 54 },
+  { category: 'Impressora', sector: 'Produção', total: 16 },
+  { category: 'Impressora', sector: 'Comercial', total: 8 },
+  { category: 'Acesso', sector: 'Qualidade', total: 12 },
+  { category: 'Acesso', sector: 'Produção', total: 18 },
+  { category: 'Acesso', sector: 'Comercial', total: 15 },
+  { category: 'Rede', sector: 'Qualidade', total: 6 },
+  { category: 'Rede', sector: 'Produção', total: 11 },
+  { category: 'Rede', sector: 'Comercial', total: 10 },
+];
+const open = 12;
+const duplicates = 8;
+
+// Soma os chamados por categoria ou setor, do maior para o menor
+const sumBy = (key: 'category' | 'sector') => {
   const totals: Record<string, number> = {};
-  for (const { row } of clean) totals[row[col]] = (totals[row[col]] ?? 0) + 1;
+  for (const r of base) totals[r[key]] = (totals[r[key]] ?? 0) + r.total;
   return Object.entries(totals)
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value);
 };
 
-const byStatus = countBy(4);
-const open = byStatus.find((s) => s.name === 'Em aberto')?.value ?? 0;
+const total = base.reduce((sum, r) => sum + r.total, 0);
 
 // value é número para a contagem animada; o texto inicial já vem preenchido (funciona sem JS)
 const kpis = [
-  { label: 'Chamados', value: clean.length },
-  { label: 'Resolvidos', value: clean.length - open },
+  { label: 'Chamados', value: total },
+  { label: 'Resolvidos', value: total - open },
   { label: 'Em aberto', value: open },
 ];
-const charts = [
-  { title: 'Chamados por categoria', data: countBy(3) },
-  { title: 'Chamados por setor', data: countBy(2) },
-];
+const byCategory = sumBy('category');
+const bySector = sumBy('sector');
+const maxSector = Math.max(...bySector.map((d) => d.value));
+// O maior valor fica em destaque e os outros em cinza
+const shades = ['bg-accent text-bg', 'bg-muted/60 text-heading', 'bg-muted/35 text-heading'];
 
-const formulas = {
+const howTo = {
   transform: `Repetidos:   Dados > Remover Duplicatas
 Textos:      =PRI.MAIÚSCULA(ARRUMAR(C2))
 Variações:   =PROCV(D2; Categorias!A:B; 2; FALSO)`,
-  visualize: `Chamados:    =CONT.VALORES(Chamados[Chamado])
-Em aberto:   =CONT.SE(Chamados[Status]; "Em aberto")
-Por setor:   =CONT.SE(Chamados[Setor]; "Qualidade")`,
+  visualize: `Sem fórmula: é só arrastar os campos da tabela para cada visual
+
+Importar:    Página Inicial > Obter dados > Pasta de Trabalho do Excel
+Chamados:    visual Cartão, com Contagem de Chamado
+Em aberto:   mesmo Cartão, filtrando Status = Em aberto
+Categoria:   Barras 100% empilhadas, Categoria na Legenda
+Setor:       Colunas, Setor no Eixo X, Contagem de Chamado no Eixo Y`,
 };
 ---
 
@@ -105,6 +124,7 @@ Por setor:   =CONT.SE(Chamados[Setor]; "Qualidade")`,
           </table>
         </div>
         <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
+        <p class="mt-2 text-sm text-muted">Primeiras {raw.length} de {total + duplicates} linhas</p>
         <p class="mt-4 text-sm text-muted"><span class="mr-2 text-red-400">✕</span>Passe o mouse (ou toque) nas células em vermelho para ver cada erro</p>
       </EtlStep>
       <EtlStep index={1} {...pipeline[1]}>
@@ -123,10 +143,11 @@ Por setor:   =CONT.SE(Chamados[Setor]; "Qualidade")`,
           </table>
         </div>
         <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
-        <p class="mt-4 text-sm text-muted"><span class="mr-2 text-emerald-400">✓</span>Chamado repetido removido · passe o mouse nas células em verde para ver cada correção</p>
+        <p class="mt-2 text-sm text-muted">Primeiras {clean.length} de {total} linhas</p>
+        <p class="mt-4 text-sm text-muted"><span class="mr-2 text-emerald-400">✓</span>{duplicates} chamados repetidos removidos · passe o mouse nas células em verde para ver cada correção</p>
         <details class="mt-3">
           <summary class="w-fit cursor-pointer py-2 text-sm text-muted transition-colors hover:text-heading">Ver como fazer no Excel</summary>
-          <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{formulas.transform}</pre>
+          <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{howTo.transform}</pre>
           <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
         </details>
       </EtlStep>
@@ -140,31 +161,46 @@ Por setor:   =CONT.SE(Chamados[Setor]; "Qualidade")`,
           ))}
         </div>
         <div class="mt-4 grid gap-4 sm:grid-cols-2">
-          {charts.map((chart) => {
-            const max = Math.max(...chart.data.map((d) => d.value));
-            return (
-              <div class="rounded border border-line px-4 py-4">
-                <p class="text-sm text-muted">{chart.title}</p>
-                <ul class="mt-3 space-y-2">
-                  {chart.data.map((d, i) => (
-                    <li class="grid grid-cols-[5.5rem_1fr_1.5rem] items-center gap-3 text-sm">
-                      <span class="text-fg/85">{d.name}</span>
-                      <span class="etl-bar h-2 rounded bg-accent" style={`width: ${(d.value / max) * 100}%; --bar-delay: ${i * 120}ms`} />
-                      <span class="text-right font-mono text-fg/85">{d.value}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
+          <div class="rounded border border-line px-4 py-4">
+            <p class="text-sm text-muted">Chamados por categoria</p>
+            <div
+              role="img"
+              aria-label={byCategory.map((d) => `${d.name}: ${d.value}`).join(', ')}
+              class="etl-bar mt-3 flex h-20 gap-0.5 overflow-hidden rounded"
+            >
+              {byCategory.map((d, i) => (
+                <span class:list={['flex min-w-0 items-center justify-center font-mono text-sm', shades[i]]} style={`flex: ${d.value} 1 0`}>{d.value}</span>
+              ))}
+            </div>
+            <ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-fg/85" aria-hidden="true">
+              {byCategory.map((d, i) => (
+                <li class="inline-flex items-center gap-1.5"><span class:list={['h-2 w-2 rounded-full', shades[i]]} />{d.name}</li>
+              ))}
+            </ul>
+          </div>
+          <div class="rounded border border-line px-4 py-4">
+            <p class="text-sm text-muted">Chamados por setor</p>
+            <ul class="mt-3 grid grid-cols-3 items-end gap-3 text-center text-sm">
+              {bySector.map((d, i) => (
+                <li>
+                  <span class="block font-mono text-fg/85">{d.value}</span>
+                  <span
+                    class:list={['etl-col mx-auto mt-1 block w-8 rounded-t', i === 0 ? 'bg-accent' : 'bg-muted/60']}
+                    style={`height: ${(d.value / maxSector) * 4}rem; --bar-delay: ${i * 120}ms`}
+                  />
+                  <span class="mt-1.5 block truncate text-fg/85">{d.name}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
         <p class="mt-4 leading-relaxed text-fg/85">
-          O que isso mostra: impressora é o problema mais comum, e a Qualidade concentra 3 desses 4 chamados. Em vez de
+          O que isso mostra: impressora é o problema mais comum, e a Qualidade concentra 54 desses 78 chamados. Em vez de
           resolver um por um, a TI pode investigar a causa nesse setor.
         </p>
         <details class="mt-3">
-          <summary class="w-fit cursor-pointer py-2 text-sm text-muted transition-colors hover:text-heading">Ver como fazer no Excel</summary>
-          <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{formulas.visualize}</pre>
+          <summary class="w-fit cursor-pointer py-2 text-sm text-muted transition-colors hover:text-heading">Ver como fazer no Power BI</summary>
+          <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{howTo.visualize}</pre>
           <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
         </details>
       </EtlStep>
@@ -286,16 +322,27 @@ Por setor:   =CONT.SE(Chamados[Setor]; "Qualidade")`,
     }
   }
 
-  /* Visualização: as barras crescem ao abrir o card */
+  /* Visualização: a barra cresce para a direita e as colunas para cima ao abrir o card */
   :global(.etl-step[data-open]) .etl-bar {
     transform-origin: left;
     animation: bar-grow 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  :global(.etl-step[data-open]) .etl-col {
+    transform-origin: bottom;
+    animation: col-grow 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
     animation-delay: var(--bar-delay, 0ms);
   }
 
   @keyframes bar-grow {
     from {
       transform: scaleX(0);
+    }
+  }
+
+  @keyframes col-grow {
+    from {
+      transform: scaleY(0);
     }
   }
 </style>
