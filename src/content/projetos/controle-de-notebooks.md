@@ -22,24 +22,27 @@ Os dados dos colaboradores são importados do **Microsoft 365**, que já é a fo
 
 As informações são tratadas e organizadas na aba de base do arquivo, com uma linha por colaborador:
 
-- **Nome** e **e-mail**
+- **Nome de usuário** e **e-mail cadastrado**
 - **Setor** do colaborador
-- **Tipo de usuário** (interno ou externo)
-- **Licença Microsoft** utilizada (Standard ou Basic)
-- **Nome do computador**
-- **Dependências** instaladas corretamente
+- **Licenças** Microsoft utilizadas (Standard ou Basic)
+- **Nome do PC**
 - **Antivírus** ativo ou não
 - **LAPS** aplicado ou não
-- **Versão do Windows** (Pro ou Home)
 - **Selo de patrimônio**
+- **Versão do Windows** (Pro ou Home)
 
-A tabela possui **filtros** que facilitam a navegação, e a base é atualizada sempre que um novo colaborador entra na empresa.
+Hoje a planilha tem **100 linhas**, uma por colaborador. A simulação acima mostra 15 exemplos. A tabela possui **filtros** que facilitam a navegação, e a base é atualizada sempre que um novo colaborador entra na empresa.
 
 A coluna **LAPS** indica se o notebook já passou pelo script de segurança desenvolvido pelo gerente de TI. Depois que ele é executado, qualquer instalação fora das diretrizes da empresa passa a pedir liberação com a conta de administrador da TI. O script também registra o notebook no **Microsoft Entra ID**, plataforma onde a equipe faz a supervisão de todos os equipamentos.
 
 ## Dashboard
 
-O mini dashboard fica em outra aba, no mesmo arquivo da base de colaboradores, e reúne os **KPIs** e **gráficos dinâmicos** do controle de equipamentos. Ele mostra os principais indicadores de forma clara e ajuda a definir os próximos passos para melhorar o controle dos dispositivos. Quando a base é atualizada e tratada, o dashboard se atualiza junto.
+O mini dashboard fica em outra aba, no mesmo arquivo da base de colaboradores, e reúne os **KPIs** e **gráficos dinâmicos** do controle de equipamentos:
+
+- **6 KPIs:** contas ativas, equipamentos, % de LAPS, % de antivírus, contas sem notebook corporativo e equipamentos sem selo de patrimônio
+- **4 gráficos:** contas ativas por licença (Standard ou Basic), versão do Windows, setores com mais pendências e contas ativas e dispositivos por setor
+
+Ele mostra os principais indicadores de forma clara e ajuda a definir os próximos passos para melhorar o controle dos dispositivos. Quando a base é atualizada e tratada, o dashboard se atualiza junto.
 
 ## Resultado
 
