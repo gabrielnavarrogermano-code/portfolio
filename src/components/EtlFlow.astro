@@ -1,0 +1,247 @@
+---
+// Fluxo resumido do ETL: um chamado sai do Helpdesk, é extraído, tratado e vira gráfico.
+// O script acende uma etapa por vez, em loop, enquanto o fluxo está na tela.
+const steps = [
+  { name: 'Helpdesk', caption: 'O chamado é aberto', icon: 'M4 5h16v14H4ZM8 10h8M8 14h5' },
+  { name: 'Extração', caption: 'Exporto a base para o Excel', icon: 'M12 4v11M7 10l5 5 5-5M5 20h14' },
+  { name: 'Tratamento', caption: 'Aplico as regras de negócio', icon: 'M5 12.5l4.5 4.5L19 7.5' },
+  { name: 'Dashboard', caption: 'Vira número e gráfico', icon: 'M6 20v-7M12 20V8M18 20V4' },
+];
+
+// O mesmo chamado antes e depois do tratamento
+const rawChips = ['qualidade', 'imp.', '2026-09-01'];
+const cleanChips = ['Qualidade', 'Impressora', '01/09/2026'];
+const bars = [100, 40, 30];
+---
+
+<ol data-flow class="flow grid gap-0 md:grid-cols-4 md:gap-6" aria-label="Caminho do dado, do Helpdesk ao dashboard">
+  {
+    steps.map((s, i) => (
+      <li data-state="done" class="flow-step relative grid grid-cols-[2.5rem_1fr] gap-x-4 pb-8 last:pb-0 md:block md:pb-0">
+        {i < steps.length - 1 && (
+          <span class="flow-line" aria-hidden="true">
+            <span class="flow-line-fill" />
+          </span>
+        )}
+        <span class="flow-node relative z-10 flex h-10 w-10 items-center justify-center rounded-full border" aria-hidden="true">
+          <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d={s.icon} />
+          </svg>
+        </span>
+
+        <div class="min-w-0 md:mt-4">
+          <p class="font-medium text-heading">
+            <span class="mr-2 text-sm text-muted">{i + 1}</span>
+            {s.name}
+          </p>
+          <p class="mt-1 text-sm text-muted">{s.caption}</p>
+
+          <div class="flow-visual mt-3 flex h-16 items-center rounded-lg border border-line px-3" aria-hidden="true">
+            {i === 0 && (
+              <div class="min-w-0 text-xs">
+                <p class="font-mono text-muted">Chamado #2042</p>
+                <p class="mt-1 truncate text-fg/85">Impressora não imprime</p>
+              </div>
+            )}
+            {i === 1 && (
+              <div class="flex flex-wrap gap-1">
+                {rawChips.map((c, ci) => (
+                  <span class="flow-chip rounded bg-red-400/10 px-1.5 py-0.5 font-mono text-xs text-red-400" style={`--chip-delay: ${ci * 120}ms`}>{c}</span>
+                ))}
+              </div>
+            )}
+            {i === 2 && (
+              <div class="flex flex-wrap gap-1">
+                {cleanChips.map((c, ci) => (
+                  <span class="flow-chip flow-fix rounded px-1.5 py-0.5 font-mono text-xs" style={`--chip-delay: ${ci * 120}ms`}>{c}</span>
+                ))}
+              </div>
+            )}
+            {i === 3 && (
+              <div class="flex h-10 items-end gap-1.5">
+                {bars.map((h, bi) => (
+                  <span
+                    class:list={['flow-bar block w-4 rounded-t', bi === 0 ? 'bg-accent' : 'bg-muted/50']}
+                    style={`height: ${h}%; --chip-delay: ${bi * 120}ms`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  /* Linha que liga uma etapa à próxima: vertical no celular, horizontal a partir de md */
+  .flow-line {
+    position: absolute;
+    left: calc(1.25rem - 1px);
+    top: 2.5rem;
+    bottom: 0;
+    width: 2px;
+    background: var(--color-line);
+    overflow: hidden;
+  }
+
+  .flow-line-fill {
+    position: absolute;
+    inset: 0;
+    background: var(--color-accent);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 0.6s ease;
+  }
+
+  @media (min-width: 48rem) {
+    .flow-line {
+      left: 2.5rem;
+      right: -1.5rem;
+      top: calc(1.25rem - 1px);
+      bottom: auto;
+      width: auto;
+      height: 2px;
+    }
+
+    .flow-line-fill {
+      transform: scaleX(0);
+      transform-origin: left;
+    }
+  }
+
+  /* Etapa apagada até o dado chegar nela */
+  .flow-node {
+    border-color: var(--color-line);
+    color: var(--color-muted);
+    transition:
+      background-color 0.3s ease,
+      border-color 0.3s ease,
+      color 0.3s ease;
+  }
+
+  .flow-visual {
+    opacity: 0.35;
+    transition: opacity 0.4s ease;
+  }
+
+  .flow-chip,
+  .flow-bar {
+    transition:
+      opacity 0.4s ease,
+      transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition-delay: var(--chip-delay, 0ms);
+  }
+
+  .flow-chip {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  .flow-bar {
+    transform: scaleY(0.15);
+    transform-origin: bottom;
+  }
+
+  /* Tratamento: os valores chegam em vermelho e ficam verdes ao serem corrigidos */
+  .flow-fix {
+    color: var(--color-red-400);
+    background: color-mix(in oklab, var(--color-red-400) 10%, transparent);
+    /* Entra igual à extração e, logo depois, muda de cor */
+    transition:
+      opacity 0.4s ease var(--chip-delay, 0ms),
+      transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) var(--chip-delay, 0ms),
+      color 0.4s ease calc(var(--chip-delay, 0ms) + 400ms),
+      background-color 0.4s ease calc(var(--chip-delay, 0ms) + 400ms);
+  }
+
+  /* Etapa ativa ou já percorrida */
+  [data-state='active'] .flow-node,
+  [data-state='done'] .flow-node {
+    background: var(--color-heading);
+    border-color: var(--color-heading);
+    color: var(--color-bg);
+  }
+
+  [data-state='active'] .flow-node {
+    box-shadow: 0 0 0 6px color-mix(in oklab, var(--color-heading) 12%, transparent);
+  }
+
+  [data-state='active'] .flow-visual,
+  [data-state='done'] .flow-visual {
+    opacity: 1;
+  }
+
+  [data-state='active'] .flow-chip,
+  [data-state='done'] .flow-chip {
+    opacity: 1;
+    transform: none;
+  }
+
+  [data-state='active'] .flow-bar,
+  [data-state='done'] .flow-bar {
+    transform: none;
+  }
+
+  [data-state='active'] .flow-fix,
+  [data-state='done'] .flow-fix {
+    color: var(--color-emerald-400);
+    background: color-mix(in oklab, var(--color-emerald-400) 10%, transparent);
+  }
+
+  [data-state='done'] .flow-line-fill {
+    transform: none;
+  }
+</style>
+
+<script>
+  // Tempo em cada etapa e a pausa no fim, com tudo aceso, antes de recomeçar
+  const STEP_MS = 800;
+  const HOLD_MS = 3500;
+  let cleanup: (() => void) | undefined;
+
+  document.addEventListener('astro:page-load', () => {
+    cleanup?.();
+    const root = document.querySelector<HTMLElement>('[data-flow]');
+    // Sem animação, o fluxo fica com tudo aceso (estado do HTML)
+    if (!root || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const steps = [...root.querySelectorAll<HTMLElement>('.flow-step')];
+    let timer = 0;
+    let current = -1;
+
+    const show = (active: number) => {
+      current = active;
+      steps.forEach((s, i) => (s.dataset.state = i < active ? 'done' : i === active ? 'active' : 'idle'));
+    };
+
+    const tick = () => {
+      if (current >= steps.length - 1) {
+        show(-1);
+        timer = window.setTimeout(tick, 500);
+        return;
+      }
+      show(current + 1);
+      timer = window.setTimeout(tick, current === steps.length - 1 ? HOLD_MS : STEP_MS);
+    };
+
+    // Só anda enquanto está na tela; ao voltar, recomeça do início
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        clearTimeout(timer);
+        if (entry.isIntersecting) {
+          show(-1);
+          timer = window.setTimeout(tick, 400);
+        }
+      },
+      { threshold: 0.4 },
+    );
+    io.observe(root);
+
+    cleanup = () => {
+      io.disconnect();
+      clearTimeout(timer);
+    };
+  });
+</script>

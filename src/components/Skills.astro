@@ -1,6 +1,7 @@
 ---
 import SectionTitle from './SectionTitle.astro';
 import EtlStep from './EtlStep.astro';
+import EtlFlow from './EtlFlow.astro';
 
 // Pipeline: as etapas e as ferramentas usadas em cada uma
 const pipeline = [
@@ -99,15 +100,52 @@ Setor:       Colunas, Setor no Eixo X, Contagem de Chamado no Eixo Y`,
 };
 ---
 
-<section id="habilidades" class="render-later py-16 [contain-intrinsic-size:auto_1024px] sm:py-24 md:[contain-intrinsic-size:auto_880px]">
+<section id="habilidades" class="render-later py-16 [contain-intrinsic-size:auto_1500px] sm:py-24 md:[contain-intrinsic-size:auto_1000px]">
   <div class="mx-auto max-w-5xl px-6">
     <SectionTitle
       title="Como eu trabalho"
-      subtitle="Quem decide não deveria precisar desconfiar do número. Meu trabalho é fazer esse número chegar limpo e fácil de entender, para que a pessoa só pense na decisão. Este exemplo, com dados fictícios, aplica o processo a chamados de TI como os que atendo no estágio."
+      subtitle="Quem decide não deveria precisar desconfiar do número. Meu trabalho é fazer esse número chegar limpo e fácil de entender, para que a pessoa só pense na decisão."
     />
-    <p data-reveal class="mt-3 text-muted md:hidden">Abra cada etapa para ver o exemplo na prática.</p>
+    <div data-reveal class="mt-6 max-w-3xl space-y-4 leading-relaxed text-fg/85">
+      <p>
+        Acredito que minha principal função é conseguir extrair e transformar os dados em decisões para quem não pode
+        acompanhá-los de perto, sempre buscando entender a pergunta de negócio e o que está por trás dela.
+      </p>
+      <p>
+        Depois que tenho meu objetivo definido e já sei qual pergunta quero responder, começo a estruturar o processo de
+        extração e tratamento dos dados, que creio ser hoje a parte que mais leva tempo. Primeiro defino de qual fonte
+        vou extrair os dados e quais regras de negócio serão aplicadas no tratamento. Depois vem a segunda etapa: deixar
+        os dados limpos e padronizados, seguindo as regras de negócio definidas, com o auxílio da IA. Ela acelera o que é
+        repetitivo, como sugerir fórmulas e padronizar textos, mas definir as regras e decidir o que cada número
+        significa continua sendo comigo. Também documento as regras que usei, para que qualquer pessoa chegue no mesmo
+        número.
+      </p>
+      <p>
+        Por último vem a visualização: defino os dados mais relevantes que vão para o dashboard, buscando deixá-lo de
+        fácil entendimento para os stakeholders, com gráficos e KPIs escolhidos com base no contexto da análise e no que
+        se quer visualizar.
+      </p>
+    </div>
 
-    <div class="etl mt-6 space-y-3 md:mt-10 md:space-y-0" data-etl>
+    <p data-reveal class="mt-12 text-fg/85 md:mt-16">
+      Na prática, o caminho de um chamado de TI até o dashboard, com dados fictícios:
+    </p>
+
+    <div data-reveal class="mt-8">
+      <EtlFlow />
+    </div>
+
+    <details data-reveal class="etl-details group mt-10">
+      <summary class="inline-flex cursor-pointer list-none items-center gap-2 rounded-full border border-line px-4 py-2 text-sm text-heading transition-colors hover:bg-white/5">
+        <span class="group-open:hidden">Ver o exemplo completo</span>
+        <span class="hidden group-open:inline">Esconder o exemplo</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden="true">
+          <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </summary>
+      <p class="mt-4 text-muted md:hidden">Abra cada etapa para ver o exemplo.</p>
+
+    <div class="etl mt-6 space-y-3 md:mt-8 md:space-y-0" data-etl>
       <EtlStep index={0} {...pipeline[0]} open>
         <div class="overflow-x-auto">
           <table class="w-full text-sm tabular-nums">
@@ -205,6 +243,7 @@ Setor:       Colunas, Setor no Eixo X, Contagem de Chamado no Eixo Y`,
         </details>
       </EtlStep>
     </div>
+    </details>
   </div>
 </section>
 
@@ -254,6 +293,10 @@ Setor:       Colunas, Setor no Eixo X, Contagem de Chamado no Eixo Y`,
   /* No celular, o conteúdo do card aparece com um fade ao abrir */
   :global(.etl-step[data-open] > .etl-body) {
     animation: etl-fade 0.3s ease;
+  }
+
+  .etl-details > summary::-webkit-details-marker {
+    display: none;
   }
 
   @keyframes etl-fade {
