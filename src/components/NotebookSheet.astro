@@ -1,7 +1,7 @@
 ---
 // Simulação da planilha de controle de notebooks (dados fictícios).
 // Ordem das colunas igual à planilha real. A tabela mostra 15 exemplos; o dashboard calcula sobre as 100 linhas.
-import { initial, incoming, records, compute, sectorOrder, PEND_TOP, type Example } from '../lib/notebooks';
+import { initial, incoming, records, compute, sectorOrder, donutDash, PEND_TOP, type Example } from '../lib/notebooks';
 
 const cols = ['Nome de usuário', 'E-mail cadastrado', 'Setor', 'Licenças', 'Nome PC', 'Antivírus', 'LAPS', 'Selo de patrimônio', 'Versão Windows'];
 
@@ -46,9 +46,8 @@ const splits = [
   { title: 'Versão do Windows', key: 'win', values: ['Pro', 'Home'] },
 ];
 
-// Setores: os 8 maiores ficam sempre à vista, o restante abre em "ver todos"
+// Setores: no celular os 8 maiores ficam à vista, o restante abre em "ver todos"
 const SECTORS_VISIBLE = 8;
-const sectorGroups = [sectorOrder.slice(0, SECTORS_VISIBLE), sectorOrder.slice(SECTORS_VISIBLE)];
 ---
 
 <div data-sheet data-reveal class="relative overflow-hidden rounded-2xl border border-line bg-white/[0.03]">
@@ -131,12 +130,38 @@ const sectorGroups = [sectorOrder.slice(0, SECTORS_VISIBLE), sectorOrder.slice(S
     </div>
 
     <div class="mt-2 grid grid-cols-2 gap-2 lg:grid-cols-3">
-      <!-- Licença e Windows: duas categorias cada, então uma barra dividida basta -->
+      <!-- Licença e Windows: duas categorias cada. Computador: barra dividida; celular: rosquinha com o % no meio -->
       {
         splits.map((c) => (
           <div class="rounded border border-line px-3 py-3">
-            <p class="text-xs leading-tight text-muted">{c.title}</p>
-            <div class="mt-3 flex h-2.5 gap-0.5" role="img" aria-label={c.values.map((v) => `${v}: ${t[`${c.key}:${v}`]}`).join(', ')}>
+            <!-- Altura fixa de 2 linhas no celular: as duas rosquinhas ficam alinhadas -->
+            <p class="min-h-[2.5em] text-xs leading-tight text-muted sm:min-h-0">{c.title}</p>
+            <div class="relative mx-auto mt-2 size-24 sm:hidden" role="img" aria-label={c.values.map((v) => `${v}: ${t[`${c.key}:${v}`]}`).join(', ')}>
+              <svg viewBox="0 0 36 36" class="size-full -rotate-90">
+                {c.values.map((v, vi) => {
+                  const d = donutDash(w[`${c.key}:${c.values[0]}`], vi);
+                  return (
+                    <circle
+                      data-donut={`${c.key}:${c.values[0]}`}
+                      data-seg={vi}
+                      cx="18"
+                      cy="18"
+                      r="15.9155"
+                      fill="none"
+                      stroke-width="3.5"
+                      class:list={['sheet-donut', vi === 0 ? 'stroke-accent' : 'stroke-accent/30']}
+                      stroke-dasharray={d.dash}
+                      stroke-dashoffset={d.offset}
+                    />
+                  );
+                })}
+              </svg>
+              <span class="absolute inset-0 flex flex-col items-center justify-center leading-none">
+                <span data-m={`${c.key}:pct`} class="text-lg font-semibold text-heading tabular-nums">{t[`${c.key}:pct`]}</span>
+                <span class="mt-1 text-[10px] text-muted">{c.values[0]}</span>
+              </span>
+            </div>
+            <div class="mt-3 hidden h-2.5 gap-0.5 sm:flex" role="img" aria-label={c.values.map((v) => `${v}: ${t[`${c.key}:${v}`]}`).join(', ')}>
               {c.values.map((v, vi) => (
                 <span data-w={`${c.key}:${v}`} class:list={['sheet-bar h-full rounded-sm', vi === 0 ? 'bg-accent' : 'bg-accent/30']} style={`width: ${w[`${c.key}:${v}`]}%`} />
               ))}
@@ -158,7 +183,36 @@ const sectorGroups = [sectorOrder.slice(0, SECTORS_VISIBLE), sectorOrder.slice(S
       <div class="col-span-2 rounded border border-line px-3 py-3 lg:col-span-1">
         <p class="text-xs leading-tight text-muted">Setores com mais pendências</p>
         <p class="text-[11px] text-muted/70">antivírus inativo, LAPS pendente ou sem selo</p>
-        <ol class="mt-2.5 space-y-2">
+        <!-- Celular: ranking numerado com o detalhe de cada tipo à vista (não existe "passar o mouse") -->
+        <ol class="mt-1.5 sm:hidden">
+          {
+            Array.from({ length: PEND_TOP }, (_, i) => (
+              <li class="flex items-center gap-3 border-b border-line py-2.5 last:border-0 last:pb-0">
+                <span class="w-5 flex-none text-xs text-muted tabular-nums">{i + 1}º</span>
+                <div class="min-w-0 flex-1">
+                  <p data-m={`pend:${i}:name`} class="truncate text-sm text-fg">{t[`pend:${i}:name`]}</p>
+                  <p class="mt-1.5 flex flex-wrap gap-1.5 text-[11px]">
+                    {[
+                      ['av', 'Antivírus'],
+                      ['laps', 'LAPS'],
+                      ['selo', 'Selo'],
+                    ].map(([k, label]) => (
+                      <span data-chip class:list={['rounded border border-line px-1.5 py-0.5 text-muted', t[`pend:${i}:${k}`] === '0' && 'opacity-40']}>
+                        {label} <span data-m={`pend:${i}:${k}`} class="font-mono text-fg">{t[`pend:${i}:${k}`]}</span>
+                      </span>
+                    ))}
+                  </p>
+                </div>
+                <span class="flex flex-none items-center gap-1.5">
+                  <span class="h-2 w-2 rounded-full bg-amber-400" />
+                  <span data-m={`pend:${i}`} class="text-xl font-semibold text-heading tabular-nums">{t[`pend:${i}`]}</span>
+                </span>
+              </li>
+            ))
+          }
+        </ol>
+        <!-- Computador: barras com o detalhe ao passar o mouse -->
+        <ol class="mt-2.5 hidden space-y-2 sm:block">
           {
             Array.from({ length: PEND_TOP }, (_, i) => (
               <li data-tip={`pend:${i}:tip`} title={t[`pend:${i}:tip`]}>
@@ -180,30 +234,37 @@ const sectorGroups = [sectorOrder.slice(0, SECTORS_VISIBLE), sectorOrder.slice(S
     <div class="mt-2 rounded border border-line px-3 py-3">
       <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <p class="text-xs leading-tight text-muted">Contas ativas e dispositivos por setor</p>
-        <p class="flex gap-3 text-[11px] text-muted">
+        <p class="hidden gap-3 text-[11px] text-muted sm:flex">
+          <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-accent/30" />Contas</span>
+          <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-amber-400/70" />Contas (setor com falta de notebook)</span>
+          <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-accent" />Dispositivos</span>
+        </p>
+        <p class="flex gap-3 text-[11px] text-muted sm:hidden">
           <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-accent/30" />Contas</span>
           <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-accent" />Dispositivos</span>
         </p>
       </div>
-      <!-- Computador/tablet: colunas em pé, uma por setor (coluna clara = contas, cheia = notebooks) -->
+      <!-- Computador/tablet: duas colunas finas lado a lado por setor (clara = contas, cheia = notebooks) -->
       <div class="hidden sm:block">
         <div class="mt-2 flex h-48 items-end gap-1 border-b border-line pt-5 pl-8">
           {
             sectorOrder.map((s) => (
-              <div
-                data-tip={`set:${s}:tip`}
-                title={t[`set:${s}:tip`]}
-                class="flex h-full min-w-0 flex-1 flex-col items-center justify-end"
-              >
-                <span data-h={`set:${s}:c`} class="sheet-col relative flex w-full max-w-7 items-end rounded-t-sm bg-accent/30" style={`height: ${w[`set:${s}:c`]}%`}>
+              <div data-tip={`set:${s}:tip`} title={t[`set:${s}:tip`]} class="flex h-full min-w-0 flex-1 items-end justify-center gap-1">
+                <!-- Contas: só este número fica à vista; dispositivos aparecem ao passar o mouse -->
+                <span
+                  data-h={`set:${s}:c`}
+                  data-gap={`set:${s}:gap`}
+                  class:list={['sheet-col sheet-contas relative block w-2.5 flex-none rounded-t-sm', t[`set:${s}:gap`] && 'is-gap']}
+                  style={`height: ${w[`set:${s}:c`]}%`}
+                >
                   <span data-m={`set:${s}:c`} class="absolute bottom-full left-1/2 mb-1 -translate-x-1/2 font-mono text-[10px] text-muted">{t[`set:${s}:c`]}</span>
-                  <span data-h={`set:${s}:d`} class="sheet-col block w-full rounded-t-sm bg-accent" style={`height: ${w[`set:${s}:d`]}%`} />
                 </span>
+                <span data-h={`set:${s}:dh`} class="sheet-col block w-2.5 flex-none rounded-t-sm bg-accent" style={`height: ${w[`set:${s}:dh`]}%`} />
               </div>
             ))
           }
         </div>
-        <!-- Nomes inclinados para caber os 21 setores -->
+        <!-- Nomes inclinados para caber todos os setores -->
         <div class="flex h-28 gap-1 pl-8" aria-hidden="true">
           {
             sectorOrder.map((s) => (
@@ -215,44 +276,35 @@ const sectorGroups = [sectorOrder.slice(0, SECTORS_VISIBLE), sectorOrder.slice(S
         </div>
       </div>
 
-      <!-- Celular: lista com barras deitadas (provisório, ainda vamos repensar) -->
-      <div class="sm:hidden">
-      {
-        sectorGroups.map((group, gi) => {
-          const list = (
-            <ul class="mt-2.5 grid gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
-              {group.map((s) => (
-                <li>
-                  <div class="flex justify-between gap-2 text-xs">
-                    <span class="truncate text-fg/85">{s}</span>
-                    <span class="flex-none font-mono text-fg/85">
-                      <span data-m={`set:${s}:c`}>{t[`set:${s}:c`]}</span>
-                      <span class="text-muted/70"> / </span>
-                      <span data-m={`set:${s}:d`}>{t[`set:${s}:d`]}</span>
-                    </span>
-                  </div>
-                  <div class="mt-1 h-1.5">
-                    <span data-w={`set:${s}:c`} class="sheet-bar block h-full rounded-sm bg-accent/30" style={`width: ${w[`set:${s}:c`]}%`}>
-                      <span data-w={`set:${s}:d`} class="sheet-bar block h-full rounded-sm bg-accent" style={`width: ${w[`set:${s}:d`]}%`} />
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          );
-          return gi === 0 ? (
-            list
-          ) : (
-            <details class="group">
-              <summary class="mt-3 cursor-pointer list-none text-xs text-muted hover:text-fg">
-                <span class="group-open:hidden">Ver todos os {sectorOrder.length} setores ↓</span>
-                <span class="hidden group-open:inline">Mostrar menos ↑</span>
-              </summary>
-              {list}
-            </details>
-          );
-        })
-      }
+      <!-- Celular: barras deitadas (clara = contas, cheia = notebooks por dentro).
+           Aparecem os 8 maiores setores e o restante abre em "ver todos" (sem JS, via checkbox) -->
+      <div class="sectors sm:hidden">
+        <input type="checkbox" id="sectors-all" class="sectors-toggle sr-only" />
+        <ul class="mt-3 grid gap-y-2">
+          {
+            sectorOrder.map((s, i) => (
+              <li data-extra={i >= SECTORS_VISIBLE || undefined}>
+                <div class="flex justify-between gap-2 text-xs">
+                  <span class="truncate text-fg/85">{s}</span>
+                  <span class="flex-none font-mono text-fg/85">
+                    <span data-m={`set:${s}:c`}>{t[`set:${s}:c`]}</span>
+                    <span class="text-muted/70"> / </span>
+                    <span data-m={`set:${s}:d`}>{t[`set:${s}:d`]}</span>
+                  </span>
+                </div>
+                <div class="mt-1 h-1.5" role="img" aria-label={t[`set:${s}:tip`]}>
+                  <span data-w={`set:${s}:c`} class="sheet-bar block h-full rounded-sm bg-accent/30" style={`width: ${w[`set:${s}:c`]}%`}>
+                    <span data-w={`set:${s}:d`} class="sheet-bar block h-full rounded-sm bg-accent" style={`width: ${w[`set:${s}:d`]}%`} />
+                  </span>
+                </div>
+              </li>
+            ))
+          }
+        </ul>
+        <label for="sectors-all" class="sectors-more mt-3 inline-block cursor-pointer text-xs text-muted hover:text-fg">
+          <span class="when-closed">Ver todos os {sectorOrder.length} setores ↓</span>
+          <span class="when-open">Mostrar menos ↑</span>
+        </label>
       </div>
     </div>
   </div>
@@ -304,8 +356,40 @@ const sectorGroups = [sectorOrder.slice(0, SECTORS_VISIBLE), sectorOrder.slice(S
     transition: height 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
-  summary::-webkit-details-marker {
+  /* Coluna de contas: cinza; âmbar quando o setor tem conta sem notebook */
+  .sheet-contas {
+    background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+    transition:
+      height 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
+      background-color 0.4s ease;
+  }
+
+  .sheet-contas.is-gap {
+    background: color-mix(in srgb, var(--color-amber-400) 70%, transparent);
+  }
+
+  .sheet-donut {
+    transition:
+      stroke-dasharray 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
+      stroke-dashoffset 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+
+  /* Celular: setores extras e o texto do botão dependem do checkbox "ver todos" */
+  .sectors:has(.sectors-toggle:checked) .when-closed,
+  .sectors:not(:has(.sectors-toggle:checked)) .when-open {
     display: none;
+  }
+
+  @media (max-width: 639px) {
+    .sectors:not(:has(.sectors-toggle:checked)) [data-extra] {
+      display: none;
+    }
+  }
+
+  .sectors-toggle:focus-visible ~ .sectors-more {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
 
   .sheet-kpi.is-bump {
@@ -325,7 +409,7 @@ const sectorGroups = [sectorOrder.slice(0, SECTORS_VISIBLE), sectorOrder.slice(S
 </style>
 
 <script>
-  import { records, compute, initial } from '../lib/notebooks';
+  import { records, compute, initial, donutDash } from '../lib/notebooks';
 
   let timer: number | undefined;
 
@@ -358,6 +442,18 @@ const sectorGroups = [sectorOrder.slice(0, SECTORS_VISIBLE), sectorOrder.slice(S
       });
       root.querySelectorAll<HTMLElement>('[data-h]').forEach((el) => {
         el.style.height = `${w[el.dataset.h!] ?? 0}%`;
+      });
+      root.querySelectorAll<HTMLElement>('[data-gap]').forEach((el) => {
+        el.classList.toggle('is-gap', !!t[el.dataset.gap!]);
+      });
+      root.querySelectorAll<SVGCircleElement>('[data-donut]').forEach((el) => {
+        const d = donutDash(w[el.dataset.donut!] ?? 0, Number(el.dataset.seg));
+        el.setAttribute('stroke-dasharray', d.dash);
+        el.setAttribute('stroke-dashoffset', d.offset);
+      });
+      // Etiquetas de pendência zeradas ficam apagadas
+      root.querySelectorAll<HTMLElement>('[data-chip]').forEach((el) => {
+        el.classList.toggle('opacity-40', el.querySelector('[data-m]')?.textContent === '0');
       });
       root.querySelectorAll<HTMLElement>('[data-tip]').forEach((el) => {
         el.title = t[el.dataset.tip!] ?? '';

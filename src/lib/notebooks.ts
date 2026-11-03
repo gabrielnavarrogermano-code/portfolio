@@ -109,6 +109,15 @@ export const sectorOrder = [...SECTORS].sort(
 
 export const PEND_TOP = 5;
 
+// Rosquinha do celular: círculo de perímetro 100, então p% vira direto o tamanho do traço.
+// seg 0 = primeira categoria (a partir do topo), seg 1 = o restante; g abre uma pequena folga entre os dois.
+export function donutDash(p: number, seg: number) {
+  const g = p > 0 && p < 100 ? 1 : 0;
+  return seg === 0
+    ? { dash: `${Math.max(p - g, 0)} ${100 - p + g}`, offset: '0' }
+    : { dash: `${Math.max(100 - p - g, 0)} ${p + g}`, offset: String(-p) };
+}
+
 // Textos (t) e larguras em % (w) de cada elemento do dashboard
 export function compute(rows: Rec[]) {
   const t: Record<string, string> = {};
@@ -137,6 +146,9 @@ export function compute(rows: Rec[]) {
     t[`win:${v}`] = String(n);
     w[`win:${v}`] = pct(n, eq.length);
   }
+  // Centro das rosquinhas do celular: % da primeira categoria
+  t['lic:pct'] = `${Math.round(w['lic:Standard'])}%`;
+  t['win:pct'] = `${Math.round(w['win:Pro'])}%`;
 
   // Pendência = antivírus inativo, LAPS pendente ou sem selo, em notebooks da empresa
   const pend = new Map<string, { av: number; laps: number; selo: number }>();
@@ -157,6 +169,10 @@ export function compute(rows: Rec[]) {
     t[`pend:${i}:name`] = p?.s ?? '';
     t[`pend:${i}`] = p ? String(p.n) : '';
     t[`pend:${i}:tip`] = p ? `Antivírus ${p.av} · LAPS ${p.laps} · Selo ${p.selo}` : '';
+    // Detalhe por tipo, visível no ranking do celular (lá não existe "passar o mouse")
+    t[`pend:${i}:av`] = String(p?.av ?? 0);
+    t[`pend:${i}:laps`] = String(p?.laps ?? 0);
+    t[`pend:${i}:selo`] = String(p?.selo ?? 0);
     w[`pend:${i}`] = p ? pct(p.n, top[0].n) : 0;
   }
 
@@ -166,9 +182,11 @@ export function compute(rows: Rec[]) {
   for (const { s, c, d } of bySector) {
     t[`set:${s}:c`] = String(c);
     t[`set:${s}:d`] = String(d);
-    t[`set:${s}:tip`] = `${s}: ${c} contas · ${d} dispositivos`;
+    t[`set:${s}:tip`] = `${s}: ${c} contas · ${d} dispositivos` + (c > d ? ` · faltam ${c - d}` : '');
+    t[`set:${s}:gap`] = c > d ? '1' : ''; // setor com conta sem notebook: coluna de contas destacada
     w[`set:${s}:c`] = pct(c, maxC);
-    w[`set:${s}:d`] = pct(d, c);
+    w[`set:${s}:d`] = pct(d, c); // celular: notebooks dentro da barra de contas
+    w[`set:${s}:dh`] = pct(d, maxC); // computador: coluna de notebooks ao lado, mesma escala das contas
   }
 
   return { t, w };
