@@ -1,7 +1,7 @@
 ---
 // Simulação da planilha de controle de notebooks (dados fictícios).
 // Ordem das colunas igual à planilha real. A tabela mostra 15 exemplos; o dashboard calcula sobre as 100 linhas.
-import { initial, incoming, records, compute, sectorOrder, donutDash, PEND_TOP, PEND_SEG, PEND_CAD, MOTIVOS, AV_PRICE, AV_YEARS, type Example } from '../lib/notebooks';
+import { initial, incoming, records, compute, sectorOrder, donutDash, PEND_TOP, PEND_SEG, PEND_CAD, MOTIVOS, AV_PRICE, AV_YEARS, FILTERS, type Example } from '../lib/notebooks';
 
 const cols = ['Nome de usuário', 'E-mail cadastrado', 'Setor', 'Licenças', 'Nome PC', 'Antivírus', 'LAPS', 'Selo de patrimônio', 'Versão Windows'];
 
@@ -41,9 +41,6 @@ const kpis = [
   { label: 'Contas sem notebook corp.', key: 'semPc', subKey: 'semPc:sub' },
   { label: 'Sem selo de patrimônio', key: 'semSelo', subKey: 'semSelo:sub' },
 ];
-
-// Faixa de filtros da aba (só ilustrativa: aqui todos ficam em "Todos")
-const filters = ['Versão do Windows', 'Licença principal', 'Status LAPS', 'Status antivírus', 'Equipamento', 'Selo patrimônio', 'Setor', 'Pendência'];
 
 const licencas = [
   ['Standard', 'Microsoft 365 Empresas Standard'],
@@ -118,7 +115,7 @@ const pendLists = [
   </div>
 
   <p class="flex flex-wrap justify-between gap-x-4 gap-y-1 px-4 pt-2 pb-3 text-xs text-muted">
-    <span>Exibindo <span data-shown>{initial.length}</span> de <span data-m="contas">{t.contas}</span> linhas da planilha</span>
+    <span>Exibindo <span data-shown>{initial.length}</span> de <span data-total>{t.contas}</span> linhas da planilha</span>
     <span>← arraste a tabela para ver mais →</span>
   </p>
 
@@ -126,23 +123,30 @@ const pendLists = [
   <div class="border-t border-line p-3 sm:p-5">
     <p class="text-sm text-muted">Aba <span class="font-mono text-fg">Dashboard</span> · mesmo arquivo, atualiza junto com a base</p>
 
-    <!-- Título e faixa de filtros da aba (filtros só ilustrativos, todos em "Todos") -->
+    <!-- Título e faixa de filtros da aba: cada filtro recalcula o dashboard só com as linhas que passam em todos -->
     <div class="mt-3 border-b border-line pb-3">
       <p class="font-semibold text-heading">Relatório · Usuários Microsoft 365 e equipamentos</p>
       <p class="text-[11px] text-muted">Filtros por setor, pendência, versão do Windows, licença, LAPS, antivírus e patrimônio. Fonte: aba Base.</p>
       <div class="-mx-3 mt-3 flex gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:grid sm:grid-cols-4 sm:px-0 sm:pb-0 lg:grid-cols-8">
         {
-          filters.map((f) => (
-            <div class="w-28 flex-none sm:w-auto">
-              <p class="truncate text-[11px] text-muted">{f}</p>
-              <p class="mt-1 flex items-center justify-between rounded border border-line px-2 py-1 text-xs text-fg/85">
-                Todos <span class="text-muted" aria-hidden="true">▾</span>
-              </p>
-            </div>
+          FILTERS.map((f) => (
+            <label class="block w-32 flex-none sm:w-auto">
+              <span class="block truncate text-[11px] text-muted">{f.label}</span>
+              <span class="relative mt-1 block">
+                <select data-filter={f.key} class="sheet-filter w-full cursor-pointer appearance-none truncate rounded border border-line bg-transparent py-1 pr-6 pl-2 text-xs text-fg/85">
+                  <option value="">Todos</option>
+                  {f.options.map(([v, label]) => <option value={v}>{label}</option>)}
+                </select>
+                <span class="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-xs text-muted" aria-hidden="true">▾</span>
+              </span>
+            </label>
           ))
         }
       </div>
-      <p class="mt-2 text-[11px] text-muted/70">Sem filtros ativos: os números mostram o total da base.</p>
+      <p class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted/70">
+        <span data-filter-status aria-live="polite">Sem filtros ativos: os números mostram o total da base.</span>
+        <button type="button" data-filter-clear hidden class="cursor-pointer text-muted underline underline-offset-2 hover:text-fg">Limpar filtros</button>
+      </p>
     </div>
 
     <!-- 6 KPIs: 2 colunas no celular, 3 no tablet, 6 no computador -->
@@ -190,7 +194,7 @@ const pendLists = [
             <p class="text-xs leading-tight text-muted">Gasto com antivírus por setor</p>
             <p class="text-[11px] text-muted">Total <span data-m="avc:total" class="font-mono text-fg/85">{t['avc:total']}</span></p>
           </div>
-          <p class="text-[11px] text-muted/70">{AV_PRICE_LABEL} por licença, válida por {AV_YEARS} anos · uma por notebook com antivírus ativo</p>
+          <p class="text-[11px] text-muted/70">Licenças comerciais Kaspersky: {AV_PRICE_LABEL} cada, uma por notebook com antivírus ativo. Valem {AV_YEARS} anos e vencem todas juntas</p>
           <input type="checkbox" id="avcost-all" class="sectors-toggle sr-only" />
           <ul class="mt-3 flex flex-1 flex-col justify-between gap-2">
             {
@@ -216,36 +220,10 @@ const pendLists = [
 
       <div class="flex min-w-0 flex-col gap-2 lg:col-span-2">
         <div class="grid gap-2 sm:grid-cols-2">
-          <!-- Tabelas: segurança dos notebooks e motivo de não ter notebook corporativo -->
+          <!-- Tabela: motivo de não ter notebook corporativo
+               (a tabela de LAPS e antivírus com/sem saiu: repetia os KPIs de % LAPS e % antivírus) -->
           <div class="rounded border border-line px-3 py-3">
-            <p class="text-xs leading-tight text-muted">Segurança dos notebooks</p>
-            <table class="mt-2 w-full text-xs tabular-nums">
-              <thead>
-                <tr class="text-muted">
-                  <th class="pb-1.5 text-left font-normal"><span class="sr-only">Item</span></th>
-                  <th class="pb-1.5 text-right font-normal">Com</th>
-                  <th class="pb-1.5 text-right font-normal">Sem</th>
-                  <th class="pb-1.5 text-right font-normal">% com</th>
-                </tr>
-              </thead>
-              <tbody>
-                {
-                  [
-                    ['laps', 'LAPS'],
-                    ['av', 'Antivírus'],
-                  ].map(([k, label]) => (
-                    <tr class="border-t border-line">
-                      <td class="py-1.5 text-fg/85">{label}</td>
-                      {['com', 'sem', 'pct'].map((c) => (
-                        <td data-m={`seg:${k}:${c}`} class="py-1.5 text-right font-mono text-fg/85">{t[`seg:${k}:${c}`]}</td>
-                      ))}
-                    </tr>
-                  ))
-                }
-              </tbody>
-            </table>
-
-            <p class="mt-4 text-xs leading-tight text-muted">Contas sem notebook corp. · motivo</p>
+            <p class="text-xs leading-tight text-muted">Contas sem notebook corp. · motivo</p>
             <table class="mt-2 w-full text-xs tabular-nums">
               <thead>
                 <tr class="text-muted">
@@ -516,6 +494,26 @@ const pendLists = [
     }
   }
 
+  /* Filtros: lista de opções no tema escuro; filtro em uso fica com a borda acesa */
+  .sheet-filter {
+    color-scheme: dark;
+    transition: border-color 0.2s ease;
+  }
+
+  .sheet-filter option {
+    background: var(--color-bg);
+  }
+
+  .sheet-filter.is-active {
+    border-color: var(--color-accent);
+    color: var(--color-heading);
+  }
+
+  .sheet-filter:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
   .sheet-bar {
     transition: width 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
@@ -577,7 +575,7 @@ const pendLists = [
 </style>
 
 <script>
-  import { records, compute, initial, donutDash } from '../lib/notebooks';
+  import { records, compute, initial, donutDash, applyFilters } from '../lib/notebooks';
 
   let timer: number | undefined;
 
@@ -588,14 +586,31 @@ const pendLists = [
     const toast = root.querySelector<HTMLElement>('[data-toast]')!;
     const toastName = root.querySelector<HTMLElement>('[data-toast-name]')!;
     const shownEl = root.querySelector<HTMLElement>('[data-shown]')!;
+    const totalEl = root.querySelector<HTMLElement>('[data-total]')!;
     const fresh = [...root.querySelectorAll<HTMLTableRowElement>('tbody tr[data-new]')];
+    const selects = [...root.querySelectorAll<HTMLSelectElement>('[data-filter]')];
+    const statusEl = root.querySelector<HTMLElement>('[data-filter-status]')!;
+    const clearBtn = root.querySelector<HTMLButtonElement>('[data-filter-clear]')!;
     let next = 0;
     let visible = false;
 
-    // Recalcula o dashboard sobre as linhas da planilha completa, como o Excel faz
+    // Recalcula o dashboard sobre as linhas da planilha completa que passam nos filtros, como o Excel faz
     const render = () => {
-      const { t, w } = compute(records.filter((r) => r.n < next));
+      const base = records.filter((r) => r.n < next);
+      const sel = Object.fromEntries(selects.map((s) => [s.dataset.filter!, s.value]));
+      const rows = applyFilters(base, sel);
+      const { t, w } = compute(rows);
       shownEl.textContent = String(initial.length + next);
+      totalEl.textContent = String(base.length);
+
+      // Situação dos filtros
+      const active = selects.filter((s) => s.value).length;
+      selects.forEach((s) => s.classList.toggle('is-active', !!s.value));
+      clearBtn.hidden = !active;
+      statusEl.textContent = !active
+        ? 'Sem filtros ativos: os números mostram o total da base.'
+        : `${active} ${active === 1 ? 'filtro ativo' : 'filtros ativos'}: ` +
+          (rows.length ? `${rows.length} de ${base.length} contas da base.` : 'nenhuma conta da base atende a todos.');
       root.querySelectorAll<HTMLElement>('[data-m]').forEach((el) => {
         const v = t[el.dataset.m!];
         if (v === undefined || el.textContent === v) return;
@@ -627,6 +642,15 @@ const pendLists = [
         el.title = t[el.dataset.tip!] ?? '';
       });
     };
+
+    // Filtros: recalculam na hora, sem parar a animação dos colaboradores novos
+    selects.forEach((s) => s.addEventListener('change', render));
+    clearBtn.addEventListener('click', () => {
+      selects.forEach((s) => (s.value = ''));
+      render();
+    });
+    // O navegador pode restaurar uma escolha antiga ao voltar para a página
+    if (selects.some((s) => s.value)) render();
 
     // Sem animação: mostra direto a planilha completa
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) {

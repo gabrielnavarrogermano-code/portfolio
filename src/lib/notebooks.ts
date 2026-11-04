@@ -141,9 +141,38 @@ export const sectorOrder = [...SECTORS].sort(
 
 export const PEND_TOP = 6;
 
-// Valor fictício e fixo de cada licença de antivírus (R$). Uma licença por notebook, válida por 3 anos
+// Licenças comerciais do Kaspersky: valor fictício e fixo por licença (R$), uma por notebook.
+// Todas valem 3 anos e vencem juntas
 export const AV_PRICE = 300;
 export const AV_YEARS = 3;
+
+// Pendências de uma linha (as mesmas das listas do dashboard; PC divergente e selo repetido dependem de outras linhas)
+const pendSeg = (r: Rec) => r.pc && (!r.laps || !r.av || r.win === 'Home');
+const pendCad = (r: Rec) => (r.pc && !r.selo) || !r.emailOk || !r.nomeOk || r.s === NO_SECTOR;
+
+// Filtros da aba Dashboard: chave, título, opções [valor, texto] e o teste de cada linha
+type Filter = { key: string; label: string; options: [string, string][]; test: (r: Rec, v: string) => boolean };
+export const FILTERS: Filter[] = [
+  { key: 'win', label: 'Versão do Windows', options: [['Pro', 'Windows 11 Pro'], ['Home', 'Windows 11 Home']], test: (r, v) => r.win === v },
+  { key: 'lic', label: 'Licença principal', options: [['Standard', 'Standard'], ['Basic', 'Basic']], test: (r, v) => r.l === v },
+  { key: 'laps', label: 'Status LAPS', options: [['ok', 'Aplicado'], ['no', 'Pendente']], test: (r, v) => r.pc && r.laps === (v === 'ok') },
+  { key: 'av', label: 'Status antivírus', options: [['ok', 'Ativo'], ['no', 'Inativo']], test: (r, v) => r.pc && r.av === (v === 'ok') },
+  { key: 'pc', label: 'Equipamento', options: [['ok', 'Com notebook corp.'], ['no', 'Sem notebook corp.']], test: (r, v) => r.pc === (v === 'ok') },
+  { key: 'selo', label: 'Selo patrimônio', options: [['ok', 'Com selo'], ['no', 'Sem selo']], test: (r, v) => r.pc && r.selo === (v === 'ok') },
+  { key: 'setor', label: 'Setor', options: SECTORS.map((s) => [s, s]), test: (r, v) => r.s === v },
+  {
+    key: 'pend',
+    label: 'Pendência',
+    options: [['seg', 'De segurança'], ['cad', 'De cadastro'], ['none', 'Sem pendência']],
+    test: (r, v) => (v === 'seg' ? pendSeg(r) : v === 'cad' ? pendCad(r) : !pendSeg(r) && !pendCad(r)),
+  },
+];
+
+// Mantém só as linhas que passam em todos os filtros escolhidos ('' = Todos)
+export function applyFilters(rows: Rec[], sel: Record<string, string>) {
+  const active = FILTERS.filter((f) => sel[f.key]);
+  return rows.filter((r) => active.every((f) => f.test(r, sel[f.key])));
+}
 
 // Listas de pendências do dashboard (chave usada no cálculo, texto da linha)
 export const PEND_SEG = [
@@ -215,16 +244,6 @@ export function compute(rows: Rec[]) {
   w['win:Pro'] = pct(pro, eq.length);
   t['win:Pro:pct'] = `${Math.round(pct(pro, eq.length))}%`;
   t['win:Home:pct'] = `${Math.round(pct(home, eq.length))}%`;
-
-  // Tabela de segurança dos notebooks: com, sem e % com
-  for (const [k, ok] of [
-    ['laps', lapsOk],
-    ['av', avOk],
-  ] as const) {
-    t[`seg:${k}:com`] = String(ok);
-    t[`seg:${k}:sem`] = String(eq.length - ok);
-    t[`seg:${k}:pct`] = pct1(ok, eq.length);
-  }
 
   // Contas sem notebook corporativo, por motivo
   for (const [k] of MOTIVOS) {
