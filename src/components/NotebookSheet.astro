@@ -1,7 +1,7 @@
 ---
 // Simulação da planilha de controle de notebooks (dados fictícios).
 // Ordem das colunas igual à planilha real. A tabela mostra 15 exemplos; o dashboard calcula sobre as 100 linhas.
-import { initial, incoming, records, compute, sectorOrder, donutDash, PEND_TOP, PEND_SEG, PEND_CAD, MOTIVOS, type Example } from '../lib/notebooks';
+import { initial, incoming, records, compute, sectorOrder, donutDash, PEND_TOP, PEND_SEG, PEND_CAD, MOTIVOS, AV_PRICE, AV_YEARS, type Example } from '../lib/notebooks';
 
 const cols = ['Nome de usuário', 'E-mail cadastrado', 'Setor', 'Licenças', 'Nome PC', 'Antivírus', 'LAPS', 'Selo de patrimônio', 'Versão Windows'];
 
@@ -49,6 +49,8 @@ const licencas = [
   ['Standard', 'Microsoft 365 Empresas Standard'],
   ['Basic', 'Microsoft 365 Empresas Basic'],
 ];
+
+const AV_PRICE_LABEL = `R$ ${AV_PRICE.toLocaleString('pt-BR')}`;
 
 // Setores: no celular os 8 maiores ficam à vista, o restante abre em "ver todos"
 const SECTORS_VISIBLE = 8;
@@ -158,7 +160,7 @@ const pendLists = [
       }
     </div>
 
-    <!-- Computador: coluna estreita à esquerda (licença + LAPS e antivírus por setor) e o restante à direita -->
+    <!-- Computador: coluna estreita à esquerda (licença + gasto com antivírus por setor) e o restante à direita -->
     <div class="mt-2 grid gap-2 lg:grid-cols-3">
       <div class="flex min-w-0 flex-col gap-2">
         <!-- Contas ativas por licença -->
@@ -181,40 +183,31 @@ const pendLists = [
           </ul>
         </div>
 
-        <!-- LAPS e antivírus por setor: duas barras por setor, número colado no fim de cada uma (pr-5 reserva o espaço).
+        <!-- Gasto com licenças de antivírus por setor (valor fixo por licença, válida por 3 anos): valor colado no fim da barra (pr-14 reserva o espaço).
              No celular, 8 setores + "ver todos" (sem JS, via checkbox) -->
         <div class="sectors flex flex-1 flex-col rounded border border-line px-3 py-3">
           <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <p class="text-xs leading-tight text-muted">LAPS e antivírus por setor</p>
-            <p class="flex gap-3 text-[11px] text-muted">
-              <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-accent" />Com LAPS</span>
-              <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-accent/30" />Com antivírus</span>
-            </p>
+            <p class="text-xs leading-tight text-muted">Gasto com antivírus por setor</p>
+            <p class="text-[11px] text-muted">Total <span data-m="avc:total" class="font-mono text-fg/85">{t['avc:total']}</span></p>
           </div>
-          <input type="checkbox" id="lapsav-all" class="sectors-toggle sr-only" />
+          <p class="text-[11px] text-muted/70">{AV_PRICE_LABEL} por licença, válida por {AV_YEARS} anos · uma por notebook com antivírus ativo</p>
+          <input type="checkbox" id="avcost-all" class="sectors-toggle sr-only" />
           <ul class="mt-3 flex flex-1 flex-col justify-between gap-2">
             {
               sectorOrder.map((s, i) => (
-                <li data-extra={i >= SECTORS_VISIBLE || undefined} data-tip={`la:${s}:tip`} title={t[`la:${s}:tip`]} class="grid grid-cols-[6.5rem_minmax(0,1fr)] items-center gap-2">
+                <li data-extra={i >= SECTORS_VISIBLE || undefined} data-tip={`avc:${s}:tip`} title={t[`avc:${s}:tip`]} class="grid grid-cols-[6.5rem_minmax(0,1fr)] items-center gap-2">
                   <span class="truncate text-right text-[11px] text-fg/85">{s}</span>
-                  <div class="space-y-0.5" role="img" aria-label={t[`la:${s}:tip`]}>
-                    {[
-                      ['laps', 'bg-accent'],
-                      ['av', 'bg-accent/30'],
-                    ].map(([k, color]) => (
-                      <div class="pr-5">
-                        <span data-w={`la:${s}:${k}`} class="sheet-bar relative block h-1.5" style={`width: ${w[`la:${s}:${k}`]}%`}>
-                          <span class:list={['block h-full rounded-sm', color]} />
-                          <span data-m={`la:${s}:${k}`} class="absolute top-1/2 left-full ml-1.5 -translate-y-1/2 font-mono text-[10px] leading-none text-muted">{t[`la:${s}:${k}`]}</span>
-                        </span>
-                      </div>
-                    ))}
+                  <div class="pr-14" role="img" aria-label={t[`avc:${s}:tip`]}>
+                    <span data-w={`avc:${s}`} class="sheet-bar relative block h-2" style={`width: ${w[`avc:${s}`]}%`}>
+                      <span class="block h-full rounded-sm bg-accent" />
+                      <span data-m={`avc:${s}`} class="absolute top-1/2 left-full ml-1.5 -translate-y-1/2 font-mono text-[10px] leading-none whitespace-nowrap text-muted">{t[`avc:${s}`]}</span>
+                    </span>
                   </div>
                 </li>
               ))
             }
           </ul>
-          <label for="lapsav-all" class="sectors-more mt-3 inline-block cursor-pointer text-xs text-muted hover:text-fg sm:hidden">
+          <label for="avcost-all" class="sectors-more mt-3 inline-block cursor-pointer text-xs text-muted hover:text-fg sm:hidden">
             <span class="when-closed">Ver todos os {sectorOrder.length} setores ↓</span>
             <span class="when-open">Mostrar menos ↑</span>
           </label>

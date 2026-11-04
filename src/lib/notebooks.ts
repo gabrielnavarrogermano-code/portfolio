@@ -141,6 +141,10 @@ export const sectorOrder = [...SECTORS].sort(
 
 export const PEND_TOP = 6;
 
+// Valor fictício e fixo de cada licença de antivírus (R$). Uma licença por notebook, válida por 3 anos
+export const AV_PRICE = 300;
+export const AV_YEARS = 3;
+
 // Listas de pendências do dashboard (chave usada no cálculo, texto da linha)
 export const PEND_SEG = [
   ['laps', 'Equipamentos sem LAPS'],
@@ -277,15 +281,17 @@ export function compute(rows: Rec[]) {
     w[`pend:${i}`] = p ? pct(p.n, top[0].n) : 0;
   }
 
-  // Por setor: contas, dispositivos, notebooks com LAPS e com antivírus
+  // Por setor: contas, dispositivos e notebooks com antivírus
   const bySector = SECTORS.map((s) => {
     const sr = rows.filter((r) => r.s === s);
     const se = sr.filter((r) => r.pc);
-    return { s, c: sr.length, d: se.length, laps: se.filter((r) => r.laps).length, av: se.filter((r) => r.av).length };
+    return { s, c: sr.length, d: se.length, av: se.filter((r) => r.av).length };
   });
   const maxC = Math.max(...bySector.map((x) => x.c), 1);
-  const maxLa = Math.max(...bySector.map((x) => Math.max(x.laps, x.av)), 1);
-  for (const { s, c, d, laps, av } of bySector) {
+  const maxAv = Math.max(...bySector.map((x) => x.av), 1);
+  const brl = (v: number) => `R$ ${v.toLocaleString('pt-BR')}`;
+  t['avc:total'] = brl(avOk * AV_PRICE);
+  for (const { s, c, d, av } of bySector) {
     t[`set:${s}:c`] = String(c);
     t[`set:${s}:d`] = String(d);
     t[`set:${s}:tip`] = `${s}: ${c} contas · ${d} dispositivos` + (c > d ? ` · faltam ${c - d}` : '');
@@ -293,12 +299,10 @@ export function compute(rows: Rec[]) {
     w[`set:${s}:c`] = pct(c, maxC);
     w[`set:${s}:d`] = pct(d, c); // celular: notebooks dentro da barra de contas
     w[`set:${s}:dh`] = pct(d, maxC); // computador: coluna de notebooks ao lado, mesma escala das contas
-    // LAPS e antivírus por setor
-    t[`la:${s}:laps`] = String(laps);
-    t[`la:${s}:av`] = String(av);
-    t[`la:${s}:tip`] = `${s}: ${d} notebooks · ${laps} com LAPS · ${av} com antivírus`;
-    w[`la:${s}:laps`] = pct(laps, maxLa);
-    w[`la:${s}:av`] = pct(av, maxLa);
+    // Gasto com licenças de antivírus por setor (uma licença por notebook com antivírus ativo)
+    t[`avc:${s}`] = brl(av * AV_PRICE);
+    t[`avc:${s}:tip`] = `${s}: ${av} ${av === 1 ? 'licença' : 'licenças'} × ${brl(AV_PRICE)} = ${brl(av * AV_PRICE)} (válidas por ${AV_YEARS} anos)`;
+    w[`avc:${s}`] = pct(av, maxAv);
   }
 
   return { t, w };
