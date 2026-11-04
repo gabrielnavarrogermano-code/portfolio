@@ -39,8 +39,10 @@ A coluna **LAPS** indica se o notebook já passou pelo script de segurança dese
 
 O mini dashboard fica em outra aba, no mesmo arquivo da base de colaboradores, e reúne os **KPIs** e **gráficos dinâmicos** do controle de equipamentos:
 
-- **6 KPIs:** contas ativas, equipamentos, % de LAPS, % de antivírus, contas sem notebook corporativo e equipamentos sem selo de patrimônio
-- **4 gráficos:** contas ativas por licença (Standard ou Basic), versão do Windows, setores com mais pendências e contas ativas e dispositivos por setor
+- **Filtros** por versão do Windows, licença, status do LAPS e do antivírus, equipamento, selo de patrimônio, setor e pendência
+- **6 KPIs:** contas ativas, equipamentos, % de LAPS e % de antivírus (com meta de 100%), contas sem notebook corporativo e equipamentos sem selo de patrimônio
+- **Gráficos:** contas ativas por licença, LAPS e antivírus por setor, versão do Windows, setores com mais pendências de segurança e contas ativas e dispositivos por setor
+- **Tabelas:** segurança dos notebooks (com e sem LAPS e antivírus), motivo das contas sem notebook corporativo e as listas de pendências de segurança e de cadastro
 
 Ele mostra os principais indicadores de forma clara e ajuda a definir os próximos passos para melhorar o controle dos dispositivos. Quando a base é atualizada e tratada, o dashboard se atualiza junto.
 
