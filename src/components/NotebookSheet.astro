@@ -1,7 +1,9 @@
 ---
 // Simulação da planilha de controle de notebooks (dados fictícios).
 // Ordem das colunas igual à planilha real. A tabela mostra 15 exemplos; o dashboard calcula sobre as 100 linhas.
-import { initial, incoming, records, compute, sectorOrder, donutDash, PEND_TOP, PEND_SEG, PEND_CAD, MOTIVOS, AV_PRICE, AV_YEARS, FILTERS, type Example } from '../lib/notebooks';
+import { initial, incoming, records, compute, sectorGroups, OTHERS, donutDash, PEND_TOP, PEND_CAD, MOTIVOS, AV_PRICE, AV_YEARS, NB_PRICE, LIC_PRICE, LIC_PARTS, DEV_PARTS, FILTERS, type Example } from '../lib/notebooks';
+import Kpis from './NotebookKpis.astro';
+import StackedBars from './NotebookStackedBars.astro';
 
 const cols = ['Nome de usuário', 'E-mail cadastrado', 'Setor', 'Licenças', 'Nome PC', 'Antivírus', 'LAPS', 'Selo de patrimônio', 'Versão Windows'];
 
@@ -33,30 +35,52 @@ const rows = [...initial.map((e) => ({ e, isNew: false })), ...incoming.map((e) 
 // Estado inicial já vem calculado (funciona sem JS): planilha antes dos 3 novos colaboradores
 const { t, w } = compute(records.filter((r) => r.n < 0));
 
-const kpis = [
-  { label: 'Contas ativas', key: 'contas', sub: 'com licença no Microsoft 365' },
-  { label: 'Equipamentos', key: 'equip', sub: 'notebooks corporativos' },
-  { label: '% LAPS · meta 100%', key: 'laps', subKey: 'laps:sub' },
-  { label: '% Antivírus · meta 100%', key: 'av', subKey: 'av:sub' },
-  { label: 'Contas sem notebook corp.', key: 'semPc', subKey: 'semPc:sub' },
-  { label: 'Sem selo de patrimônio', key: 'semSelo', subKey: 'semSelo:sub' },
-];
+// Páginas do relatório no Power BI, cada uma com os seus KPIs
+const PAGES = [
+  ['lic', 'Licenças'],
+  ['dev', 'Dispositivos'],
+  ['seg', 'Segurança'],
+] as const;
+
+type Kpi = { label: string; key: string; sub?: string; subKey?: string };
+const kpis: Record<(typeof PAGES)[number][0], Kpi[]> = {
+  lic: [
+    { label: 'Licenças em uso', key: 'contas', sub: 'contas ativas no Microsoft 365' },
+    { label: 'Gasto com Microsoft 365', key: 'm365', subKey: 'm365:sub' },
+    { label: 'Pendências de cadastro', key: 'pc:total', sub: 'itens para corrigir na planilha' },
+  ],
+  dev: [
+    { label: 'Notebooks em uso', key: 'equip', sub: 'notebooks corporativos' },
+    { label: 'Contas sem notebook corp.', key: 'semPc', subKey: 'semPc:sub' },
+    { label: 'Gasto com dispositivos', key: 'dev', subKey: 'dev:sub' },
+  ],
+  seg: [
+    { label: '% LAPS · meta 100%', key: 'laps', subKey: 'laps:sub' },
+    { label: '% Antivírus · meta 100%', key: 'av', subKey: 'av:sub' },
+    { label: 'Notebooks com pendência', key: 'seg', subKey: 'seg:sub' },
+  ],
+};
 
 const licencas = [
   ['Standard', 'Microsoft 365 Empresas Standard'],
   ['Basic', 'Microsoft 365 Empresas Basic'],
 ];
 
-const AV_PRICE_LABEL = `R$ ${AV_PRICE.toLocaleString('pt-BR')}`;
+const brl = (v: number) => `R$ ${v.toLocaleString('pt-BR')}`;
 
-// Setores: no celular os 8 maiores ficam à vista, o restante abre em "ver todos"
-const SECTORS_VISIBLE = 8;
+// Cor de cada parte das barras empilhadas de gasto (mesma ordem de LIC_PARTS e DEV_PARTS)
+const PART_COLORS = ['bg-accent', 'bg-accent/35'];
 
-// Lista com barra e quantidade (pendências de segurança e de cadastro)
-const pendLists = [
-  { title: 'Pendências de segurança', prefix: 'ps', items: PEND_SEG },
-  { title: 'Pendências de cadastro', prefix: 'pc', items: PEND_CAD },
-];
+// Tipos de pendência de segurança, em tons de âmbar
+const SEG_PARTS = [
+  ['laps', 'Sem LAPS'],
+  ['av', 'Sem antivírus'],
+  ['home', 'Windows Home'],
+] as const;
+const SEG_COLORS = ['bg-amber-400', 'bg-amber-400/55', 'bg-amber-400/25'];
+
+// Linhas dos gráficos por setor: [chave, texto]. "Outros" mostra quantos setores soma
+const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTHERS ? `${list.length} setores menores` : s]);
 ---
 
 <div data-sheet data-reveal class="relative overflow-hidden rounded-2xl border border-line bg-white/[0.03]">
@@ -119,110 +143,163 @@ const pendLists = [
     <span>← arraste a tabela para ver mais →</span>
   </p>
 
-  <!-- Dashboard: recalculado sobre as 100 linhas a cada colaborador novo -->
-  <div class="border-t border-line p-3 sm:p-5">
-    <p class="text-sm text-muted">Aba <span class="font-mono text-fg">Dashboard</span> · mesmo arquivo, atualiza junto com a base</p>
-
-    <!-- Título e faixa de filtros da aba: cada filtro recalcula o dashboard só com as linhas que passam em todos -->
-    <div class="mt-3 border-b border-line pb-3">
-      <p class="font-semibold text-heading">Relatório · Usuários Microsoft 365 e equipamentos</p>
-      <p class="text-[11px] text-muted">Filtros por setor, pendência, versão do Windows, licença, LAPS, antivírus e patrimônio. Fonte: aba Base.</p>
-      <div class="-mx-3 mt-3 flex gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:grid sm:grid-cols-4 sm:px-0 sm:pb-0 lg:grid-cols-8">
-        {
-          FILTERS.map((f) => (
-            <label class="block w-32 flex-none sm:w-auto">
-              <span class="block truncate text-[11px] text-muted">{f.label}</span>
-              <span class="relative mt-1 block">
-                <select data-filter={f.key} class="sheet-filter w-full cursor-pointer appearance-none truncate rounded border border-line bg-transparent py-1 pr-6 pl-2 text-xs text-fg/85">
-                  <option value="">Todos</option>
-                  {f.options.map(([v, label]) => <option value={v}>{label}</option>)}
-                </select>
-                <span class="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-xs text-muted" aria-hidden="true">▾</span>
-              </span>
-            </label>
-          ))
-        }
+  <!-- Dashboard no Power BI: conectado à planilha, recalculado sobre as 100 linhas a cada colaborador novo -->
+  <div class="flex items-center gap-1.5 border-y border-line px-4 py-3">
+    <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
+    <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
+    <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
+    <span class="ml-2 truncate font-mono text-xs text-muted">controle-notebooks.pbix</span>
+    <span class="ml-auto flex-none pl-2 text-xs text-muted">Power BI</span>
+  </div>
+  <div class="sheet-pages relative p-3 sm:p-5">
+    <!-- Cabeçalho: título, situação dos filtros e o botão que abre o painel de filtros -->
+    <div class="flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <p class="font-semibold text-heading">Relatório · Usuários Microsoft 365 e equipamentos</p>
+        <p class="text-[11px] text-muted">Atualiza sempre que a planilha de usuários é alterada</p>
       </div>
-      <p class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted/70">
-        <span data-filter-status aria-live="polite">Sem filtros ativos: os números mostram o total da base.</span>
-        <button type="button" data-filter-clear hidden class="cursor-pointer text-muted underline underline-offset-2 hover:text-fg">Limpar filtros</button>
-      </p>
+      <button
+        type="button"
+        data-filter-open
+        aria-expanded="false"
+        aria-controls="sheet-filters"
+        class="sheet-filter-btn flex flex-none cursor-pointer items-center gap-1.5 rounded border border-line px-2.5 py-1.5 text-xs text-fg/85 hover:text-heading"
+      >
+        <svg viewBox="0 0 24 24" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
+        Filtros
+        <span data-filter-count hidden class="rounded-full bg-accent px-1.5 text-[10px] leading-4 font-semibold text-bg"></span>
+      </button>
     </div>
 
-    <!-- 6 KPIs: 2 colunas no celular, 3 no tablet, 6 no computador -->
-    <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-      {
-        kpis.map((k) => (
-          <div class="flex flex-col rounded border border-line px-3 py-2.5">
-            <p class="text-xs leading-tight text-muted">{k.label}</p>
-            <p class="mt-auto pt-1.5">
-              <span data-m={k.key} class="sheet-kpi text-xl font-semibold text-heading tabular-nums sm:text-2xl">{t[k.key]}</span>
-            </p>
-            <p class="text-[11px] text-muted" data-m={k.subKey}>{k.subKey ? t[k.subKey] : k.sub}</p>
-          </div>
-        ))
-      }
+    <!-- Filtros em uso: uma etiqueta por filtro, o ✕ tira só aquele -->
+    <div class="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+      <span data-filter-status aria-live="polite" class="text-muted/70">Sem filtros: todas as contas da base.</span>
+      <span data-filter-chips class="contents"></span>
+      <button type="button" data-filter-clear hidden class="cursor-pointer text-muted underline underline-offset-2 hover:text-fg">Limpar filtros</button>
     </div>
 
-    <!-- Computador: coluna estreita à esquerda (licença + gasto com antivírus por setor) e o restante à direita -->
-    <div class="mt-2 grid gap-2 lg:grid-cols-3">
-      <div class="flex min-w-0 flex-col gap-2">
-        <!-- Contas ativas por licença -->
-        <div class="rounded border border-line px-3 py-3">
-          <p class="text-xs leading-tight text-muted">Contas ativas por licença</p>
-          <ul class="mt-2.5 space-y-2">
-            {
-              licencas.map(([k, label]) => (
-                <li>
-                  <div class="flex justify-between gap-2 text-xs">
-                    <span class="truncate text-fg/85">{label}</span>
-                    <span data-m={`lic:${k}`} class="font-mono text-fg/85">{t[`lic:${k}`]}</span>
-                  </div>
-                  <div class="mt-1 h-1.5">
-                    <span data-w={`lic:${k}`} class="sheet-bar block h-full rounded-sm bg-accent" style={`width: ${w[`lic:${k}`]}%`} />
-                  </div>
-                </li>
-              ))
-            }
-          </ul>
+    <!-- Painel de filtros na lateral, como no Power BI. Cada filtro recalcula o dashboard só com as linhas que passam em todos -->
+    <div id="sheet-filters" data-filter-panel hidden class="absolute inset-y-0 right-0 z-20 w-full border-l border-line bg-bg sm:w-72">
+      <div class="p-4">
+        <div class="flex items-center justify-between">
+          <p class="text-sm font-semibold text-heading">Filtros</p>
+          <button type="button" data-filter-close class="cursor-pointer rounded px-1.5 text-lg leading-none text-muted hover:text-heading" aria-label="Fechar filtros">×</button>
         </div>
-
-        <!-- Gasto com licenças de antivírus por setor (valor fixo por licença, válida por 3 anos): valor colado no fim da barra (pr-14 reserva o espaço).
-             No celular, 8 setores + "ver todos" (sem JS, via checkbox) -->
-        <div class="sectors flex flex-1 flex-col rounded border border-line px-3 py-3">
-          <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <p class="text-xs leading-tight text-muted">Gasto com antivírus por setor</p>
-            <p class="text-[11px] text-muted">Total <span data-m="avc:total" class="font-mono text-fg/85">{t['avc:total']}</span></p>
-          </div>
-          <p class="text-[11px] text-muted/70">Licenças comerciais Kaspersky: {AV_PRICE_LABEL} cada, uma por notebook com antivírus ativo. Valem {AV_YEARS} anos e vencem todas juntas</p>
-          <input type="checkbox" id="avcost-all" class="sectors-toggle sr-only" />
-          <ul class="mt-3 flex flex-1 flex-col justify-between gap-2">
-            {
-              sectorOrder.map((s, i) => (
-                <li data-extra={i >= SECTORS_VISIBLE || undefined} data-tip={`avc:${s}:tip`} title={t[`avc:${s}:tip`]} class="grid grid-cols-[6.5rem_minmax(0,1fr)] items-center gap-2">
-                  <span class="truncate text-right text-[11px] text-fg/85">{s}</span>
-                  <div class="pr-14" role="img" aria-label={t[`avc:${s}:tip`]}>
-                    <span data-w={`avc:${s}`} class="sheet-bar relative block h-2" style={`width: ${w[`avc:${s}`]}%`}>
-                      <span class="block h-full rounded-sm bg-accent" />
-                      <span data-m={`avc:${s}`} class="absolute top-1/2 left-full ml-1.5 -translate-y-1/2 font-mono text-[10px] leading-none whitespace-nowrap text-muted">{t[`avc:${s}`]}</span>
-                    </span>
-                  </div>
-                </li>
-              ))
-            }
-          </ul>
-          <label for="avcost-all" class="sectors-more mt-3 inline-block cursor-pointer text-xs text-muted hover:text-fg sm:hidden">
-            <span class="when-closed">Ver todos os {sectorOrder.length} setores ↓</span>
-            <span class="when-open">Mostrar menos ↑</span>
-          </label>
+        <p class="mt-0.5 text-[11px] text-muted">Valem para as {PAGES.length} páginas do relatório</p>
+        <div class="mt-4 space-y-3">
+          {
+            FILTERS.map((f) => (
+              <label class="block">
+                <span class="block text-[11px] text-muted">{f.label}</span>
+                <span class="relative mt-1 block">
+                  <select data-filter={f.key} class="sheet-filter w-full cursor-pointer appearance-none truncate rounded border border-line bg-transparent py-1.5 pr-6 pl-2 text-xs text-fg/85">
+                    <option value="">Todos</option>
+                    {f.options.map(([v, label]) => <option value={v}>{label}</option>)}
+                  </select>
+                  <span class="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-xs text-muted" aria-hidden="true">▾</span>
+                </span>
+              </label>
+            ))
+          }
         </div>
+        <!-- Celular: o painel cobre o dashboard inteiro, então fecha por aqui também -->
+        <button type="button" data-filter-close class="mt-5 w-full cursor-pointer rounded bg-accent py-2 text-xs font-semibold text-bg sm:hidden">Ver resultado</button>
       </div>
+    </div>
 
-      <div class="flex min-w-0 flex-col gap-2 lg:col-span-2">
-        <div class="grid gap-2 sm:grid-cols-2">
-          <!-- Tabela: motivo de não ter notebook corporativo
-               (a tabela de LAPS e antivírus com/sem saiu: repetia os KPIs de % LAPS e % antivírus) -->
+    <!-- Aba Licenças: licenças do Microsoft 365 em uso, gasto com elas e pendências de cadastro -->
+    <div data-page="lic" class="mt-3">
+      <Kpis items={kpis.lic} t={t} />
+      <div class="mt-2 grid gap-2 lg:grid-cols-3">
+        <div class="flex min-w-0 flex-col gap-2">
+          <!-- Licenças em uso por tipo, com o valor anual de cada tipo -->
           <div class="rounded border border-line px-3 py-3">
+            <p class="text-xs leading-tight text-muted">Licenças em uso por tipo</p>
+            <ul class="mt-2.5 space-y-2">
+              {
+                licencas.map(([k, label]) => (
+                  <li>
+                    <div class="flex justify-between gap-2 text-xs">
+                      <span class="truncate text-fg/85">{label}</span>
+                      <span data-m={`lic:${k}`} class="font-mono text-fg/85">{t[`lic:${k}`]}</span>
+                    </div>
+                    <div class="mt-1 h-1.5">
+                      <span data-w={`lic:${k}`} class="sheet-bar block h-full rounded-sm bg-accent" style={`width: ${w[`lic:${k}`]}%`} />
+                    </div>
+                    <p data-m={`lic:${k}:cost`} class="mt-1 text-[11px] text-muted">{t[`lic:${k}:cost`]}</p>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+
+          <!-- Pendências de cadastro: barra relativa ao maior item da lista -->
+          <div class="flex-1 rounded border border-line px-3 py-3">
+            <div class="flex justify-between gap-2 text-xs leading-tight text-muted">
+              <p>Pendências de cadastro</p>
+              <p>Qtd</p>
+            </div>
+            <ul class="mt-2 space-y-1.5">
+              {
+                PEND_CAD.map(([k, label]) => (
+                  <li title={label} class="grid grid-cols-[minmax(0,1fr)_3.5rem_1.25rem] items-center gap-2 text-xs">
+                    <span class="truncate text-fg/85">{label}</span>
+                    <span class="h-1.5">
+                      <span data-w={`pc:${k}`} class="sheet-bar block h-full rounded-sm bg-amber-400/80" style={`width: ${w[`pc:${k}`]}%`} />
+                    </span>
+                    <span data-m={`pc:${k}`} class="text-right font-mono text-fg/85">{t[`pc:${k}`]}</span>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+        </div>
+
+        <div class="min-w-0 lg:col-span-2">
+          <StackedBars
+            title="Gasto com Microsoft 365 por setor"
+            note={`12 meses · ${brl(LIC_PRICE.Standard)}/ano por licença Standard e ${brl(LIC_PRICE.Basic)}/ano por Basic`}
+            prefix="lcs"
+            parts={LIC_PARTS}
+            colors={PART_COLORS}
+            groups={groups}
+            t={t}
+            w={w}
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Aba Dispositivos: notebooks em uso, gasto com eles e onde faltam notebooks.
+         Três colunas da mesma altura: tipo de gasto + motivo, gasto por setor, contas e notebooks por setor -->
+    <div data-page="dev" class="mt-3">
+      <Kpis items={kpis.dev} t={t} />
+      <div class="mt-2 grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+        <div class="flex min-w-0 flex-col gap-2 md:col-span-2 md:grid md:grid-cols-2 lg:col-span-1 lg:flex">
+          <!-- Gasto com dispositivos por tipo: barra relativa ao maior gasto, com o % do total -->
+          <div class="rounded border border-line px-3 py-3">
+            <p class="text-xs leading-tight text-muted">Gasto com dispositivos por tipo</p>
+            <ul class="mt-2.5 space-y-2.5">
+              {
+                DEV_PARTS.map(([k, label], ci) => (
+                  <li>
+                    <div class="flex justify-between gap-2 text-xs">
+                      <span class="flex min-w-0 items-center gap-1.5 text-fg/85"><span class:list={['h-2 w-2 flex-none rounded-sm', PART_COLORS[ci]]} /><span class="truncate">{label}</span></span>
+                      <span class="flex-none font-mono text-fg/85"><span data-m={`dev:${k}`}>{t[`dev:${k}`]}</span><span class="text-muted/70"> · </span><span data-m={`dev:${k}:pct`}>{t[`dev:${k}:pct`]}</span></span>
+                    </div>
+                    <div class="mt-1 h-1.5">
+                      <span data-w={`dev:${k}`} class:list={['sheet-bar block h-full rounded-sm', PART_COLORS[ci]]} style={`width: ${w[`dev:${k}`]}%`} />
+                    </div>
+                    <p data-m={`dev:${k}:sub`} class="mt-1 text-[11px] text-muted">{t[`dev:${k}:sub`]}</p>
+                  </li>
+                ))
+              }
+            </ul>
+            <p class="mt-3 border-t border-line pt-2.5 text-[11px] text-muted/80">As licenças do Kaspersky valem {AV_YEARS} anos e vencem todas juntas: o valor ajuda a prever o custo da renovação.</p>
+          </div>
+
+          <!-- Motivo de não ter notebook corporativo -->
+          <div class="flex-1 rounded border border-line px-3 py-3">
             <p class="text-xs leading-tight text-muted">Contas sem notebook corp. · motivo</p>
             <table class="mt-2 w-full text-xs tabular-nums">
               <thead>
@@ -245,213 +322,176 @@ const pendLists = [
               </tbody>
             </table>
           </div>
+        </div>
 
-          <!-- Pendências de segurança e de cadastro: barra relativa ao maior item da lista -->
-          <div class="rounded border border-line px-3 py-3">
+        <StackedBars
+          title="Gasto com dispositivos por setor"
+          note={`${brl(NB_PRICE)} por notebook e ${brl(AV_PRICE)} por antivírus ativo`}
+          prefix="dvs"
+          parts={DEV_PARTS}
+          colors={PART_COLORS}
+          groups={groups}
+          t={t}
+          w={w}
+        />
+
+        <!-- Contas e notebooks por setor: barra clara = contas, barra cheia por dentro = notebooks -->
+        <div class="flex min-w-0 flex-col rounded border border-line px-3 py-3">
+          <p class="text-xs leading-tight text-muted">Contas e notebooks por setor</p>
+          <p class="mt-1 flex gap-3 text-[11px] text-muted">
+            <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-accent/30" />Contas</span>
+            <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-accent" />Notebooks</span>
+          </p>
+          <ul class="mt-3 flex flex-1 flex-col justify-between gap-2">
             {
-              pendLists.map((l, li) => (
-                <div class:list={[li > 0 && 'mt-4']}>
-                  <div class="flex justify-between gap-2 text-xs leading-tight text-muted">
-                    <p>{l.title}</p>
-                    <p>Qtd</p>
+              groups.slice(0, -1).map(([s, label]) => (
+                <li data-tip={`set:${s}:tip`} title={t[`set:${s}:tip`]}>
+                  <div class="flex justify-between gap-2 text-[11px]">
+                    <span class="truncate text-fg/85">{label}</span>
+                    <span class="flex-none font-mono text-fg/85">
+                      <span data-m={`set:${s}:c`}>{t[`set:${s}:c`]}</span>
+                      <span class="text-muted/70"> / </span>
+                      <span data-m={`set:${s}:d`}>{t[`set:${s}:d`]}</span>
+                    </span>
                   </div>
-                  <ul class="mt-2 space-y-1.5">
-                    {l.items.map(([k, label]) => (
-                      <li title={label} class="grid grid-cols-[minmax(0,1fr)_3.5rem_1.25rem] items-center gap-2 text-xs">
-                        <span class="truncate text-fg/85">{label}</span>
-                        <span class="h-1.5">
-                          <span data-w={`${l.prefix}:${k}`} class="sheet-bar block h-full rounded-sm bg-amber-400/80" style={`width: ${w[`${l.prefix}:${k}`]}%`} />
-                        </span>
-                        <span data-m={`${l.prefix}:${k}`} class="text-right font-mono text-fg/85">{t[`${l.prefix}:${k}`]}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                  <div class="mt-1 h-1.5" role="img" aria-label={t[`set:${s}:tip`]}>
+                    <span data-w={`set:${s}:c`} class="sheet-bar block h-full rounded-sm bg-accent/30" style={`width: ${w[`set:${s}:c`]}%`}>
+                      <span data-w={`set:${s}:d`} class="sheet-bar block h-full rounded-sm bg-accent" style={`width: ${w[`set:${s}:d`]}%`} />
+                    </span>
+                  </div>
+                </li>
               ))
             }
-          </div>
+          </ul>
+          <!-- "Outros" soma vários setores: vai como texto para não esmagar as barras -->
+          <p data-tip={`set:${OTHERS}:tip`} title={t[`set:${OTHERS}:tip`]} class="mt-3 flex justify-between gap-2 border-t border-line pt-2 text-[11px] text-muted">
+            <span>+ {groups.at(-1)![1]}</span>
+            <span class="font-mono text-fg/85"><span data-m={`set:${OTHERS}:c`}>{t[`set:${OTHERS}:c`]}</span><span class="text-muted/70"> / </span><span data-m={`set:${OTHERS}:d`}>{t[`set:${OTHERS}:d`]}</span></span>
+          </p>
         </div>
+      </div>
+    </div>
 
-        <div class="grid gap-2 sm:grid-cols-2">
-          <!-- Versão do Windows: rosquinha com o % do Pro no meio -->
-          <div class="rounded border border-line px-3 py-3">
-            <p class="text-xs leading-tight text-muted">Versão do Windows</p>
-            <div class="mt-3 flex items-center gap-4 sm:flex-col sm:gap-3">
-              <div class="relative size-28 flex-none" role="img" aria-label={`Windows 11 Pro: ${t['win:Pro']}, Windows 11 Home: ${t['win:Home']}`}>
-                <svg viewBox="0 0 36 36" class="size-full -rotate-90">
-                  {[0, 1].map((seg) => {
-                    const d = donutDash(w['win:Pro'], seg);
-                    return (
-                      <circle
-                        data-donut="win:Pro"
-                        data-seg={seg}
-                        cx="18"
-                        cy="18"
-                        r="15.9155"
-                        fill="none"
-                        stroke-width="3.5"
-                        class:list={['sheet-donut', seg === 0 ? 'stroke-accent' : 'stroke-accent/30']}
-                        stroke-dasharray={d.dash}
-                        stroke-dashoffset={d.offset}
-                      />
-                    );
-                  })}
-                </svg>
-                <span class="absolute inset-0 flex flex-col items-center justify-center leading-none">
-                  <span data-m="win:Pro:pct" class="text-lg font-semibold text-heading tabular-nums">{t['win:Pro:pct']}</span>
-                  <span class="mt-1 text-[10px] text-muted">Pro</span>
-                </span>
-              </div>
-              <ul class="min-w-0 flex-1 space-y-1.5 text-xs sm:w-full sm:flex-none">
-                {
-                  [
-                    ['Pro', 'bg-accent'],
-                    ['Home', 'bg-accent/30'],
-                  ].map(([v, color]) => (
-                    <li class="flex items-center gap-1.5">
-                      <span class:list={['h-2 w-2 flex-none rounded-sm', color]} />
-                      <span class="text-fg/85">Windows 11 {v}</span>
-                      <span class="ml-auto font-mono whitespace-nowrap text-fg/85">
-                        <span data-m={`win:${v}`}>{t[`win:${v}`]}</span>
-                        <span class="text-muted/70"> · </span>
-                        <span data-m={`win:${v}:pct`}>{t[`win:${v}:pct`]}</span>
-                      </span>
-                    </li>
-                  ))
-                }
-              </ul>
-            </div>
-          </div>
-
-          <!-- Setores com mais pendências de segurança: top 6 -->
-          <div class="rounded border border-line px-3 py-3">
-            <p class="text-xs leading-tight text-muted">Setores com mais pendências de segurança</p>
-            <p class="text-[11px] text-muted/70">sem LAPS, sem antivírus ou Windows Home</p>
-            <!-- Celular: ranking numerado com o detalhe de cada tipo à vista (não existe "passar o mouse") -->
-            <ol class="mt-1.5 sm:hidden">
-              {
-                Array.from({ length: PEND_TOP }, (_, i) => (
-                  <li class="flex items-center gap-3 border-b border-line py-2.5 last:border-0 last:pb-0">
-                    <span class="w-5 flex-none text-xs text-muted tabular-nums">{i + 1}º</span>
-                    <div class="min-w-0 flex-1">
-                      <p data-m={`pend:${i}:name`} class="truncate text-sm text-fg">{t[`pend:${i}:name`]}</p>
-                      <p class="mt-1.5 flex flex-wrap gap-1.5 text-[11px]">
-                        {[
-                          ['laps', 'LAPS'],
-                          ['av', 'Antivírus'],
-                          ['home', 'Home'],
-                        ].map(([k, label]) => (
-                          <span data-chip class:list={['rounded border border-line px-1.5 py-0.5 text-muted', t[`pend:${i}:${k}`] === '0' && 'opacity-40']}>
-                            {label} <span data-m={`pend:${i}:${k}`} class="font-mono text-fg">{t[`pend:${i}:${k}`]}</span>
-                          </span>
-                        ))}
-                      </p>
-                    </div>
-                    <span class="flex flex-none items-center gap-1.5">
-                      <span class="h-2 w-2 rounded-full bg-amber-400" />
-                      <span data-m={`pend:${i}`} class="text-xl font-semibold text-heading tabular-nums">{t[`pend:${i}`]}</span>
-                    </span>
-                  </li>
-                ))
-              }
-            </ol>
-            <!-- Computador: barras com o detalhe ao passar o mouse -->
-            <ol class="mt-2.5 hidden space-y-2 sm:block">
-              {
-                Array.from({ length: PEND_TOP }, (_, i) => (
-                  <li data-tip={`pend:${i}:tip`} title={t[`pend:${i}:tip`]}>
-                    <div class="flex justify-between gap-2 text-xs">
-                      <span data-m={`pend:${i}:name`} class="truncate text-fg/85">{t[`pend:${i}:name`]}</span>
-                      <span data-m={`pend:${i}`} class="font-mono text-fg/85">{t[`pend:${i}`]}</span>
-                    </div>
-                    <div class="mt-1 h-1.5">
-                      <span data-w={`pend:${i}`} class="sheet-bar block h-full rounded-sm bg-amber-400/80" style={`width: ${w[`pend:${i}`]}%`} />
-                    </div>
-                  </li>
-                ))
-              }
-            </ol>
-          </div>
-        </div>
-
-        <!-- Contas ativas e dispositivos por setor: barra clara = contas, barra cheia = notebooks -->
+    <!-- Aba Segurança: LAPS, antivírus, versão do Windows e os setores com mais pendências -->
+    <div data-page="seg" class="mt-3">
+      <Kpis items={kpis.seg} t={t} />
+      <div class="mt-2 grid gap-2 lg:grid-cols-3">
+        <!-- Versão do Windows: rosquinha com o % do Pro no meio -->
         <div class="rounded border border-line px-3 py-3">
-          <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <p class="text-xs leading-tight text-muted">Contas ativas e dispositivos por setor</p>
-            <p class="hidden gap-3 text-[11px] text-muted sm:flex">
-              <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-accent/30" />Contas</span>
-              <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-amber-400/70" />Contas (setor com falta de notebook)</span>
-              <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-accent" />Dispositivos</span>
-            </p>
-            <p class="flex gap-3 text-[11px] text-muted sm:hidden">
-              <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-accent/30" />Contas</span>
-              <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-accent" />Dispositivos</span>
-            </p>
-          </div>
-          <!-- Computador/tablet: duas colunas finas lado a lado por setor (clara = contas, cheia = notebooks) -->
-          <div class="hidden sm:block">
-            <div class="mt-2 flex h-48 items-end gap-1 border-b border-line pt-5 pl-8">
+          <p class="text-xs leading-tight text-muted">Versão do Windows</p>
+          <div class="mt-3 flex items-center gap-5 lg:flex-col lg:gap-4">
+            <div class="relative size-28 flex-none" role="img" aria-label={`Windows 11 Pro: ${t['win:Pro']}, Windows 11 Home: ${t['win:Home']}`}>
+              <svg viewBox="0 0 36 36" class="size-full -rotate-90">
+                {[0, 1].map((seg) => {
+                  const d = donutDash(w['win:Pro'], seg);
+                  return (
+                    <circle
+                      data-donut="win:Pro"
+                      data-seg={seg}
+                      cx="18"
+                      cy="18"
+                      r="15.9155"
+                      fill="none"
+                      stroke-width="3.5"
+                      class:list={['sheet-donut', seg === 0 ? 'stroke-accent' : 'stroke-accent/30']}
+                      stroke-dasharray={d.dash}
+                      stroke-dashoffset={d.offset}
+                    />
+                  );
+                })}
+              </svg>
+              <span class="absolute inset-0 flex flex-col items-center justify-center leading-none">
+                <span data-m="win:Pro:pct" class="text-lg font-semibold text-heading tabular-nums">{t['win:Pro:pct']}</span>
+                <span class="mt-1 text-[10px] text-muted">Pro</span>
+              </span>
+            </div>
+            <ul class="min-w-0 flex-1 space-y-1.5 text-xs lg:w-full lg:flex-none">
               {
-                sectorOrder.map((s) => (
-                  <div data-tip={`set:${s}:tip`} title={t[`set:${s}:tip`]} class="flex h-full min-w-0 flex-1 items-end justify-center gap-1">
-                    <!-- Contas: só este número fica à vista; dispositivos aparecem ao passar o mouse -->
-                    <span
-                      data-h={`set:${s}:c`}
-                      data-gap={`set:${s}:gap`}
-                      class:list={['sheet-col sheet-contas relative block w-2.5 flex-none rounded-t-sm', t[`set:${s}:gap`] && 'is-gap']}
-                      style={`height: ${w[`set:${s}:c`]}%`}
-                    >
-                      <span data-m={`set:${s}:c`} class="absolute bottom-full left-1/2 mb-1 -translate-x-1/2 font-mono text-[10px] text-muted">{t[`set:${s}:c`]}</span>
+                [
+                  ['Pro', 'bg-accent'],
+                  ['Home', 'bg-accent/30'],
+                ].map(([v, color]) => (
+                  <li class="flex items-center gap-1.5">
+                    <span class:list={['h-2 w-2 flex-none rounded-sm', color]} />
+                    <span class="text-fg/85">Windows 11 {v}</span>
+                    <span class="ml-auto font-mono whitespace-nowrap text-fg/85">
+                      <span data-m={`win:${v}`}>{t[`win:${v}`]}</span>
+                      <span class="text-muted/70"> · </span>
+                      <span data-m={`win:${v}:pct`}>{t[`win:${v}:pct`]}</span>
                     </span>
-                    <span data-h={`set:${s}:dh`} class="sheet-col block w-2.5 flex-none rounded-t-sm bg-accent" style={`height: ${w[`set:${s}:dh`]}%`} />
-                  </div>
-                ))
-              }
-            </div>
-            <!-- Nomes inclinados para caber todos os setores -->
-            <div class="flex h-28 gap-1 pl-8" aria-hidden="true">
-              {
-                sectorOrder.map((s) => (
-                  <div class="relative min-w-0 flex-1">
-                    <span class="absolute top-1.5 right-1/2 origin-top-right -rotate-45 text-[11px] whitespace-nowrap text-fg/85">{s}</span>
-                  </div>
-                ))
-              }
-            </div>
-          </div>
-
-          <!-- Celular: barras deitadas (clara = contas, cheia = notebooks por dentro).
-               Aparecem os 8 maiores setores e o restante abre em "ver todos" (sem JS, via checkbox) -->
-          <div class="sectors sm:hidden">
-            <input type="checkbox" id="sectors-all" class="sectors-toggle sr-only" />
-            <ul class="mt-3 grid gap-y-2">
-              {
-                sectorOrder.map((s, i) => (
-                  <li data-extra={i >= SECTORS_VISIBLE || undefined}>
-                    <div class="flex justify-between gap-2 text-xs">
-                      <span class="truncate text-fg/85">{s}</span>
-                      <span class="flex-none font-mono text-fg/85">
-                        <span data-m={`set:${s}:c`}>{t[`set:${s}:c`]}</span>
-                        <span class="text-muted/70"> / </span>
-                        <span data-m={`set:${s}:d`}>{t[`set:${s}:d`]}</span>
-                      </span>
-                    </div>
-                    <div class="mt-1 h-1.5" role="img" aria-label={t[`set:${s}:tip`]}>
-                      <span data-w={`set:${s}:c`} class="sheet-bar block h-full rounded-sm bg-accent/30" style={`width: ${w[`set:${s}:c`]}%`}>
-                        <span data-w={`set:${s}:d`} class="sheet-bar block h-full rounded-sm bg-accent" style={`width: ${w[`set:${s}:d`]}%`} />
-                      </span>
-                    </div>
                   </li>
                 ))
               }
             </ul>
-            <label for="sectors-all" class="sectors-more mt-3 inline-block cursor-pointer text-xs text-muted hover:text-fg">
-              <span class="when-closed">Ver todos os {sectorOrder.length} setores ↓</span>
-              <span class="when-open">Mostrar menos ↑</span>
-            </label>
           </div>
+          <p class="mt-3 text-[11px] text-muted/70">Notebooks com Windows Home contam como pendência de segurança.</p>
+        </div>
+
+        <!-- Setores com mais pendências de segurança: top 6 -->
+        <div class="rounded border border-line px-3 py-3 lg:col-span-2">
+          <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <p class="text-xs leading-tight text-muted">Setores com mais pendências de segurança</p>
+            <p class="hidden flex-wrap gap-3 text-[11px] text-muted sm:flex">
+              {SEG_PARTS.map(([, label], ci) => <span class="flex items-center gap-1.5"><span class:list={['h-2 w-2 rounded-sm', SEG_COLORS[ci]]} />{label}</span>)}
+            </p>
+          </div>
+          <!-- Celular: ranking numerado com o detalhe de cada tipo à vista (não existe "passar o mouse") -->
+          <ol class="mt-1.5 sm:hidden">
+            {
+              Array.from({ length: PEND_TOP }, (_, i) => (
+                <li class="flex items-center gap-3 border-b border-line py-2.5 last:border-0 last:pb-0">
+                  <span class="w-5 flex-none text-xs text-muted tabular-nums">{i + 1}º</span>
+                  <div class="min-w-0 flex-1">
+                    <p data-m={`pend:${i}:name`} class="truncate text-sm text-fg">{t[`pend:${i}:name`]}</p>
+                    <p class="mt-1.5 flex flex-wrap gap-1.5 text-[11px]">
+                      {SEG_PARTS.map(([k, label]) => (
+                        <span data-chip class:list={['rounded border border-line px-1.5 py-0.5 text-muted', t[`pend:${i}:${k}`] === '0' && 'opacity-40']}>
+                          {label} <span data-m={`pend:${i}:${k}`} class="font-mono text-fg">{t[`pend:${i}:${k}`]}</span>
+                        </span>
+                      ))}
+                    </p>
+                  </div>
+                  <span class="flex flex-none items-center gap-1.5">
+                    <span class="h-2 w-2 rounded-full bg-amber-400" />
+                    <span data-m={`pend:${i}`} class="text-xl font-semibold text-heading tabular-nums">{t[`pend:${i}`]}</span>
+                  </span>
+                </li>
+              ))
+            }
+          </ol>
+          <!-- Computador: barra do total dividida por tipo de pendência, detalhe ao passar o mouse -->
+          <ol class="mt-3 hidden space-y-3 sm:block">
+            {
+              Array.from({ length: PEND_TOP }, (_, i) => (
+                <li data-tip={`pend:${i}:tip`} title={t[`pend:${i}:tip`]} class="grid grid-cols-[1.25rem_10rem_minmax(0,1fr)] items-center gap-2 text-xs">
+                  <span class="text-muted tabular-nums">{i + 1}º</span>
+                  <span data-m={`pend:${i}:name`} class="truncate text-fg/85">{t[`pend:${i}:name`]}</span>
+                  <div class="pr-8">
+                    <span data-w={`pend:${i}`} class="sheet-bar relative block h-2" style={`width: ${w[`pend:${i}`]}%`}>
+                      <span class="flex h-full gap-px overflow-hidden rounded-sm">
+                        {SEG_PARTS.map(([k], ci) => <span data-w={`pend:${i}:${k}`} class:list={['sheet-bar block h-full flex-none', SEG_COLORS[ci]]} style={`width: ${w[`pend:${i}:${k}`]}%`} />)}
+                      </span>
+                      <span data-m={`pend:${i}`} class="absolute top-1/2 left-full ml-2 -translate-y-1/2 font-mono text-fg/85">{t[`pend:${i}`]}</span>
+                    </span>
+                  </div>
+                </li>
+              ))
+            }
+          </ol>
         </div>
       </div>
+    </div>
+
+    <!-- Páginas do relatório no rodapé, como as abas do Power BI (radio + CSS: funciona sem JS) -->
+    <div role="radiogroup" aria-label="Páginas do relatório" class="-mx-3 mt-3 -mb-3 flex gap-1 overflow-x-auto border-t border-line bg-white/[0.02] px-3 sm:-mx-5 sm:-mb-5 sm:px-5">
+      {
+        PAGES.map(([k, label], i) => (
+          <Fragment>
+            <input type="radio" name="sheet-page" id={`pg-${k}`} value={k} checked={i === 0} class="sheet-page-input sr-only" />
+            <label for={`pg-${k}`} class="sheet-page-tab -mt-px flex-none cursor-pointer border-t-2 border-transparent px-4 py-2.5 text-xs whitespace-nowrap text-muted hover:text-fg">{label}</label>
+          </Fragment>
+        ))
+      }
     </div>
   </div>
 </div>
@@ -514,24 +554,51 @@ const pendLists = [
     outline-offset: 2px;
   }
 
-  .sheet-bar {
+  /* Páginas do relatório: só a escolhida aparece (sem suporte a :has, todas ficam à vista) */
+  .sheet-pages:has(#pg-dev:checked) [data-page]:not([data-page='dev']),
+  .sheet-pages:has(#pg-seg:checked) [data-page]:not([data-page='seg']),
+  .sheet-pages:not(:has(#pg-dev:checked, #pg-seg:checked)) [data-page]:not([data-page='lic']) {
+    display: none;
+  }
+
+  .sheet-page-tab {
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  /* Aba escolhida: fundo aceso e traço em cima, como no Power BI */
+  .sheet-page-input:checked + .sheet-page-tab {
+    border-color: var(--color-accent);
+    background: rgb(255 255 255 / 0.06);
+    color: var(--color-heading);
+    font-weight: 500;
+  }
+
+  .sheet-page-input:focus-visible + .sheet-page-tab {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
+  }
+
+  /* Barras e KPIs também ficam dentro dos componentes NotebookKpis e NotebookStackedBars */
+  [data-sheet] :global(.sheet-bar) {
     transition: width 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
-  .sheet-col {
-    transition: height 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  /* Botão de filtros: borda acesa com o painel aberto ou com filtro em uso */
+  .sheet-filter-btn[aria-expanded='true'],
+  .sheet-filter-btn.is-active {
+    border-color: var(--color-accent);
+    color: var(--color-heading);
   }
 
-  /* Coluna de contas: cinza; âmbar quando o setor tem conta sem notebook */
-  .sheet-contas {
-    background: color-mix(in srgb, var(--color-accent) 30%, transparent);
-    transition:
-      height 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
-      background-color 0.4s ease;
+  .sheet-filter-btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
 
-  .sheet-contas.is-gap {
-    background: color-mix(in srgb, var(--color-amber-400) 70%, transparent);
+  [data-filter-panel] {
+    box-shadow: -12px 0 32px rgb(0 0 0 / 0.35);
   }
 
   .sheet-donut {
@@ -540,25 +607,7 @@ const pendLists = [
       stroke-dashoffset 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
-
-  /* Celular: setores extras e o texto do botão dependem do checkbox "ver todos" */
-  .sectors:has(.sectors-toggle:checked) .when-closed,
-  .sectors:not(:has(.sectors-toggle:checked)) .when-open {
-    display: none;
-  }
-
-  @media (max-width: 639px) {
-    .sectors:not(:has(.sectors-toggle:checked)) [data-extra] {
-      display: none;
-    }
-  }
-
-  .sectors-toggle:focus-visible ~ .sectors-more {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
-  }
-
-  .sheet-kpi.is-bump {
+  [data-sheet] :global(.sheet-kpi.is-bump) {
     animation: kpi-bump 0.6s ease;
   }
 
@@ -568,7 +617,7 @@ const pendLists = [
     }
   }
 
-  .sheet-kpi {
+  [data-sheet] :global(.sheet-kpi) {
     display: inline-block;
     transform-origin: left;
   }
@@ -591,10 +640,17 @@ const pendLists = [
     const selects = [...root.querySelectorAll<HTMLSelectElement>('[data-filter]')];
     const statusEl = root.querySelector<HTMLElement>('[data-filter-status]')!;
     const clearBtn = root.querySelector<HTMLButtonElement>('[data-filter-clear]')!;
+    const chipsEl = root.querySelector<HTMLElement>('[data-filter-chips]')!;
+    const countEl = root.querySelector<HTMLElement>('[data-filter-count]')!;
+    const panel = root.querySelector<HTMLElement>('[data-filter-panel]')!;
+    const openBtn = root.querySelector<HTMLButtonElement>('[data-filter-open]')!;
+    const closeBtns = root.querySelectorAll<HTMLButtonElement>('[data-filter-close]');
+    // Nome de cada filtro, para as etiquetas
+    const labelOf = (s: HTMLSelectElement) => s.closest('label')?.querySelector('span')?.textContent ?? '';
     let next = 0;
     let visible = false;
 
-    // Recalcula o dashboard sobre as linhas da planilha completa que passam nos filtros, como o Excel faz
+    // Recalcula o dashboard sobre as linhas da planilha completa que passam nos filtros, como o Power BI faz
     const render = () => {
       const base = records.filter((r) => r.n < next);
       const sel = Object.fromEntries(selects.map((s) => [s.dataset.filter!, s.value]));
@@ -603,14 +659,32 @@ const pendLists = [
       shownEl.textContent = String(initial.length + next);
       totalEl.textContent = String(base.length);
 
-      // Situação dos filtros
-      const active = selects.filter((s) => s.value).length;
+      // Situação dos filtros: contador no botão e uma etiqueta por filtro em uso
+      const active = selects.filter((s) => s.value);
       selects.forEach((s) => s.classList.toggle('is-active', !!s.value));
-      clearBtn.hidden = !active;
-      statusEl.textContent = !active
-        ? 'Sem filtros ativos: os números mostram o total da base.'
-        : `${active} ${active === 1 ? 'filtro ativo' : 'filtros ativos'}: ` +
-          (rows.length ? `${rows.length} de ${base.length} contas da base.` : 'nenhuma conta da base atende a todos.');
+      openBtn.classList.toggle('is-active', active.length > 0);
+      countEl.hidden = !active.length;
+      countEl.textContent = String(active.length);
+      clearBtn.hidden = !active.length;
+      statusEl.textContent = !active.length
+        ? 'Sem filtros: todas as contas da base.'
+        : rows.length
+          ? `${rows.length} de ${base.length} contas ·`
+          : `Nenhuma das ${base.length} contas atende a todos ·`;
+      chipsEl.replaceChildren(
+        ...active.map((s) => {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'cursor-pointer rounded border border-accent/50 px-1.5 py-0.5 text-fg/85 hover:border-accent hover:text-heading';
+          chip.textContent = `${labelOf(s)}: ${s.selectedOptions[0].text} ✕`;
+          chip.setAttribute('aria-label', `Tirar o filtro ${labelOf(s)}`);
+          chip.addEventListener('click', () => {
+            s.value = '';
+            render();
+          });
+          return chip;
+        }),
+      );
       root.querySelectorAll<HTMLElement>('[data-m]').forEach((el) => {
         const v = t[el.dataset.m!];
         if (v === undefined || el.textContent === v) return;
@@ -622,12 +696,6 @@ const pendLists = [
       });
       root.querySelectorAll<HTMLElement>('[data-w]').forEach((el) => {
         el.style.width = `${w[el.dataset.w!] ?? 0}%`;
-      });
-      root.querySelectorAll<HTMLElement>('[data-h]').forEach((el) => {
-        el.style.height = `${w[el.dataset.h!] ?? 0}%`;
-      });
-      root.querySelectorAll<HTMLElement>('[data-gap]').forEach((el) => {
-        el.classList.toggle('is-gap', !!t[el.dataset.gap!]);
       });
       root.querySelectorAll<SVGCircleElement>('[data-donut]').forEach((el) => {
         const d = donutDash(w[el.dataset.donut!] ?? 0, Number(el.dataset.seg));
@@ -642,6 +710,18 @@ const pendLists = [
         el.title = t[el.dataset.tip!] ?? '';
       });
     };
+
+    // Painel de filtros: abre pelo botão, fecha no × ou com Esc
+    const setPanel = (open: boolean) => {
+      panel.hidden = !open;
+      openBtn.setAttribute('aria-expanded', String(open));
+      (open ? selects[0] : openBtn).focus();
+    };
+    openBtn.addEventListener('click', () => setPanel(panel.hidden));
+    closeBtns.forEach((b) => b.addEventListener('click', () => setPanel(false)));
+    panel.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') setPanel(false);
+    });
 
     // Filtros: recalculam na hora, sem parar a animação dos colaboradores novos
     selects.forEach((s) => s.addEventListener('change', render));

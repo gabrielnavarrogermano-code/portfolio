@@ -141,10 +141,32 @@ export const sectorOrder = [...SECTORS].sort(
 
 export const PEND_TOP = 6;
 
+// Gráficos por setor: os 10 maiores setores (pela planilha completa) e o restante somado em "Outros"
+const TOP_SECTORS = 10;
+export const OTHERS = 'Outros';
+export const sectorGroups: [string, string[]][] = [
+  ...sectorOrder.slice(0, TOP_SECTORS).map((s): [string, string[]] => [s, [s]]),
+  [OTHERS, sectorOrder.slice(TOP_SECTORS)],
+];
+
 // Licenças comerciais do Kaspersky: valor fictício e fixo por licença (R$), uma por notebook.
 // Todas valem 3 anos e vencem juntas
 export const AV_PRICE = 300;
 export const AV_YEARS = 3;
+
+// Custos (valores fictícios): compra de cada notebook e assinatura anual do Microsoft 365 por conta
+export const NB_PRICE = 4500;
+export const LIC_PRICE = { Standard: 900, Basic: 420 } as const;
+
+// Partes das barras empilhadas de gasto por setor: aba Licenças (por tipo de licença) e aba Dispositivos (por tipo de gasto)
+export const LIC_PARTS = [
+  ['Standard', 'Standard'],
+  ['Basic', 'Basic'],
+] as const;
+export const DEV_PARTS = [
+  ['nb', 'Notebooks'],
+  ['av', 'Antivírus'],
+] as const;
 
 // Pendências de uma linha (as mesmas das listas do dashboard; PC divergente e selo repetido dependem de outras linhas)
 const pendSeg = (r: Rec) => r.pc && (!r.laps || !r.av || r.win === 'Home');
@@ -298,30 +320,74 @@ export function compute(rows: Rec[]) {
     t[`pend:${i}:av`] = String(p?.av ?? 0);
     t[`pend:${i}:home`] = String(p?.home ?? 0);
     w[`pend:${i}`] = p ? pct(p.n, top[0].n) : 0;
+    // Partes da barra empilhada: quanto de cada tipo de pendência
+    for (const k of ['laps', 'av', 'home'] as const) w[`pend:${i}:${k}`] = p ? pct(p[k], p.n) : 0;
   }
 
-  // Por setor: contas, dispositivos e notebooks com antivírus
-  const bySector = SECTORS.map((s) => {
-    const sr = rows.filter((r) => r.s === s);
-    const se = sr.filter((r) => r.pc);
-    return { s, c: sr.length, d: se.length, av: se.filter((r) => r.av).length };
-  });
-  const maxC = Math.max(...bySector.map((x) => x.c), 1);
-  const maxAv = Math.max(...bySector.map((x) => x.av), 1);
   const brl = (v: number) => `R$ ${v.toLocaleString('pt-BR')}`;
-  t['avc:total'] = brl(avOk * AV_PRICE);
-  for (const { s, c, d, av } of bySector) {
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+  // Aba Licenças: gasto com Microsoft 365 em 12 meses, no total e por tipo de licença
+  const licCost = (rs: Rec[]) => ({
+    Standard: rs.filter((r) => r.l === 'Standard').length * LIC_PRICE.Standard,
+    Basic: rs.filter((r) => r.l === 'Basic').length * LIC_PRICE.Basic,
+  });
+  const lc = licCost(rows);
+  t['m365'] = brl(lc.Standard + lc.Basic);
+  t['m365:sub'] = `${plural(rows.length, 'licença', 'licenças')} · 12 meses`;
+  for (const [k] of LIC_PARTS) t[`lic:${k}:cost`] = `${brl(lc[k])}/ano`;
+  t['pc:total'] = String(PEND_CAD.reduce((a, [k]) => a + Number(t[`pc:${k}`]), 0));
+
+  // Aba Dispositivos: compra dos notebooks e licenças de antivírus (3 anos)
+  const dc = { nb: eq.length * NB_PRICE, av: avOk * AV_PRICE };
+  t['dev'] = brl(dc.nb + dc.av);
+  t['dev:sub'] = `notebooks e antivírus de ${plural(eq.length, 'equipamento', 'equipamentos')}`;
+  t['dev:nb:sub'] = `${plural(eq.length, 'notebook', 'notebooks')} × ${brl(NB_PRICE)}`;
+  t['dev:av:sub'] = `${plural(avOk, 'licença', 'licenças')} × ${brl(AV_PRICE)} · ${AV_YEARS} anos`;
+  const maxDev = Math.max(dc.nb, dc.av, 1);
+  for (const [k] of DEV_PARTS) {
+    t[`dev:${k}`] = brl(dc[k]);
+    t[`dev:${k}:pct`] = pct1(dc[k], dc.nb + dc.av);
+    w[`dev:${k}`] = pct(dc[k], maxDev);
+  }
+
+  // Por setor: contas, dispositivos e os dois gastos
+  // Notebooks com alguma pendência de segurança (sem LAPS, sem antivírus ou Windows Home)
+  const seg = eq.filter(pendSeg).length;
+  t.seg = String(seg);
+  t['seg:sub'] = `de ${plural(eq.length, 'notebook', 'notebooks')}`;
+
+  const bySector = sectorGroups.map(([s, group]) => {
+    const sr = rows.filter((r) => group.includes(r.s));
+    const se = sr.filter((r) => r.pc);
+    const av = se.filter((r) => r.av).length;
+    return { s, sr, c: sr.length, d: se.length, av, lic: licCost(sr), dev: { nb: se.length * NB_PRICE, av: av * AV_PRICE } };
+  });
+  const sum = (o: Record<string, number>) => Object.values(o).reduce((a, v) => a + v, 0);
+  // Escala das barras só pelos 10 maiores setores: "Outros" soma vários setores e aparece como texto, sem barra
+  const bigs = bySector.filter((x) => x.s !== OTHERS);
+  const maxC = Math.max(...bigs.map((x) => x.c), 1);
+  const maxLic = Math.max(...bigs.map((x) => sum(x.lic)), 1);
+  const maxDevS = Math.max(...bigs.map((x) => sum(x.dev)), 1);
+  for (const { s, sr, c, d, av, lic, dev } of bySector) {
+    // "Outros" mostra quantos setores estão somados nele
+    const name = s === OTHERS ? `${OTHERS} (${sectorGroups.at(-1)![1].length} setores)` : s;
     t[`set:${s}:c`] = String(c);
     t[`set:${s}:d`] = String(d);
-    t[`set:${s}:tip`] = `${s}: ${c} contas · ${d} dispositivos` + (c > d ? ` · faltam ${c - d}` : '');
-    t[`set:${s}:gap`] = c > d ? '1' : ''; // setor com conta sem notebook: coluna de contas destacada
+    t[`set:${s}:tip`] = `${name}: ${c} contas · ${d} notebooks` + (c > d ? ` · faltam ${c - d}` : '');
     w[`set:${s}:c`] = pct(c, maxC);
-    w[`set:${s}:d`] = pct(d, c); // celular: notebooks dentro da barra de contas
-    w[`set:${s}:dh`] = pct(d, maxC); // computador: coluna de notebooks ao lado, mesma escala das contas
-    // Gasto com licenças de antivírus por setor (uma licença por notebook com antivírus ativo)
-    t[`avc:${s}`] = brl(av * AV_PRICE);
-    t[`avc:${s}:tip`] = `${s}: ${av} ${av === 1 ? 'licença' : 'licenças'} × ${brl(AV_PRICE)} = ${brl(av * AV_PRICE)} (válidas por ${AV_YEARS} anos)`;
-    w[`avc:${s}`] = pct(av, maxAv);
+    w[`set:${s}:d`] = pct(d, c); // notebooks dentro da barra de contas
+
+    // Barras empilhadas: total relativo ao setor que mais gasta, dividido pelas partes
+    const std = sr.filter((r) => r.l === 'Standard').length;
+    t[`lcs:${s}`] = brl(sum(lic));
+    t[`lcs:${s}:tip`] = `${name}: ${plural(c, 'licença', 'licenças')} (${std} Standard · ${c - std} Basic) = ${brl(sum(lic))}/ano`;
+    w[`lcs:${s}`] = pct(sum(lic), maxLic);
+    for (const [k] of LIC_PARTS) w[`lcs:${s}:${k}`] = pct(lic[k], sum(lic));
+    t[`dvs:${s}`] = brl(sum(dev));
+    t[`dvs:${s}:tip`] = `${name}: ${brl(sum(dev))} · ${plural(d, 'notebook', 'notebooks')} ${brl(dev.nb)} · ${plural(av, 'antivírus', 'antivírus')} ${brl(dev.av)}`;
+    w[`dvs:${s}`] = pct(sum(dev), maxDevS);
+    for (const [k] of DEV_PARTS) w[`dvs:${s}:${k}`] = pct(dev[k], sum(dev));
   }
 
   return { t, w };

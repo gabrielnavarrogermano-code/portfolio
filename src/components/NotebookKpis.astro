@@ -1,0 +1,29 @@
+---
+// Linha de KPIs de uma página do dashboard de notebooks (os valores com data-m são atualizados pelo NotebookSheet)
+type Kpi = { label: string; key: string; sub?: string; subKey?: string };
+interface Props {
+  items: Kpi[];
+  t: Record<string, string>;
+}
+const { items, t } = Astro.props;
+
+// 3 KPIs: no celular, 2 por linha e o terceiro ocupa a linha inteira
+const cols: Record<number, string> = {
+  3: 'grid-cols-2 sm:grid-cols-3 [&>:nth-child(3)]:col-span-2 sm:[&>:nth-child(3)]:col-span-1',
+  4: 'grid-cols-2 lg:grid-cols-4',
+};
+---
+
+<div class:list={['grid gap-2', cols[items.length]]}>
+  {
+    items.map((k) => (
+      <div class="flex min-w-0 flex-col rounded border border-line px-3 py-2.5">
+        <p class="text-xs leading-tight text-muted">{k.label}</p>
+        <p class="mt-auto pt-1.5">
+          <span data-m={k.key} class="sheet-kpi text-lg font-semibold whitespace-nowrap text-heading tabular-nums sm:text-2xl">{t[k.key]}</span>
+        </p>
+        <p class="text-[11px] text-muted" data-m={k.subKey}>{k.subKey ? t[k.subKey] : k.sub}</p>
+      </div>
+    ))
+  }
+</div>

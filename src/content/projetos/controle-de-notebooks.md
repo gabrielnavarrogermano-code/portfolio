@@ -1,9 +1,9 @@
 ---
 title: Controle de Notebooks dos Colaboradores
-summary: Extração de dados do Microsoft 365 para uma base de colaboradores em Excel, com mini dashboard de KPIs no mesmo arquivo.
+summary: Extração de dados do Microsoft 365 para uma base de colaboradores em Excel, com dashboard de KPIs no Power BI que se atualiza junto com a planilha.
 problem: A equipe de TI precisava saber, de forma rápida, qual notebook estava com cada colaborador e se a máquina estava pronta para uso.
 kind: Extração e Tratamento
-tools: [Microsoft 365, Excel, Gráficos Dinâmicos]
+tools: [Microsoft 365, Excel, Power BI]
 order: 1
 demo: notebooks
 ---
@@ -20,7 +20,7 @@ Os dados dos colaboradores são importados do **Microsoft 365**, que já é a fo
 
 ## Tratamento
 
-As informações são tratadas e organizadas na aba de base do arquivo, com uma linha por colaborador:
+As informações são tratadas e organizadas em uma planilha de usuários no Excel, com uma linha por colaborador:
 
 - **Nome de usuário** e **e-mail cadastrado**
 - **Setor** do colaborador
@@ -37,21 +37,22 @@ A coluna **LAPS** indica se o notebook já passou pelo script de segurança dese
 
 ## Dashboard
 
-O mini dashboard fica em outra aba, no mesmo arquivo da base de colaboradores, e reúne os **KPIs** e **gráficos dinâmicos** do controle de equipamentos:
+O dashboard foi feito no **Power BI**, conectado à planilha de usuários. Ele começou como uma aba do próprio arquivo do Excel e depois foi levado para o Power BI, separado em três páginas para não juntar tudo em uma tela só:
 
-- **Filtros** por versão do Windows, licença, status do LAPS e do antivírus, equipamento, selo de patrimônio, setor e pendência (de segurança, de cadastro ou sem pendência)
-- **6 KPIs:** contas ativas, equipamentos, % de LAPS e % de antivírus (com meta de 100%), contas sem notebook corporativo e equipamentos sem selo de patrimônio
-- **Gráficos:** contas ativas por licença, gasto com licenças de antivírus por setor, versão do Windows, setores com mais pendências de segurança e contas ativas e dispositivos por setor
-- **Tabelas:** motivo das contas sem notebook corporativo e as listas de pendências de segurança e de cadastro
+- **Licenças:** licenças do Microsoft 365 em uso, no total e por tipo (Standard ou Basic), o gasto com elas em 12 meses, no total e por setor, e as pendências de cadastro da planilha
+- **Dispositivos:** notebooks em uso, contas sem notebook corporativo e o motivo, o gasto com notebooks e antivírus, no total e por setor, e as contas e os notebooks de cada setor
+- **Segurança:** % de LAPS e % de antivírus (com meta de 100%), notebooks com pendência de segurança, versão do Windows e os setores com mais pendências, separadas por tipo
 
-Os filtros podem ser combinados: ao escolher, por exemplo, um setor e o status "Inativo" do antivírus, todos os KPIs, gráficos e tabelas são recalculados só com as contas que atendem aos dois. Isso permite ir da visão geral da empresa até um setor ou um tipo de pendência específico. Na simulação acima, os filtros também funcionam.
+Os gráficos por setor mostram os 10 maiores setores, e os menores aparecem somados em uma linha só, para não esmagar as barras.
 
-O gráfico de **gasto com antivírus por setor** mostra quanto cada setor representa no custo das licenças comerciais do **Kaspersky**. Cada notebook com antivírus ativo usa uma licença de valor fixo, e todas valem **3 anos** e vencem juntas. Com isso, o gráfico ajuda a prever o custo da renovação e a mostrar quais setores pesam mais nesse gasto. Na simulação, o valor da licença é fictício.
+Os **filtros** ficam em um painel lateral, como no Power BI, e valem para as três páginas: versão do Windows, licença, status do LAPS e do antivírus, equipamento, selo de patrimônio, setor e pendência (de segurança, de cadastro ou sem pendência). Os filtros em uso aparecem como etiquetas no topo do relatório, e cada uma pode ser tirada sozinha. Eles também podem ser combinados: ao escolher, por exemplo, um setor e o status "Inativo" do antivírus, todos os KPIs, gráficos e tabelas são recalculados só com as contas que atendem aos dois. Isso permite ir da visão geral da empresa até um setor ou um tipo de pendência específico. Na simulação acima, os filtros e as páginas também funcionam.
 
-O dashboard mostra os principais indicadores de forma clara e ajuda a definir os próximos passos para melhorar o controle dos dispositivos. Quando a base é atualizada e tratada, o dashboard se atualiza junto.
+As páginas de licenças e de dispositivos têm o seu próprio custo. Na de licenças, o gasto com o **Microsoft 365** é calculado pelos 12 meses de cada licença em uso. Na de dispositivos, entram a compra dos notebooks e as licenças comerciais do **Kaspersky**, que têm valor fixo, uma por notebook com antivírus ativo, e valem **3 anos** e vencem juntas, o que ajuda a prever o custo da renovação. Na simulação, todos os valores são fictícios.
+
+O dashboard mostra os principais indicadores de forma clara e ajuda a definir os próximos passos para melhorar o controle dos dispositivos. Sempre que a planilha de usuários é alterada, o Power BI atualiza o dashboard com os novos dados.
 
 ## Resultado
 
-Esse arquivo, com a tabela e o dashboard, é a **principal fonte de consulta de dados centralizados** de cada colaborador. Nele estão todas as informações sobre o dispositivo e o setor onde a pessoa se encontra.
+A planilha, junto com o dashboard no Power BI, é a **principal fonte de consulta de dados centralizados** de cada colaborador. Nele estão todas as informações sobre o dispositivo e o setor onde a pessoa se encontra.
 
 Antes disso, precisávamos consultar individualmente as informações dos usuários no 365 Admin, e ainda não tínhamos todas as informações referentes a um mesmo dispositivo, como o antivírus e o LAPS. Centralizamos tudo e, agora, quando precisamos consultar alguma informação de um colaborador, apenas filtramos pela planilha. Além disso, o dashboard nos mostra o que pode ser melhorado e o que já foi feito até agora, com uma visão tanto geral quanto afunilada pelos KPIs e gráficos.
