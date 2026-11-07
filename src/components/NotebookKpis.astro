@@ -1,11 +1,14 @@
 ---
-// Linha de KPIs de uma página do dashboard de notebooks (os valores com data-m são atualizados pelo NotebookSheet)
-type Kpi = { label: string; key: string; sub?: string; subKey?: string };
+// Linha de KPIs de uma página do dashboard de notebooks (os valores com data-m são atualizados pelo NotebookSheet).
+// st: chave do status em t (good, warn ou crit), que pinta a faixa da esquerda e o selo "OK / Atenção / Crítico".
+// gauge: chave do % em w, desenhado como anel de progresso até a meta de 100%.
+type Kpi = { label: string; key: string; sub?: string; subKey?: string; st?: string; gauge?: string };
 interface Props {
   items: Kpi[];
   t: Record<string, string>;
+  w: Record<string, number>;
 }
-const { items, t } = Astro.props;
+const { items, t, w } = Astro.props;
 
 // 3 KPIs: no celular, 2 por linha e o terceiro ocupa a linha inteira
 const cols: Record<number, string> = {
@@ -17,12 +20,31 @@ const cols: Record<number, string> = {
 <div class:list={['grid gap-2', cols[items.length]]}>
   {
     items.map((k) => (
-      <div class="flex min-w-0 flex-col rounded border border-line px-3 py-2.5">
-        <p class="text-xs leading-tight text-muted">{k.label}</p>
-        <p class="mt-auto pt-1.5">
-          <span data-m={k.key} class="sheet-kpi text-lg font-semibold whitespace-nowrap text-heading tabular-nums sm:text-2xl">{t[k.key]}</span>
-        </p>
-        <p class="text-[11px] text-muted" data-m={k.subKey}>{k.subKey ? t[k.subKey] : k.sub}</p>
+      <div data-st={k.st} data-status={k.st ? t[k.st] : undefined} class="relative flex min-w-0 flex-col overflow-hidden rounded border border-line px-3 py-2.5">
+        {k.st && <span class="sheet-st-bar absolute inset-y-0 left-0 w-1" aria-hidden="true" />}
+        <div class="flex items-start justify-between gap-2">
+          <p class="text-xs leading-tight text-muted">{k.label}</p>
+          {k.st && <span class="sheet-st-badge flex-none text-[10px] leading-tight font-medium whitespace-nowrap" />}
+        </div>
+        {k.gauge ? (
+          <div class="mt-auto flex items-center gap-3 pt-2">
+            <svg viewBox="0 0 36 36" class="size-12 flex-none -rotate-90 sm:size-14" aria-hidden="true">
+              <circle cx="18" cy="18" r="15" fill="none" stroke-width="4" class="stroke-white/10" />
+              <circle data-gauge={k.gauge} cx="18" cy="18" r="15" fill="none" stroke-width="4" stroke-linecap="round" pathLength="100" class="sheet-gauge" stroke-dasharray={`${w[k.gauge]} 100`} />
+            </svg>
+            <div class="min-w-0">
+              <span data-m={k.key} class="sheet-kpi text-lg font-semibold whitespace-nowrap text-heading tabular-nums sm:text-2xl">{t[k.key]}</span>
+              <p class="text-[11px] text-muted max-sm:hidden" data-m={k.subKey}>{k.subKey ? t[k.subKey] : k.sub}</p>
+            </div>
+          </div>
+        ) : (
+          <Fragment>
+            <p class="mt-auto pt-1.5">
+              <span data-m={k.key} class="sheet-kpi text-lg font-semibold whitespace-nowrap text-heading tabular-nums sm:text-2xl">{t[k.key]}</span>
+            </p>
+            <p class="text-[11px] text-muted max-sm:hidden" data-m={k.subKey}>{k.subKey ? t[k.subKey] : k.sub}</p>
+          </Fragment>
+        )}
       </div>
     ))
   }

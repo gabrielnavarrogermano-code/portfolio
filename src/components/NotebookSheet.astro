@@ -1,6 +1,7 @@
 ---
 // Simulação da planilha de controle de notebooks (dados fictícios).
-// Ordem das colunas igual à planilha real. A tabela mostra 15 exemplos; o dashboard calcula sobre as 100 linhas.
+// Ordem das colunas igual à planilha real. O dashboard vem primeiro; a base aparece embaixo, como fonte de dados,
+// com só as últimas linhas. O dashboard calcula sobre as 100 linhas.
 import { initial, incoming, records, compute, sectorGroups, OTHERS, donutDash, PEND_TOP, PEND_CAD, MOTIVOS, AV_PRICE, AV_YEARS, NB_PRICE, LIC_PRICE, LIC_PARTS, DEV_PARTS, FILTERS, type Example } from '../lib/notebooks';
 import Kpis from './NotebookKpis.astro';
 import StackedBars from './NotebookStackedBars.astro';
@@ -30,7 +31,11 @@ const cell = (e: Example, ci: number): [string, Tone] => {
   }
 };
 
-const rows = [...initial.map((e) => ({ e, isNew: false })), ...incoming.map((e) => ({ e, isNew: true }))];
+// A base aparece como fonte de dados, embaixo do dashboard: só as últimas linhas, onde entram os novos
+const shownInitial = initial.slice(-4);
+const rows = [...shownInitial.map((e) => ({ e, isNew: false })), ...incoming.map((e) => ({ e, isNew: true }))];
+// Número de cada linha na base completa (as amostras são as últimas antes dos novos colaboradores)
+const firstRow = records.filter((r) => r.n < 0).length - shownInitial.length + 1;
 
 // Estado inicial já vem calculado (funciona sem JS): planilha antes dos 3 novos colaboradores
 const { t, w } = compute(records.filter((r) => r.n < 0));
@@ -42,12 +47,12 @@ const PAGES = [
   ['seg', 'Segurança'],
 ] as const;
 
-type Kpi = { label: string; key: string; sub?: string; subKey?: string };
+type Kpi = { label: string; key: string; sub?: string; subKey?: string; st?: string; gauge?: string };
 const kpis: Record<(typeof PAGES)[number][0], Kpi[]> = {
   lic: [
     { label: 'Licenças em uso', key: 'contas', sub: 'contas ativas no Microsoft 365' },
     { label: 'Gasto com Microsoft 365', key: 'm365', subKey: 'm365:sub' },
-    { label: 'Pendências de cadastro', key: 'pc:total', sub: 'itens para corrigir na planilha' },
+    { label: 'Pendências de cadastro', key: 'pc:total', sub: 'itens para corrigir na planilha', st: 'pc:total:st' },
   ],
   dev: [
     { label: 'Notebooks em uso', key: 'equip', sub: 'notebooks corporativos' },
@@ -55,9 +60,9 @@ const kpis: Record<(typeof PAGES)[number][0], Kpi[]> = {
     { label: 'Gasto com dispositivos', key: 'dev', subKey: 'dev:sub' },
   ],
   seg: [
-    { label: '% LAPS · meta 100%', key: 'laps', subKey: 'laps:sub' },
-    { label: '% Antivírus · meta 100%', key: 'av', subKey: 'av:sub' },
-    { label: 'Notebooks com pendência', key: 'seg', subKey: 'seg:sub' },
+    { label: '% LAPS · meta 100%', key: 'laps', subKey: 'laps:sub', st: 'laps:st', gauge: 'laps' },
+    { label: '% Antivírus · meta 100%', key: 'av', subKey: 'av:sub', st: 'av:st', gauge: 'av' },
+    { label: 'Notebooks com pendência', key: 'seg', subKey: 'seg:sub', st: 'seg:st' },
   ],
 };
 
@@ -68,95 +73,40 @@ const licencas = [
 
 const brl = (v: number) => `R$ ${v.toLocaleString('pt-BR')}`;
 
-// Cor de cada parte das barras empilhadas de gasto (mesma ordem de LIC_PARTS e DEV_PARTS)
-const PART_COLORS = ['bg-accent', 'bg-accent/35'];
+// Cor de cada parte das barras empilhadas de gasto (mesma ordem de LIC_PARTS e DEV_PARTS): azul e magenta,
+// par validado para daltonismo no fundo escuro
+const PART_COLORS = ['bg-viz-1', 'bg-viz-2'];
 
-// Tipos de pendência de segurança, em tons de âmbar
+// Tipos de pendência de segurança, pela gravidade: sem antivírus é crítico, sem LAPS é sério, Windows Home é atenção
 const SEG_PARTS = [
   ['laps', 'Sem LAPS'],
   ['av', 'Sem antivírus'],
   ['home', 'Windows Home'],
 ] as const;
-const SEG_COLORS = ['bg-amber-400', 'bg-amber-400/55', 'bg-amber-400/25'];
+const SEG_COLORS = ['bg-serious', 'bg-crit', 'bg-warn'];
 
 // Linhas dos gráficos por setor: [chave, texto]. "Outros" mostra quantos setores soma
+// No celular, os gráficos por setor mostram só os maiores e um "Ver todos"
+const MOBILE_SECTORS = 5;
+
 const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTHERS ? `${list.length} setores menores` : s]);
 ---
 
 <div data-sheet data-reveal class="relative overflow-hidden rounded-2xl border border-line bg-white/[0.03]">
-  <div class="flex items-center gap-1.5 border-b border-line px-4 py-3">
-    <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
-    <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
-    <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
-    <span class="ml-2 truncate font-mono text-xs text-muted">controle-notebooks.xlsx</span>
-    <span class="ml-auto flex-none pl-2 text-xs text-muted">dados fictícios</span>
-  </div>
-
-  <!-- Aviso de novo colaborador vindo do Microsoft 365 -->
-  <div
-    data-toast
-    aria-live="polite"
-    class="sheet-toast absolute top-14 right-4 z-10 rounded-xl border border-line bg-bg px-4 py-3 text-sm shadow-lg"
-  >
-    <p class="text-xs text-muted">Microsoft 365 · novo colaborador</p>
-    <p data-toast-name class="mt-0.5 font-medium text-heading"></p>
-  </div>
-
-  <p class="px-4 pt-3 text-sm text-muted">Aba <span class="font-mono text-fg">Base</span></p>
-
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm tabular-nums">
-      <thead>
-        <tr>
-          <th class="hidden w-10 border-b border-line px-3 py-2 text-left font-mono text-xs font-normal text-muted/60 sm:table-cell">#</th>
-          {cols.map((c, ci) => <th class:list={['border-b border-line px-3 py-2 text-left font-medium whitespace-nowrap text-muted', desktopOnly.has(ci) && 'hidden sm:table-cell']}>{c}</th>)}
-        </tr>
-      </thead>
-      <tbody>
-        {
-          rows.map(({ e, isNew }, i) => (
-            <tr data-new={isNew || undefined} hidden={isNew}>
-              <td class="hidden border-b border-line px-3 py-2 font-mono text-xs text-muted/60 sm:table-cell">{i + 1}</td>
-              {cols.map((_, ci) => {
-                const [v, tone] = cell(e, ci);
-                return (
-                  <td style={`--c: ${ci}`} class:list={['border-b border-line px-3 py-2 whitespace-nowrap text-fg/85', desktopOnly.has(ci) && 'hidden sm:table-cell']}>
-                    {tone === 'ok' || tone === 'warn' ? (
-                      <span class:list={[tone === 'ok' ? 'text-emerald-400' : 'text-amber-400']}>
-                        {tone === 'ok' ? '✓' : '!'} {v}
-                      </span>
-                    ) : (
-                      <span class:list={[tone === 'muted' && 'text-muted/70']}>{v}</span>
-                    )}
-                  </td>
-                );
-              })}
-            </tr>
-          ))
-        }
-      </tbody>
-    </table>
-  </div>
-
-  <p class="flex flex-wrap justify-between gap-x-4 gap-y-1 px-4 pt-2 pb-3 text-xs text-muted">
-    <span>Exibindo <span data-shown>{initial.length}</span> de <span data-total>{t.contas}</span> linhas da planilha</span>
-    <span>← arraste a tabela para ver mais →</span>
-  </p>
-
   <!-- Dashboard no Power BI: conectado à planilha, recalculado sobre as 100 linhas a cada colaborador novo -->
-  <div class="flex items-center gap-1.5 border-y border-line px-4 py-3">
+  <div class="flex items-center gap-1.5 border-b border-line px-4 py-3">
     <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
     <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
     <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
     <span class="ml-2 truncate font-mono text-xs text-muted">controle-notebooks.pbix</span>
     <span class="ml-auto flex-none pl-2 text-xs text-muted">Power BI</span>
   </div>
-  <div class="sheet-pages relative p-3 sm:p-5">
+  <div class="sheet-pages relative flex flex-col p-3 sm:block sm:p-5">
     <!-- Cabeçalho: título, situação dos filtros e o botão que abre o painel de filtros -->
-    <div class="flex items-start justify-between gap-3">
+    <div class="flex items-start justify-between gap-3 max-sm:order-[-2]">
       <div class="min-w-0">
         <p class="font-semibold text-heading">Relatório · Usuários Microsoft 365 e equipamentos</p>
-        <p class="text-[11px] text-muted">Atualiza sempre que a planilha de usuários é alterada</p>
+        <p data-updated aria-live="polite" class="text-[11px] text-muted">Atualiza sempre que a planilha de usuários é alterada</p>
       </div>
       <button
         type="button"
@@ -172,7 +122,7 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
     </div>
 
     <!-- Filtros em uso: uma etiqueta por filtro, o ✕ tira só aquele -->
-    <div class="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+    <div data-filter-row class="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] max-sm:order-[-2] max-sm:hidden">
       <span data-filter-status aria-live="polite" class="text-muted/70">Sem filtros: todas as contas da base.</span>
       <span data-filter-chips class="contents"></span>
       <button type="button" data-filter-clear hidden class="cursor-pointer text-muted underline underline-offset-2 hover:text-fg">Limpar filtros</button>
@@ -209,22 +159,22 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
 
     <!-- Aba Licenças: licenças do Microsoft 365 em uso, gasto com elas e pendências de cadastro -->
     <div data-page="lic" class="mt-3">
-      <Kpis items={kpis.lic} t={t} />
+      <Kpis items={kpis.lic} t={t} w={w} />
       <div class="mt-2 grid gap-2 lg:grid-cols-3">
-        <div class="flex min-w-0 flex-col gap-2">
+        <div class="flex min-w-0 flex-col gap-2 max-sm:contents">
           <!-- Licenças em uso por tipo, com o valor anual de cada tipo -->
           <div class="rounded border border-line px-3 py-3">
             <p class="text-xs leading-tight text-muted">Licenças em uso por tipo</p>
             <ul class="mt-2.5 space-y-2">
               {
-                licencas.map(([k, label]) => (
+                licencas.map(([k, label], ci) => (
                   <li>
                     <div class="flex justify-between gap-2 text-xs">
-                      <span class="truncate text-fg/85">{label}</span>
+                      <span class="flex min-w-0 items-center gap-1.5 text-fg/85"><span class:list={['h-2 w-2 flex-none rounded-sm', PART_COLORS[ci]]} /><span class="truncate">{label}</span></span>
                       <span data-m={`lic:${k}`} class="font-mono text-fg/85">{t[`lic:${k}`]}</span>
                     </div>
                     <div class="mt-1 h-1.5">
-                      <span data-w={`lic:${k}`} class="sheet-bar block h-full rounded-sm bg-accent" style={`width: ${w[`lic:${k}`]}%`} />
+                      <span data-w={`lic:${k}`} class:list={['sheet-bar block h-full rounded-sm', PART_COLORS[ci]]} style={`width: ${w[`lic:${k}`]}%`} />
                     </div>
                     <p data-m={`lic:${k}:cost`} class="mt-1 text-[11px] text-muted">{t[`lic:${k}:cost`]}</p>
                   </li>
@@ -234,7 +184,7 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
           </div>
 
           <!-- Pendências de cadastro: barra relativa ao maior item da lista -->
-          <div class="flex-1 rounded border border-line px-3 py-3">
+          <div data-detail class="flex-1 rounded border border-line px-3 py-3 max-sm:order-1">
             <div class="flex justify-between gap-2 text-xs leading-tight text-muted">
               <p>Pendências de cadastro</p>
               <p>Qtd</p>
@@ -243,9 +193,12 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
               {
                 PEND_CAD.map(([k, label]) => (
                   <li title={label} class="grid grid-cols-[minmax(0,1fr)_3.5rem_1.25rem] items-center gap-2 text-xs">
-                    <span class="truncate text-fg/85">{label}</span>
+                    <span class="flex min-w-0 items-center gap-1.5 text-fg/85">
+                      <span data-st={`pc:${k}:st`} data-status={t[`pc:${k}:st`]} class="sheet-st-icon w-3 flex-none text-center text-[10px] font-bold" aria-hidden="true" />
+                      <span class="truncate">{label}</span>
+                    </span>
                     <span class="h-1.5">
-                      <span data-w={`pc:${k}`} class="sheet-bar block h-full rounded-sm bg-amber-400/80" style={`width: ${w[`pc:${k}`]}%`} />
+                      <span data-w={`pc:${k}`} class="sheet-bar block h-full rounded-sm bg-warn" style={`width: ${w[`pc:${k}`]}%`} />
                     </span>
                     <span data-m={`pc:${k}`} class="text-right font-mono text-fg/85">{t[`pc:${k}`]}</span>
                   </li>
@@ -263,21 +216,24 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
             parts={LIC_PARTS}
             colors={PART_COLORS}
             groups={groups}
+            mobile={MOBILE_SECTORS}
             t={t}
             w={w}
           />
         </div>
       </div>
+      <!-- Celular: o que não é essencial fica atrás deste botão -->
+      <button type="button" data-detail-btn data-js-only aria-expanded="false" class="mt-2 w-full cursor-pointer rounded border border-line py-2 text-xs text-fg/85 hover:text-heading sm:hidden">Ver detalhes</button>
     </div>
 
     <!-- Aba Dispositivos: notebooks em uso, gasto com eles e onde faltam notebooks.
          Três colunas da mesma altura: tipo de gasto + motivo, gasto por setor, contas e notebooks por setor -->
     <div data-page="dev" class="mt-3">
-      <Kpis items={kpis.dev} t={t} />
+      <Kpis items={kpis.dev} t={t} w={w} />
       <div class="mt-2 grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-        <div class="flex min-w-0 flex-col gap-2 md:col-span-2 md:grid md:grid-cols-2 lg:col-span-1 lg:flex">
+        <div class="flex min-w-0 flex-col gap-2 max-sm:contents md:col-span-2 md:grid md:grid-cols-2 lg:col-span-1 lg:flex">
           <!-- Gasto com dispositivos por tipo: barra relativa ao maior gasto, com o % do total -->
-          <div class="rounded border border-line px-3 py-3">
+          <div data-detail class="rounded border border-line px-3 py-3 max-sm:order-1">
             <p class="text-xs leading-tight text-muted">Gasto com dispositivos por tipo</p>
             <ul class="mt-2.5 space-y-2.5">
               {
@@ -295,11 +251,11 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
                 ))
               }
             </ul>
-            <p class="mt-3 border-t border-line pt-2.5 text-[11px] text-muted/80">As licenças do Kaspersky valem {AV_YEARS} anos e vencem todas juntas: o valor ajuda a prever o custo da renovação.</p>
+            <p class="mt-3 border-t border-line pt-2.5 text-[11px] text-muted/80 max-sm:hidden">As licenças do Kaspersky valem {AV_YEARS} anos e vencem todas juntas: o valor ajuda a prever o custo da renovação.</p>
           </div>
 
           <!-- Motivo de não ter notebook corporativo -->
-          <div class="flex-1 rounded border border-line px-3 py-3">
+          <div data-detail class="flex-1 rounded border border-line px-3 py-3 max-sm:order-1">
             <p class="text-xs leading-tight text-muted">Contas sem notebook corp. · motivo</p>
             <table class="mt-2 w-full text-xs tabular-nums">
               <thead>
@@ -331,21 +287,22 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
           parts={DEV_PARTS}
           colors={PART_COLORS}
           groups={groups}
+          mobile={MOBILE_SECTORS}
           t={t}
           w={w}
         />
 
         <!-- Contas e notebooks por setor: barra clara = contas, barra cheia por dentro = notebooks -->
-        <div class="flex min-w-0 flex-col rounded border border-line px-3 py-3">
+        <div data-detail data-more-wrap class="flex min-w-0 flex-col rounded border border-line px-3 py-3 max-sm:order-1">
           <p class="text-xs leading-tight text-muted">Contas e notebooks por setor</p>
           <p class="mt-1 flex gap-3 text-[11px] text-muted">
-            <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-accent/30" />Contas</span>
-            <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-accent" />Notebooks</span>
+            <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-viz-1/45" />Contas</span>
+            <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-viz-1" />Notebooks</span>
           </p>
           <ul class="mt-3 flex flex-1 flex-col justify-between gap-2">
             {
-              groups.slice(0, -1).map(([s, label]) => (
-                <li data-tip={`set:${s}:tip`} title={t[`set:${s}:tip`]}>
+              groups.slice(0, -1).map(([s, label], i) => (
+                <li data-tip={`set:${s}:tip`} title={t[`set:${s}:tip`]} data-more={i >= MOBILE_SECTORS || undefined}>
                   <div class="flex justify-between gap-2 text-[11px]">
                     <span class="truncate text-fg/85">{label}</span>
                     <span class="flex-none font-mono text-fg/85">
@@ -355,14 +312,15 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
                     </span>
                   </div>
                   <div class="mt-1 h-1.5" role="img" aria-label={t[`set:${s}:tip`]}>
-                    <span data-w={`set:${s}:c`} class="sheet-bar block h-full rounded-sm bg-accent/30" style={`width: ${w[`set:${s}:c`]}%`}>
-                      <span data-w={`set:${s}:d`} class="sheet-bar block h-full rounded-sm bg-accent" style={`width: ${w[`set:${s}:d`]}%`} />
+                    <span data-w={`set:${s}:c`} class="sheet-bar block h-full rounded-sm bg-viz-1/45" style={`width: ${w[`set:${s}:c`]}%`}>
+                      <span data-w={`set:${s}:d`} class="sheet-bar block h-full rounded-sm bg-viz-1" style={`width: ${w[`set:${s}:d`]}%`} />
                     </span>
                   </div>
                 </li>
               ))
             }
           </ul>
+          <button type="button" data-more-btn data-js-only class="mt-3 cursor-pointer self-start text-[11px] text-accent hover:underline sm:hidden">Ver todos os setores</button>
           <!-- "Outros" soma vários setores: vai como texto para não esmagar as barras -->
           <p data-tip={`set:${OTHERS}:tip`} title={t[`set:${OTHERS}:tip`]} class="mt-3 flex justify-between gap-2 border-t border-line pt-2 text-[11px] text-muted">
             <span>+ {groups.at(-1)![1]}</span>
@@ -370,11 +328,13 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
           </p>
         </div>
       </div>
+      <!-- Celular: o que não é essencial fica atrás deste botão -->
+      <button type="button" data-detail-btn data-js-only aria-expanded="false" class="mt-2 w-full cursor-pointer rounded border border-line py-2 text-xs text-fg/85 hover:text-heading sm:hidden">Ver detalhes</button>
     </div>
 
     <!-- Aba Segurança: LAPS, antivírus, versão do Windows e os setores com mais pendências -->
     <div data-page="seg" class="mt-3">
-      <Kpis items={kpis.seg} t={t} />
+      <Kpis items={kpis.seg} t={t} w={w} />
       <div class="mt-2 grid gap-2 lg:grid-cols-3">
         <!-- Versão do Windows: rosquinha com o % do Pro no meio -->
         <div class="rounded border border-line px-3 py-3">
@@ -393,7 +353,7 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
                       r="15.9155"
                       fill="none"
                       stroke-width="3.5"
-                      class:list={['sheet-donut', seg === 0 ? 'stroke-accent' : 'stroke-accent/30']}
+                      class:list={['sheet-donut', seg === 0 ? 'stroke-viz-1' : 'stroke-warn']}
                       stroke-dasharray={d.dash}
                       stroke-dashoffset={d.offset}
                     />
@@ -408,8 +368,8 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
             <ul class="min-w-0 flex-1 space-y-1.5 text-xs lg:w-full lg:flex-none">
               {
                 [
-                  ['Pro', 'bg-accent'],
-                  ['Home', 'bg-accent/30'],
+                  ['Pro', 'bg-viz-1'],
+                  ['Home', 'bg-warn'],
                 ].map(([v, color]) => (
                   <li class="flex items-center gap-1.5">
                     <span class:list={['h-2 w-2 flex-none rounded-sm', color]} />
@@ -424,7 +384,7 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
               }
             </ul>
           </div>
-          <p class="mt-3 text-[11px] text-muted/70">Notebooks com Windows Home contam como pendência de segurança.</p>
+          <p class="mt-3 text-[11px] text-muted/70 max-sm:hidden">Notebooks com Windows Home contam como pendência de segurança.</p>
         </div>
 
         <!-- Setores com mais pendências de segurança: top 6 -->
@@ -444,15 +404,16 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
                   <div class="min-w-0 flex-1">
                     <p data-m={`pend:${i}:name`} class="truncate text-sm text-fg">{t[`pend:${i}:name`]}</p>
                     <p class="mt-1.5 flex flex-wrap gap-1.5 text-[11px]">
-                      {SEG_PARTS.map(([k, label]) => (
-                        <span data-chip class:list={['rounded border border-line px-1.5 py-0.5 text-muted', t[`pend:${i}:${k}`] === '0' && 'opacity-40']}>
+                      {SEG_PARTS.map(([k, label], ci) => (
+                        <span data-chip class:list={['flex items-center gap-1 rounded border border-line px-1.5 py-0.5 text-muted', t[`pend:${i}:${k}`] === '0' && 'opacity-40']}>
+                          <span class:list={['h-1.5 w-1.5 rounded-sm', SEG_COLORS[ci]]} />
                           {label} <span data-m={`pend:${i}:${k}`} class="font-mono text-fg">{t[`pend:${i}:${k}`]}</span>
                         </span>
                       ))}
                     </p>
                   </div>
                   <span class="flex flex-none items-center gap-1.5">
-                    <span class="h-2 w-2 rounded-full bg-amber-400" />
+                    <span data-st={`pend:${i}:st`} data-status={t[`pend:${i}:st`]} class="sheet-st-dot h-2.5 w-2.5 rounded-full" />
                     <span data-m={`pend:${i}`} class="text-xl font-semibold text-heading tabular-nums">{t[`pend:${i}`]}</span>
                   </span>
                 </li>
@@ -466,12 +427,15 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
                 <li data-tip={`pend:${i}:tip`} title={t[`pend:${i}:tip`]} class="grid grid-cols-[1.25rem_10rem_minmax(0,1fr)] items-center gap-2 text-xs">
                   <span class="text-muted tabular-nums">{i + 1}º</span>
                   <span data-m={`pend:${i}:name`} class="truncate text-fg/85">{t[`pend:${i}:name`]}</span>
-                  <div class="pr-8">
+                  <div class="pr-12">
                     <span data-w={`pend:${i}`} class="sheet-bar relative block h-2" style={`width: ${w[`pend:${i}`]}%`}>
                       <span class="flex h-full gap-px overflow-hidden rounded-sm">
                         {SEG_PARTS.map(([k], ci) => <span data-w={`pend:${i}:${k}`} class:list={['sheet-bar block h-full flex-none', SEG_COLORS[ci]]} style={`width: ${w[`pend:${i}:${k}`]}%`} />)}
                       </span>
-                      <span data-m={`pend:${i}`} class="absolute top-1/2 left-full ml-2 -translate-y-1/2 font-mono text-fg/85">{t[`pend:${i}`]}</span>
+                      <span class="absolute top-1/2 left-full ml-2 flex -translate-y-1/2 items-center gap-1.5">
+                        <span data-st={`pend:${i}:st`} data-status={t[`pend:${i}:st`]} class="sheet-st-dot h-2 w-2 flex-none rounded-full" />
+                        <span data-m={`pend:${i}`} class="text-sm font-semibold text-heading tabular-nums">{t[`pend:${i}`]}</span>
+                      </span>
                     </span>
                   </div>
                 </li>
@@ -483,16 +447,78 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
     </div>
 
     <!-- Páginas do relatório no rodapé, como as abas do Power BI (radio + CSS: funciona sem JS) -->
-    <div role="radiogroup" aria-label="Páginas do relatório" class="-mx-3 mt-3 -mb-3 flex gap-1 overflow-x-auto border-t border-line bg-white/[0.02] px-3 sm:-mx-5 sm:-mb-5 sm:px-5">
+    <div role="radiogroup" aria-label="Páginas do relatório" class="mt-3 flex gap-0.5 rounded border border-line bg-white/[0.02] p-0.5 max-sm:order-[-1] sm:-mx-5 sm:-mb-5 sm:gap-1 sm:overflow-x-auto sm:rounded-none sm:border-0 sm:border-t sm:p-0 sm:px-5">
       {
         PAGES.map(([k, label], i) => (
           <Fragment>
             <input type="radio" name="sheet-page" id={`pg-${k}`} value={k} checked={i === 0} class="sheet-page-input sr-only" />
-            <label for={`pg-${k}`} class="sheet-page-tab -mt-px flex-none cursor-pointer border-t-2 border-transparent px-4 py-2.5 text-xs whitespace-nowrap text-muted hover:text-fg">{label}</label>
+            <label for={`pg-${k}`} class="sheet-page-tab flex-1 cursor-pointer rounded-sm px-2 py-2 text-center text-xs whitespace-nowrap text-muted hover:text-fg sm:-mt-px sm:flex-none sm:rounded-none sm:border-t-2 sm:border-transparent sm:px-4 sm:py-2.5">{label}</label>
           </Fragment>
         ))
       }
     </div>
+  </div>
+
+  <!-- Fonte de dados do dashboard: só as últimas linhas da base, onde entram os colaboradores novos -->
+  <div class="relative border-t border-line">
+  <div class="flex items-center gap-1.5 border-b border-line px-4 py-3">
+    <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
+    <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
+    <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
+    <span class="ml-2 truncate font-mono text-xs text-muted">controle-notebooks.xlsx</span>
+    <span class="ml-auto flex-none pl-2 text-xs text-muted">fonte de dados · dados fictícios</span>
+  </div>
+
+  <!-- Aviso de novo colaborador vindo do Microsoft 365 -->
+  <div
+    data-toast
+    aria-live="polite"
+    class="sheet-toast absolute top-14 right-4 z-10 rounded-xl border border-line bg-bg px-4 py-3 text-sm shadow-lg"
+  >
+    <p class="text-xs text-muted">Microsoft 365 · novo colaborador</p>
+    <p data-toast-name class="mt-0.5 font-medium text-heading"></p>
+  </div>
+
+  <p class="px-4 pt-3 text-sm text-muted">Aba <span class="font-mono text-fg">Base</span> · últimas linhas</p>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm tabular-nums">
+      <thead>
+        <tr>
+          <th class="hidden w-10 border-b border-line px-3 py-2 text-left font-mono text-xs font-normal text-muted/60 sm:table-cell">#</th>
+          {cols.map((c, ci) => <th class:list={['border-b border-line px-3 py-2 text-left font-medium whitespace-nowrap text-muted', desktopOnly.has(ci) && 'hidden sm:table-cell']}>{c}</th>)}
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map(({ e, isNew }, i) => (
+            <tr data-new={isNew || undefined} hidden={isNew}>
+              <td class="hidden border-b border-line px-3 py-2 font-mono text-xs text-muted/60 sm:table-cell">{firstRow + i}</td>
+              {cols.map((_, ci) => {
+                const [v, tone] = cell(e, ci);
+                return (
+                  <td style={`--c: ${ci}`} class:list={['border-b border-line px-3 py-2 whitespace-nowrap text-fg/85', desktopOnly.has(ci) && 'hidden sm:table-cell']}>
+                    {tone === 'ok' || tone === 'warn' ? (
+                      <span class:list={[tone === 'ok' ? 'text-good' : 'text-warn']}>
+                        {tone === 'ok' ? '✓' : '!'} {v}
+                      </span>
+                    ) : (
+                      <span class:list={[tone === 'muted' && 'text-muted/70']}>{v}</span>
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <p class="flex flex-wrap justify-between gap-x-4 gap-y-1 px-4 pt-2 pb-3 text-xs text-muted">
+    <span>Exibindo <span data-shown data-base={shownInitial.length}>{shownInitial.length}</span> de <span data-total>{t.contas}</span> linhas da planilha</span>
+    <span class="sm:hidden">← arraste a tabela para ver mais →</span>
+  </p>
   </div>
 </div>
 
@@ -575,6 +601,24 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
     font-weight: 500;
   }
 
+  /* Celular: as abas viram um seletor no topo, e a escolhida fica com o fundo aceso */
+  @media (max-width: 639.98px) {
+    .sheet-page-input:checked + .sheet-page-tab {
+      background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+    }
+
+    /* Com JS, o que não é essencial fica atrás do "Ver detalhes", e os gráficos por setor atrás do "Ver todos" */
+    [data-sheet][data-js] :global([data-page]:not(.is-open) [data-detail]),
+    [data-sheet][data-js] :global([data-more-wrap]:not(.is-all) [data-more]) {
+      display: none;
+    }
+  }
+
+  /* Sem JS, tudo fica à vista e os botões que abrem e fecham somem */
+  [data-sheet]:not([data-js]) :global([data-js-only]) {
+    display: none;
+  }
+
   .sheet-page-input:focus-visible + .sheet-page-tab {
     outline: 2px solid var(--color-accent);
     outline-offset: -2px;
@@ -599,6 +643,70 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
 
   [data-filter-panel] {
     box-shadow: -12px 0 32px rgb(0 0 0 / 0.35);
+  }
+
+  /* Status (KPIs, semáforos e ranking): a cor sempre vem com ícone ou texto */
+  [data-sheet] :global([data-status='good']) {
+    --st: var(--color-good);
+    --st-icon: '✓';
+    --st-label: 'OK';
+  }
+
+  [data-sheet] :global([data-status='warn']) {
+    --st: var(--color-warn);
+    --st-icon: '!';
+    --st-label: 'Atenção';
+  }
+
+  [data-sheet] :global([data-status='serious']) {
+    --st: var(--color-serious);
+    --st-icon: '!';
+    --st-label: 'Sério';
+  }
+
+  [data-sheet] :global([data-status='crit']) {
+    --st: var(--color-crit);
+    --st-icon: '✕';
+    --st-label: 'Crítico';
+  }
+
+  [data-sheet] :global(.sheet-st-bar),
+  [data-sheet] :global(.sheet-st-dot) {
+    background: var(--st, transparent);
+    transition: background 0.4s ease;
+  }
+
+  /* Selo do KPI: ícone na cor do status e o texto em cinza */
+  [data-sheet] :global(.sheet-st-badge)::before {
+    content: var(--st-icon) ' ';
+    color: var(--st);
+  }
+
+  [data-sheet] :global(.sheet-st-badge)::after {
+    content: var(--st-label);
+    color: var(--color-muted);
+  }
+
+  [data-sheet] :global(.sheet-st-icon)::before {
+    content: var(--st-icon);
+    color: var(--st);
+  }
+
+  [data-sheet] :global(.sheet-gauge) {
+    stroke: var(--st);
+    transition:
+      stroke-dasharray 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
+      stroke 0.4s ease;
+  }
+
+  /* Gasto por setor: o setor que mais gasta fica em destaque, os outros um pouco apagados */
+  [data-sheet] :global([data-rank] > li:not(.is-top) .sheet-bar > span:first-child) {
+    opacity: 0.7;
+  }
+
+  [data-sheet] :global([data-rank] > li.is-top > span:first-child) {
+    color: var(--color-heading);
+    font-weight: 600;
   }
 
   .sheet-donut {
@@ -636,6 +744,10 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
     const toastName = root.querySelector<HTMLElement>('[data-toast-name]')!;
     const shownEl = root.querySelector<HTMLElement>('[data-shown]')!;
     const totalEl = root.querySelector<HTMLElement>('[data-total]')!;
+    const shownBase = Number(shownEl.dataset.base);
+    // Linha do cabeçalho do dashboard que avisa quem acabou de entrar na base
+    const updatedEl = root.querySelector<HTMLElement>('[data-updated]')!;
+    const updatedDefault = updatedEl.textContent;
     const fresh = [...root.querySelectorAll<HTMLTableRowElement>('tbody tr[data-new]')];
     const selects = [...root.querySelectorAll<HTMLSelectElement>('[data-filter]')];
     const statusEl = root.querySelector<HTMLElement>('[data-filter-status]')!;
@@ -645,6 +757,23 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
     const panel = root.querySelector<HTMLElement>('[data-filter-panel]')!;
     const openBtn = root.querySelector<HTMLButtonElement>('[data-filter-open]')!;
     const closeBtns = root.querySelectorAll<HTMLButtonElement>('[data-filter-close]');
+    const filterRow = root.querySelector<HTMLElement>('[data-filter-row]')!;
+
+    // Celular: com JS, os detalhes de cada página e os setores menores ficam atrás de um botão
+    root.dataset.js = '';
+    root.querySelectorAll<HTMLButtonElement>('[data-detail-btn]').forEach((btn) =>
+      btn.addEventListener('click', () => {
+        const open = btn.closest('[data-page]')!.classList.toggle('is-open');
+        btn.textContent = open ? 'Ocultar detalhes' : 'Ver detalhes';
+        btn.setAttribute('aria-expanded', String(open));
+      }),
+    );
+    root.querySelectorAll<HTMLButtonElement>('[data-more-btn]').forEach((btn) =>
+      btn.addEventListener('click', () => {
+        const all = btn.closest('[data-more-wrap]')!.classList.toggle('is-all');
+        btn.textContent = all ? 'Ver menos setores' : 'Ver todos os setores';
+      }),
+    );
     // Nome de cada filtro, para as etiquetas
     const labelOf = (s: HTMLSelectElement) => s.closest('label')?.querySelector('span')?.textContent ?? '';
     let next = 0;
@@ -656,7 +785,7 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
       const sel = Object.fromEntries(selects.map((s) => [s.dataset.filter!, s.value]));
       const rows = applyFilters(base, sel);
       const { t, w } = compute(rows);
-      shownEl.textContent = String(initial.length + next);
+      shownEl.textContent = String(shownBase + next);
       totalEl.textContent = String(base.length);
 
       // Situação dos filtros: contador no botão e uma etiqueta por filtro em uso
@@ -666,6 +795,8 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
       countEl.hidden = !active.length;
       countEl.textContent = String(active.length);
       clearBtn.hidden = !active.length;
+      // No celular, a linha de filtros só aparece com algum filtro em uso
+      filterRow.classList.toggle('max-sm:hidden', !active.length);
       statusEl.textContent = !active.length
         ? 'Sem filtros: todas as contas da base.'
         : rows.length
@@ -696,6 +827,19 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
       });
       root.querySelectorAll<HTMLElement>('[data-w]').forEach((el) => {
         el.style.width = `${w[el.dataset.w!] ?? 0}%`;
+      });
+      // Status de cada KPI, semáforo e ranking; anéis de meta; maior setor de cada gráfico de gasto
+      root.querySelectorAll<HTMLElement>('[data-st]').forEach((el) => {
+        el.dataset.status = t[el.dataset.st!] ?? '';
+      });
+      root.querySelectorAll<SVGCircleElement>('[data-gauge]').forEach((el) => {
+        el.setAttribute('stroke-dasharray', `${w[el.dataset.gauge!] ?? 0} 100`);
+      });
+      root.querySelectorAll<HTMLElement>('[data-rank]').forEach((ul) => {
+        const items = [...ul.children] as HTMLElement[];
+        const widths = items.map((li) => parseFloat(li.querySelector<HTMLElement>('.sheet-bar')?.style.width ?? '0'));
+        const max = Math.max(...widths);
+        items.forEach((li, i) => li.classList.toggle('is-top', max > 0 && widths[i] === max));
       });
       root.querySelectorAll<SVGCircleElement>('[data-donut]').forEach((el) => {
         const d = donutDash(w[el.dataset.donut!] ?? 0, Number(el.dataset.seg));
@@ -754,6 +898,8 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
           toast.classList.remove('is-on');
           row.hidden = false;
           row.classList.add('is-in');
+          updatedEl.textContent = `↻ Atualizado: ${row.cells[1].textContent} entrou na base`;
+          updatedEl.classList.add('text-accent');
           render();
           timer = window.setTimeout(step, 3000);
         }, 1400);
@@ -764,6 +910,8 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
             r.classList.remove('is-in');
           });
           next = 0;
+          updatedEl.textContent = updatedDefault;
+          updatedEl.classList.remove('text-accent');
           render();
           timer = window.setTimeout(step, 1500);
         }, 3000);

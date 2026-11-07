@@ -13,6 +13,16 @@
   --color-fg: #e8eaee;
   --color-muted: #a3a6ae;
   --color-accent: #ffffff;
+
+  /* Cores do dashboard de notebooks (só nele; o site continua preto e branco).
+     viz-1/viz-2: dados normais, duas séries (validadas para daltonismo no fundo escuro).
+     good/warn/serious/crit: status, sempre com ícone ou texto junto, nunca só a cor. */
+  --color-viz-1: #3987e5;
+  --color-viz-2: #d55181;
+  --color-good: #0ca30c;
+  --color-warn: #fab219;
+  --color-serious: #ec835a;
+  --color-crit: #d03b3b;
 }
 
 /* Blocos claros: invertem as cores do site (fundo branco, informações em preto) */
@@ -226,5 +236,17 @@ body {
     opacity: 1;
     transform: none;
     filter: none;
+  }
+}
+
+/* No computador, listas curtas (como as colunas da base) ficam em duas colunas para o texto ocupar menos altura */
+@media (min-width: 1024px) {
+  .prose-case ul:has(> li:nth-child(6)) {
+    columns: 2;
+    column-gap: 3rem;
+  }
+
+  .prose-case ul:has(> li:nth-child(6)) li {
+    break-inside: avoid;
   }
 }

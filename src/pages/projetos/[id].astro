@@ -23,7 +23,7 @@ const minutes = Math.max(1, Math.ceil((p.body ?? '').split(/\s+/).length / 200))
 
   <main class="relative overflow-hidden pt-36">
 
-    <header class="mx-auto max-w-5xl px-6">
+    <header class="mx-auto max-w-5xl px-6 xl:max-w-6xl">
       <a href="/#projetos" class="group inline-flex items-center gap-2 text-sm text-muted transition hover:text-heading">
         <span class="transition-transform group-hover:-translate-x-1">←</span> Voltar aos projetos
       </a>
@@ -57,13 +57,13 @@ const minutes = Math.max(1, Math.ceil((p.body ?? '').split(/\s+/).length / 200))
 
     {
       p.data.demo === 'notebooks' && (
-        <div class="mx-auto mt-12 max-w-5xl px-6">
+        <div class="mx-auto mt-12 max-w-5xl px-6 xl:max-w-6xl">
           <NotebookSheet />
         </div>
       )
     }
 
-    <div class="mx-auto mt-14 grid max-w-5xl gap-12 border-t border-line px-6 pt-4 pb-24 lg:grid-cols-[200px_1fr]">
+    <div class="mx-auto mt-14 grid max-w-5xl gap-12 border-t border-line px-6 pt-4 pb-24 lg:grid-cols-[200px_1fr] xl:max-w-6xl">
       <aside class="hidden lg:block">
         <nav class="sticky top-28 pt-10">
           <p class="text-sm text-muted">Neste estudo</p>
@@ -81,7 +81,7 @@ const minutes = Math.max(1, Math.ceil((p.body ?? '').split(/\s+/).length / 200))
         </nav>
       </aside>
 
-      <article class="prose-case max-w-2xl">
+      <article class="prose-case max-w-2xl lg:max-w-none">
         <Content />
       </article>
     </div>

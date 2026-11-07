@@ -8,26 +8,29 @@ interface Props {
   parts: readonly (readonly [string, string])[];
   colors: string[];
   groups: [string, string][];
+  // Quantos setores aparecem no celular antes do "Ver todos"
+  mobile: number;
   t: Record<string, string>;
   w: Record<string, number>;
 }
-const { title, note, prefix, parts, colors, groups, t, w } = Astro.props;
+const { title, note, prefix, parts, colors, groups, mobile, t, w } = Astro.props;
 
 // A última linha é "Outros": soma vários setores pequenos, então vai como texto (com barra, ela esmagaria as outras)
 const bars = groups.slice(0, -1);
 const [othersKey, othersLabel] = groups.at(-1)!;
 ---
 
-<div class="flex h-full min-w-0 flex-col rounded border border-line px-3 py-3">
+<div data-more-wrap class="flex h-full min-w-0 flex-col rounded border border-line px-3 py-3">
   <p class="text-xs leading-tight text-muted">{title}</p>
-  <p class="text-[11px] text-muted/70">{note}</p>
+  <p class="text-[11px] text-muted/70 max-sm:hidden">{note}</p>
   <p class="mt-1 flex flex-wrap gap-3 text-[11px] text-muted">
     {parts.map(([, label], ci) => <span class="flex items-center gap-1.5"><span class:list={['h-2 w-2 rounded-sm', colors[ci]]} />{label}</span>)}
   </p>
-  <ul class="mt-3 flex flex-1 flex-col justify-between gap-2">
+  <!-- data-rank: o setor que mais gasta fica com a cor cheia e o nome em destaque; os outros, mais apagados -->
+  <ul data-rank class="mt-3 flex flex-1 flex-col justify-between gap-2">
     {
-      bars.map(([s, label]) => (
-        <li data-tip={`${prefix}:${s}:tip`} title={t[`${prefix}:${s}:tip`]} class="grid grid-cols-[6.5rem_minmax(0,1fr)] items-center gap-2">
+      bars.map(([s, label], i) => (
+        <li data-more={i >= mobile || undefined} data-tip={`${prefix}:${s}:tip`} title={t[`${prefix}:${s}:tip`]} class:list={['grid grid-cols-[6.5rem_minmax(0,1fr)] items-center gap-2', w[`${prefix}:${s}`] === 100 && 'is-top']}>
           <span class="truncate text-right text-[11px] text-fg/85">{label}</span>
           <div class="pr-16" role="img" aria-label={t[`${prefix}:${s}:tip`]}>
             <span data-w={`${prefix}:${s}`} class="sheet-bar relative block h-2" style={`width: ${w[`${prefix}:${s}`]}%`}>
@@ -41,6 +44,7 @@ const [othersKey, othersLabel] = groups.at(-1)!;
       ))
     }
   </ul>
+  <button type="button" data-more-btn data-js-only class="mt-3 cursor-pointer self-start text-[11px] text-accent hover:underline sm:hidden">Ver todos os setores</button>
   <p data-tip={`${prefix}:${othersKey}:tip`} title={t[`${prefix}:${othersKey}:tip`]} class="mt-3 flex justify-between gap-2 border-t border-line pt-2 text-[11px] text-muted">
     <span>+ {othersLabel}</span>
     <span data-m={`${prefix}:${othersKey}`} class="font-mono text-fg/85">{t[`${prefix}:${othersKey}`]}</span>

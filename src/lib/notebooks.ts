@@ -250,6 +250,14 @@ export function compute(rows: Rec[]) {
   t.semPc = String(semPc.length);
   t['semPc:sub'] = `de ${rows.length} contas ativas`;
   t.semSelo = String(semSelo);
+
+  // Status de cada KPI com meta: good (meta batida), warn (atenção) ou crit (crítico).
+  // LAPS e antivírus: meta de 100%; abaixo de 85% é crítico. w guarda o % para o anel de progresso.
+  const metaSt = (v: number) => (v >= 100 ? 'good' : v >= 85 ? 'warn' : 'crit');
+  w.laps = pct(lapsOk, eq.length);
+  w.av = pct(avOk, eq.length);
+  t['laps:st'] = eq.length ? metaSt(w.laps) : 'good';
+  t['av:st'] = eq.length ? metaSt(w.av) : 'good';
   t['semSelo:sub'] = `de ${eq.length} notebooks`;
 
   // Contas ativas por licença
@@ -319,6 +327,8 @@ export function compute(rows: Rec[]) {
     t[`pend:${i}:laps`] = String(p?.laps ?? 0);
     t[`pend:${i}:av`] = String(p?.av ?? 0);
     t[`pend:${i}:home`] = String(p?.home ?? 0);
+    // Gravidade do setor pela pior pendência: sem antivírus > sem LAPS > Windows Home
+    t[`pend:${i}:st`] = !p ? '' : p.av ? 'crit' : p.laps ? 'serious' : 'warn';
     w[`pend:${i}`] = p ? pct(p.n, top[0].n) : 0;
     // Partes da barra empilhada: quanto de cada tipo de pendência
     for (const k of ['laps', 'av', 'home'] as const) w[`pend:${i}:${k}`] = p ? pct(p[k], p.n) : 0;
@@ -337,6 +347,9 @@ export function compute(rows: Rec[]) {
   t['m365:sub'] = `${plural(rows.length, 'licença', 'licenças')} · 12 meses`;
   for (const [k] of LIC_PARTS) t[`lic:${k}:cost`] = `${brl(lc[k])}/ano`;
   t['pc:total'] = String(PEND_CAD.reduce((a, [k]) => a + Number(t[`pc:${k}`]), 0));
+  t['pc:total:st'] = t['pc:total'] === '0' ? 'good' : 'warn';
+  // Semáforo de cada pendência de cadastro
+  for (const [k] of PEND_CAD) t[`pc:${k}:st`] = t[`pc:${k}`] === '0' ? 'good' : 'warn';
 
   // Aba Dispositivos: compra dos notebooks e licenças de antivírus (3 anos)
   const dc = { nb: eq.length * NB_PRICE, av: avOk * AV_PRICE };
@@ -356,6 +369,8 @@ export function compute(rows: Rec[]) {
   const seg = eq.filter(pendSeg).length;
   t.seg = String(seg);
   t['seg:sub'] = `de ${plural(eq.length, 'notebook', 'notebooks')}`;
+  // Até 10% dos notebooks com pendência é atenção; acima disso, crítico
+  t['seg:st'] = !seg ? 'good' : seg <= eq.length * 0.1 ? 'warn' : 'crit';
 
   const bySector = sectorGroups.map(([s, group]) => {
     const sr = rows.filter((r) => group.includes(r.s));
