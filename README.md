@@ -21,8 +21,8 @@ src/
 │   ├── Nav.astro              # Menu fixo no topo, com barra de progresso
 │   ├── Hero.astro             # Capa: foto, nome e efeito de digitação
 │   ├── Presentation.astro     # Apresentação: card gabriel.py, por que dados, formação e estágio
-│   ├── Skills.astro           # "Como eu trabalho": as 4 etapas do ETL com exemplo interativo
-│   ├── EtlStep.astro          # Uma etapa do ETL (usada dentro de Skills)
+│   ├── Skills.astro           # "Como eu trabalho": princípios e o que estou estudando
+│   ├── Principles.astro       # Os 4 princípios, com demonstrações animadas (usado em Skills)
 │   ├── Projects.astro         # Lista de projetos (cards)
 │   ├── NotebookSheet.astro    # Simulação animada da planilha do controle de notebooks
 │   ├── Contact.astro          # Contato

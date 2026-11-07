@@ -1,0 +1,606 @@
+---
+// "Como eu trabalho": 4 princípios, cada um com uma demonstração animada feita com dados do projeto de notebooks.
+// Computador: abas à esquerda e um palco à direita; as demonstrações passam sozinhas enquanto estão na tela,
+// e um clique escolhe uma (e para a troca automática). Celular: cartões que deslizam para o lado.
+// Sem JS ou com movimento reduzido, cada demonstração já aparece no estado final.
+const principles = [
+  {
+    title: 'Começo pela pergunta, não pela planilha',
+    text: 'É a decisão que o número vai apoiar que define quais dados entram na base.',
+  },
+  {
+    title: 'Toda regra fica escrita',
+    text: 'Duas pessoas olhando a mesma base precisam chegar no mesmo número.',
+  },
+  {
+    title: 'O dashboard mostra o que precisa de ação',
+    text: 'Um total sozinho não diz se está bom ou ruim. Meta e status dizem.',
+  },
+  {
+    title: 'A IA acelera, eu decido',
+    text: 'A IA cuida do repetitivo. A regra e o significado de cada número são comigo.',
+  },
+];
+
+// Demonstração 1: colunas que a pergunta fez a base ganhar
+const cols = [
+  { name: 'Nome', isNew: false },
+  { name: 'E-mail', isNew: false },
+  { name: 'Nome PC', isNew: false },
+  { name: 'LAPS', isNew: true },
+  { name: 'Antivírus', isNew: true },
+];
+
+// Demonstração 2: as outras regras definidas no projeto
+const otherRules = [
+  'Windows Home conta como pendência de segurança',
+  'Sem antivírus é crítico',
+  'Toda conta sem notebook tem um motivo registrado',
+];
+
+// Demonstração 4: o que a IA padroniza e a regra que fica comigo
+const fixes = [
+  ['producao/cq', 'Produção/CQ'],
+  ['eng. manutencao', 'Engenharia e Manutenção'],
+  ['rh', 'RH'],
+];
+---
+
+<div data-principles class="mt-6 grid gap-4 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-6">
+  <!-- Computador: abas com o título e a frase de cada princípio; a barra embaixo mostra o tempo até o próximo -->
+  <div role="tablist" aria-label="Princípios" aria-orientation="vertical" class="hidden flex-col gap-1 md:flex">
+    {
+      principles.map((p, i) => (
+        <button
+          type="button"
+          role="tab"
+          id={`pr-tab-${i}`}
+          aria-controls={`pr-panel-${i}`}
+          aria-selected={i === 0 ? 'true' : 'false'}
+          tabindex={i === 0 ? 0 : -1}
+          data-tab={i}
+          class:list={['pr-tab relative cursor-pointer overflow-hidden rounded-xl border px-4 py-3.5 text-left', i === 0 && 'is-active']}
+        >
+          <span class="flex items-baseline gap-3">
+            <span class="font-mono text-xs text-muted">0{i + 1}</span>
+            <span class="pr-tab-title font-semibold">{p.title}</span>
+          </span>
+          <span class="pr-tab-text mt-1 block pl-7 text-sm leading-relaxed text-muted">{p.text}</span>
+          <span class="pr-progress absolute bottom-0 left-0 h-0.5 w-full origin-left bg-heading" aria-hidden="true" />
+        </button>
+      ))
+    }
+  </div>
+
+  <!-- Palco: no computador, uma demonstração por vez no mesmo lugar; no celular, cartões lado a lado -->
+  <div data-stage class="pr-stage relative -mx-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-2 md:mx-0 md:grid md:overflow-visible md:p-0">
+    {
+      principles.map((p, i) => (
+        <section
+          role="tabpanel"
+          id={`pr-panel-${i}`}
+          aria-labelledby={`pr-tab-${i}`}
+          data-panel={i}
+          class:list={['pr-panel flex w-[85%] flex-none snap-center flex-col rounded-2xl border border-line p-5 sm:w-[70%] md:w-auto md:p-6', i === 0 && 'is-active']}
+        >
+          <!-- Celular: o título vai no próprio cartão, porque as abas ficam escondidas -->
+          <div class="md:hidden">
+            <p class="font-mono text-xs text-muted">0{i + 1}</p>
+            <h3 class="mt-1.5 font-semibold text-heading">{p.title}</h3>
+            <p class="mt-1 text-sm leading-relaxed text-muted">{p.text}</p>
+          </div>
+
+          <p class="mt-5 text-xs tracking-wide text-fg/60 uppercase md:mt-0">Exemplo real · controle de notebooks</p>
+
+          <div class="pr-demo mt-3 flex min-h-64 flex-1 flex-col justify-center rounded-xl border border-line bg-white/[0.02] p-4 sm:p-5" aria-hidden="true">
+            {i === 0 && (
+              <div>
+                <p class="d-pop inline-block rounded-2xl rounded-bl-sm bg-heading px-4 py-2.5 text-sm font-medium text-bg">
+                  Quais notebooks estão prontos para uso?
+                </p>
+                <p class="d-pop mt-5 text-xs text-muted" style="--d: 0.7s">Colunas da base de usuários</p>
+                <div class="mt-2 flex flex-wrap gap-1.5">
+                  {cols.map((c, ci) => (
+                    <span
+                      class:list={['d-pop rounded-md border px-2.5 py-1.5 text-xs', c.isNew ? 'd-new border-heading text-heading' : 'border-line text-fg/70']}
+                      style={`--d: ${0.9 + ci * 0.25}s`}
+                    >
+                      {c.isNew && <span class="mr-1 text-good">+</span>}
+                      {c.name}
+                    </span>
+                  ))}
+                </div>
+                <p class="d-pop mt-4 text-xs text-muted" style="--d: 2.6s">
+                  <span class="text-good">+</span> LAPS e antivírus entraram na base por causa da pergunta
+                </p>
+              </div>
+            )}
+
+            {i === 1 && (
+              <div>
+                <div class="d-pop flex w-fit items-center gap-2 rounded-full border border-line px-3 py-1 text-xs text-fg/85">
+                  <span class="text-muted">Regra</span> Notebook compartilhado conta uma vez só
+                </div>
+                <div class="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
+                  <div class="space-y-1.5 font-mono text-xs">
+                    <p class="flex justify-between gap-3 rounded-md border border-line px-3 py-2">
+                      <span class="truncate text-fg/85">Ana Souza</span><span class="d-shared text-fg/85">NTB-007</span>
+                    </p>
+                    <p class="d-merge flex justify-between gap-3 rounded-md border border-line px-3 py-2">
+                      <span class="truncate text-fg/85">Bruno Lima</span><span class="d-shared text-fg/85">NTB-007</span>
+                    </p>
+                  </div>
+                  <div class="flex gap-8 sm:block sm:space-y-2 sm:text-right">
+                    <div>
+                      <p class="text-[11px] text-muted">Notebooks</p>
+                      <p class="d-swap relative text-2xl font-semibold text-heading tabular-nums">
+                        <span class="d-before">2</span><span class="d-after">1</span>
+                      </p>
+                    </div>
+                    <div>
+                      <p class="text-[11px] text-muted">Antivírus</p>
+                      <p class="d-swap relative text-2xl font-semibold text-heading tabular-nums">
+                        <span class="d-before">2</span><span class="d-after">1</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <ul class="mt-5 space-y-1 border-t border-line pt-3 text-xs text-muted">
+                  {otherRules.map((r, ri) => (
+                    <li class="d-pop flex gap-2" style={`--d: ${2.6 + ri * 0.3}s`}>
+                      <span class="text-fg/50">–</span>
+                      {r}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {i === 2 && (
+              <div class="mx-auto w-full max-w-sm">
+                <div class="relative">
+                  <p class="d-label text-xs text-muted">
+                    <span class="d-before">Antes: só o total</span>
+                    <span class="d-after">Depois: com meta e status</span>
+                  </p>
+                  <div class="d-kpi relative mt-2 overflow-hidden rounded-lg border border-line px-4 py-3.5">
+                    <span class="d-stripe absolute inset-y-0 left-0 w-1 bg-crit" />
+                    <div class="d-before">
+                      <p class="text-xs text-muted">Notebooks com LAPS</p>
+                      <p class="mt-2 text-3xl font-semibold text-heading tabular-nums">62</p>
+                      <p class="mt-1 text-xs text-muted">Está bom ou ruim?</p>
+                    </div>
+                    <div class="d-after">
+                      <div class="flex items-start justify-between gap-2">
+                        <p class="text-xs text-muted">% LAPS · meta 100%</p>
+                        <p class="text-[11px] font-medium"><span class="text-crit">✕</span> <span class="text-muted">Crítico</span></p>
+                      </div>
+                      <div class="mt-2 flex items-center gap-3">
+                        <svg viewBox="0 0 36 36" class="size-14 flex-none -rotate-90">
+                          <circle cx="18" cy="18" r="15" fill="none" stroke-width="4" class="stroke-white/10" />
+                          <circle cx="18" cy="18" r="15" fill="none" stroke-width="4" stroke-linecap="round" pathLength="100" stroke-dasharray="84.9 100" class="d-ring stroke-crit" />
+                        </svg>
+                        <div>
+                          <p class="text-3xl font-semibold text-heading tabular-nums">84,9%</p>
+                          <p class="text-xs text-muted">faltam 11 notebooks</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {i === 3 && (
+              <div class="grid gap-3 sm:grid-cols-2">
+                <div class="rounded-lg border border-line p-3">
+                  <p class="text-xs text-muted">IA · padroniza os textos</p>
+                  <ul class="mt-2.5 space-y-1.5 font-mono text-xs">
+                    {fixes.map(([raw, ok], fi) => (
+                      <li class="d-fix relative h-6" style={`--d: ${0.6 + fi * 0.45}s`}>
+                        <span class="d-before absolute inset-0 truncate rounded bg-crit/10 px-2 py-1 text-crit">{raw}</span>
+                        <span class="d-after absolute inset-0 truncate rounded bg-good/10 px-2 py-1 text-good">{ok}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div class="d-pop flex flex-col rounded-lg border border-heading/40 p-3" style="--d: 2.2s">
+                  <p class="text-xs text-muted">Eu · defino a regra</p>
+                  <p class="mt-2.5 text-sm leading-snug text-heading">Notebook compartilhado conta uma vez só</p>
+                  <p class="mt-auto pt-3 text-[11px] text-muted"><span class="text-good">✓</span> Decisão que a IA não toma</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      ))
+    }
+  </div>
+
+  <!-- Celular: pontos que mostram qual cartão está na tela -->
+  <div class="flex justify-center gap-2 md:hidden" aria-hidden="true">
+    {principles.map((_, i) => <span data-dot={i} class:list={['pr-dot h-1.5 w-1.5 rounded-full', i === 0 && 'is-active']} />)}
+  </div>
+</div>
+
+<style>
+  /* Abas */
+  .pr-tab {
+    border-color: transparent;
+    transition:
+      background-color 0.25s ease,
+      border-color 0.25s ease;
+  }
+
+  .pr-tab:hover {
+    background: rgb(255 255 255 / 0.03);
+  }
+
+  .pr-tab-title {
+    color: var(--color-fg);
+    opacity: 0.7;
+    transition: opacity 0.25s ease;
+  }
+
+  .pr-tab.is-active {
+    border-color: var(--color-line);
+    background: rgb(255 255 255 / 0.04);
+  }
+
+  .pr-tab.is-active .pr-tab-title {
+    color: var(--color-heading);
+    opacity: 1;
+  }
+
+  .pr-tab:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Barra de tempo: só corre na aba ativa enquanto a troca automática está ligada */
+  .pr-progress {
+    transform: scaleX(0);
+  }
+
+  [data-principles].is-auto .pr-tab.is-active .pr-progress {
+    animation: pr-progress var(--cycle, 7s) linear both;
+  }
+
+  @keyframes pr-progress {
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  /* Computador: as demonstrações ficam empilhadas no mesmo lugar e só a ativa aparece */
+  @media (min-width: 48rem) {
+    .pr-panel {
+      grid-area: 1 / 1;
+      transition:
+        opacity 0.35s ease,
+        visibility 0.35s;
+    }
+
+    .pr-panel:not(.is-active) {
+      visibility: hidden;
+      opacity: 0;
+    }
+  }
+
+  .pr-stage {
+    scrollbar-width: none;
+  }
+
+  .pr-stage::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pr-dot {
+    background: var(--color-line);
+    transition:
+      background-color 0.25s ease,
+      width 0.25s ease;
+  }
+
+  .pr-dot.is-active {
+    width: 1rem;
+    background: var(--color-heading);
+  }
+
+  /* ---------- Demonstrações ----------
+     Sem a classe is-play, tudo fica no estado final (sem JS ou com movimento reduzido).
+     Com is-play, cada peça roda a sua animação uma vez, com o atraso --d. */
+
+  .d-before,
+  .d-after {
+    transition: none;
+  }
+
+  /* Peças que trocam: o "antes" some e o "depois" aparece no mesmo lugar (empilhados na mesma célula) */
+  .d-swap,
+  .d-label {
+    display: grid;
+  }
+
+  .d-swap > span,
+  .d-label > span {
+    grid-area: 1 / 1;
+  }
+
+  .d-kpi .d-before {
+    position: absolute;
+    left: 0;
+  }
+
+  .d-kpi .d-before {
+    inset: 0;
+    padding: 0.875rem 1rem;
+  }
+
+  .d-before {
+    opacity: 0;
+  }
+
+  /* Estado final da regra: a segunda linha some e o notebook compartilhado fica marcado */
+  .d-merge {
+    opacity: 0.35;
+    text-decoration: line-through;
+  }
+
+  .d-shared {
+    color: var(--color-heading);
+    font-weight: 600;
+  }
+
+  .d-fix .d-before {
+    opacity: 0;
+  }
+
+  .is-play .d-pop {
+    animation: d-pop 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: var(--d, 0s);
+  }
+
+  @keyframes d-pop {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
+  .is-play .d-new {
+    animation:
+      d-pop 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both,
+      d-glow 1.2s ease 2.1s both;
+    animation-delay: var(--d, 0s), 2.1s;
+  }
+
+  @keyframes d-glow {
+    from {
+      box-shadow: 0 0 0 0 rgb(255 255 255 / 0.5);
+    }
+    to {
+      box-shadow: 0 0 0 8px rgb(255 255 255 / 0);
+    }
+  }
+
+  /* Regra: começa com duas linhas e conta 2; a regra aplica, a linha repetida some e o número cai para 1 */
+  .is-play .d-merge {
+    animation: d-merge 0.6s ease 1.6s both;
+  }
+
+  @keyframes d-merge {
+    from {
+      opacity: 1;
+      text-decoration-color: transparent;
+    }
+  }
+
+  .is-play .d-shared {
+    animation: d-shared 0.4s ease 1s both;
+  }
+
+  @keyframes d-shared {
+    from {
+      color: color-mix(in oklab, var(--color-fg) 85%, transparent);
+      font-weight: 400;
+    }
+  }
+
+  .is-play .d-swap .d-before {
+    animation: d-out 0.35s ease 1.9s both;
+  }
+
+  .is-play .d-swap .d-after {
+    animation: d-in 0.35s ease 2.1s both;
+  }
+
+  /* KPI: o total vira % com meta, status e anel */
+  .is-play .d-label .d-before,
+  .is-play .d-kpi .d-before {
+    animation: d-out 0.35s ease 1.8s both;
+  }
+
+  .is-play .d-label .d-after,
+  .is-play .d-kpi .d-after {
+    animation: d-in 0.4s ease 2s both;
+  }
+
+  .is-play .d-stripe {
+    animation: d-in 0.4s ease 2s both;
+  }
+
+  .is-play .d-ring {
+    animation: d-ring 1s cubic-bezier(0.2, 0.7, 0.2, 1) 2.2s both;
+  }
+
+  @keyframes d-ring {
+    from {
+      stroke-dasharray: 0 100;
+    }
+  }
+
+  /* IA: o texto cru (vermelho) vira o padronizado (verde), um por vez */
+  .is-play .d-fix .d-before {
+    animation: d-fix-out 0.35s ease var(--d) both;
+  }
+
+  .is-play .d-fix .d-after {
+    animation: d-in 0.35s ease calc(var(--d) + 0.2s) both;
+  }
+
+  @keyframes d-fix-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes d-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes d-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pr-panel,
+    .pr-tab,
+    .pr-dot {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  // Tempo de cada princípio na troca automática (a demonstração mais longa termina em ~3,5 s)
+  const CYCLE_MS = 7000;
+  let cleanup: (() => void) | undefined;
+
+  document.addEventListener('astro:page-load', () => {
+    cleanup?.();
+    const root = document.querySelector<HTMLElement>('[data-principles]');
+    if (!root) return;
+
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+    const panels = [...root.querySelectorAll<HTMLElement>('[data-panel]')];
+    const dots = [...root.querySelectorAll<HTMLElement>('[data-dot]')];
+    const stage = root.querySelector<HTMLElement>('[data-stage]')!;
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const desktop = matchMedia('(min-width: 48rem)');
+    root.style.setProperty('--cycle', `${CYCLE_MS}ms`);
+
+    let current = 0;
+    let auto = !reduced;
+    let visible = false;
+    let timer = 0;
+
+    // Reinicia a demonstração do painel (tirar e pôr a classe faz as animações rodarem de novo)
+    const play = (panel: HTMLElement) => {
+      if (reduced) return;
+      panel.classList.remove('is-play');
+      void panel.offsetWidth;
+      panel.classList.add('is-play');
+    };
+
+    const select = (i: number, { focus = false } = {}) => {
+      current = i;
+      tabs.forEach((t, ti) => {
+        const on = ti === i;
+        t.classList.toggle('is-active', on);
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        // Reinicia a barra de tempo da aba
+        const bar = t.querySelector<HTMLElement>('.pr-progress');
+        if (on && bar) {
+          bar.style.animation = 'none';
+          void bar.offsetWidth;
+          bar.style.animation = '';
+        }
+      });
+      panels.forEach((p, pi) => p.classList.toggle('is-active', pi === i));
+      dots.forEach((d, di) => d.classList.toggle('is-active', di === i));
+      play(panels[i]);
+      if (focus) tabs[i].focus();
+      schedule();
+    };
+
+    // Troca automática: só no computador, com o bloco na tela e enquanto ninguém escolheu uma aba
+    const schedule = () => {
+      clearTimeout(timer);
+      const on = auto && visible && desktop.matches;
+      root.classList.toggle('is-auto', on);
+      if (on) timer = window.setTimeout(() => select((current + 1) % tabs.length), CYCLE_MS);
+    };
+
+    tabs.forEach((t, i) =>
+      t.addEventListener('click', () => {
+        auto = false;
+        select(i);
+      }),
+    );
+
+    // Setas do teclado trocam de aba
+    root.querySelector('[role="tablist"]')?.addEventListener('keydown', (e) => {
+      const key = (e as KeyboardEvent).key;
+      const step = key === 'ArrowDown' || key === 'ArrowRight' ? 1 : key === 'ArrowUp' || key === 'ArrowLeft' ? -1 : 0;
+      if (!step) return;
+      e.preventDefault();
+      auto = false;
+      select((current + step + tabs.length) % tabs.length, { focus: true });
+    });
+
+    // Bloco na tela: liga a troca automática e roda a demonstração atual
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        const was = visible;
+        visible = entry.isIntersecting;
+        if (visible && !was) play(panels[current]);
+        schedule();
+      },
+      { threshold: 0.35 },
+    );
+    io.observe(root);
+
+    // Celular: o cartão que está no centro da faixa é o ativo e roda a sua demonstração
+    // (o mais perto do centro da faixa, conferido a cada rolagem, no máximo uma vez por quadro)
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking || desktop.matches) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        const center = stage.scrollLeft + stage.clientWidth / 2;
+        const dist = panels.map((p) => Math.abs(p.offsetLeft + p.offsetWidth / 2 - center));
+        const i = dist.indexOf(Math.min(...dist));
+        if (i === current) return;
+        current = i;
+        dots.forEach((d, di) => d.classList.toggle('is-active', di === i));
+        panels.forEach((p, pi) => p.classList.toggle('is-active', pi === i));
+        if (visible) play(panels[i]);
+      });
+    };
+    stage.addEventListener('scroll', onScroll, { passive: true });
+
+    const onResize = () => schedule();
+    desktop.addEventListener('change', onResize);
+
+    cleanup = () => {
+      io.disconnect();
+      stage.removeEventListener('scroll', onScroll);
+      clearTimeout(timer);
+      desktop.removeEventListener('change', onResize);
+    };
+  });
+</script>

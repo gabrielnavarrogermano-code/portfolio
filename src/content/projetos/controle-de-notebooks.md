@@ -29,6 +29,8 @@ Os dados dos colaboradores vêm do **Microsoft 365**, a fonte oficial de quem en
 
 No começo, a base tinha só os dados do 365. As colunas de **antivírus** e **LAPS** vieram depois, quando a equipe passou a acompanhar a segurança dos notebooks, e foram preenchidas **manualmente**, colaborador por colaborador.
 
+As regras de negócio também foram definidas por mim: um **notebook compartilhado** por mais de um colaborador conta uma vez só (o dispositivo, a licença do antivírus e o LAPS), e os textos da base, como setores e nomes, seguem um padrão de escrita.
+
 O **LAPS** é o script de segurança do gerente de TI: depois dele, qualquer instalação fora das diretrizes pede a conta de administrador, e o notebook passa a ser supervisionado no **Microsoft Entra ID**.
 
 ## Dashboard

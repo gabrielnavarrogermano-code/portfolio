@@ -1,483 +1,260 @@
 ---
 import SectionTitle from './SectionTitle.astro';
-import EtlStep from './EtlStep.astro';
-import EtlFlow from './EtlFlow.astro';
+import Principles from './Principles.astro';
 
-// Pipeline: as etapas e as ferramentas usadas em cada uma
-const pipeline = [
-  { stage: 'Extração', tools: ['Helpdesk', 'Excel'] },
-  { stage: 'Tratamento', tools: ['Excel', 'Fórmulas'] },
-  { stage: 'Visualização', tools: ['Power BI', 'Dashboard'] },
+// O que estou estudando agora e para quê: a palavra rola entre os três, e a frase de baixo acompanha
+const studying = [
+  { name: 'SQL', icon: 'sql', why: 'para consultar os dados e montar tabelas direto na fonte.' },
+  { name: 'DAX no Power BI', icon: 'pbi', why: 'para aplicar as regras de negócio dentro do Power BI, começando pelo básico.' },
+  { name: 'Data storytelling', icon: 'story', why: 'para contar uma história com comparações nos dashboards.' },
 ];
 
-// Caso fictício: chamados de helpdesk passando pelas 3 etapas.
-// bad: coluna com problema → o motivo, mostrado ao passar o mouse na célula
-const rawCols = ['Chamado', 'Data', 'Setor', 'Categoria', 'Status'];
-const repeated = 'Chamado repetido';
-const raw: { row: string[]; bad: Record<number, string> }[] = [
-  { row: ['2041', '01/09/2026', 'Qualidade', 'Impressora', 'Resolvido'], bad: {} },
-  {
-    row: ['2042', '2026-09-01', 'qualidade', 'imp.', 'Resolvido'],
-    bad: { 1: 'Data em outro formato', 2: 'Setor em minúsculas', 3: 'Categoria abreviada' },
-  },
-  { row: ['2043', '02/09/2026', 'Produção', 'Acesso', '—'], bad: { 4: 'Chamado sem status' } },
-  { row: ['2044', '02/09/2026', 'Comercial', 'Acesso', 'Resolvido'], bad: {} },
-  {
-    row: ['2044', '02/09/2026', 'Comercial', 'Acesso', 'Resolvido'],
-    bad: Object.fromEntries(rawCols.map((_, i) => [i, repeated])),
-  },
-  { row: ['2045', '03/09/2026', 'Producao', 'Impressora', 'Resolvido'], bad: { 2: 'Setor sem acento' } },
-  { row: ['2046', '03/09/2026', 'Qualidade', 'IMPRESSORA', 'Resolvido'], bad: { 3: 'Categoria em maiúsculas' } },
-  { row: ['2047', '03/09/2026', 'Comercial', 'Rede', 'Resolvido'], bad: {} },
-];
-
-// fixed: coluna corrigida no tratamento → o que foi feito
-const clean: { row: string[]; fixed: Record<number, string> }[] = [
-  { row: ['2041', '01/09/2026', 'Qualidade', 'Impressora', 'Resolvido'], fixed: {} },
-  {
-    row: ['2042', '01/09/2026', 'Qualidade', 'Impressora', 'Resolvido'],
-    fixed: { 1: 'Data padronizada', 2: 'Setor padronizado', 3: 'Categoria padronizada' },
-  },
-  { row: ['2043', '02/09/2026', 'Produção', 'Acesso', 'Em aberto'], fixed: { 4: 'Status conferido no Helpdesk' } },
-  { row: ['2044', '02/09/2026', 'Comercial', 'Acesso', 'Resolvido'], fixed: {} },
-  { row: ['2045', '03/09/2026', 'Produção', 'Impressora', 'Resolvido'], fixed: { 2: 'Setor padronizado' } },
-  { row: ['2046', '03/09/2026', 'Qualidade', 'Impressora', 'Resolvido'], fixed: { 3: 'Categoria padronizada' } },
-  { row: ['2047', '03/09/2026', 'Comercial', 'Rede', 'Resolvido'], fixed: {} },
-];
-
-// Dica fica alinhada à direita nas últimas colunas, para não sair da tabela
-const tipSide = (col: number, total: number) => (col >= total - 2 ? 'tip-end' : '');
-
-// As tabelas mostram só o começo da base; os totais abaixo são da base inteira
-const base: { category: string; sector: string; total: number }[] = [
-  { category: 'Impressora', sector: 'Qualidade', total: 54 },
-  { category: 'Impressora', sector: 'Produção', total: 16 },
-  { category: 'Impressora', sector: 'Comercial', total: 8 },
-  { category: 'Acesso', sector: 'Qualidade', total: 12 },
-  { category: 'Acesso', sector: 'Produção', total: 18 },
-  { category: 'Acesso', sector: 'Comercial', total: 15 },
-  { category: 'Rede', sector: 'Qualidade', total: 6 },
-  { category: 'Rede', sector: 'Produção', total: 11 },
-  { category: 'Rede', sector: 'Comercial', total: 10 },
-];
-const open = 12;
-const duplicates = 8;
-
-// Soma os chamados por categoria ou setor, do maior para o menor
-const sumBy = (key: 'category' | 'sector') => {
-  const totals: Record<string, number> = {};
-  for (const r of base) totals[r[key]] = (totals[r[key]] ?? 0) + r.total;
-  return Object.entries(totals)
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value);
-};
-
-const total = base.reduce((sum, r) => sum + r.total, 0);
-
-// value é número para a contagem animada; o texto inicial já vem preenchido (funciona sem JS)
-const kpis = [
-  { label: 'Chamados', value: total },
-  { label: 'Resolvidos', value: total - open },
-  { label: 'Em aberto', value: open },
-];
-const byCategory = sumBy('category');
-const bySector = sumBy('sector');
-const maxSector = Math.max(...bySector.map((d) => d.value));
-// O maior valor fica em destaque e os outros em cinza
-const shades = ['bg-accent text-bg', 'bg-muted/60 text-heading', 'bg-muted/35 text-heading'];
-
-const howTo = {
-  transform: `Repetidos:   Dados > Remover Duplicatas
-Textos:      =PRI.MAIÚSCULA(ARRUMAR(C2))
-Variações:   =PROCV(D2; Categorias!A:B; 2; FALSO)`,
-  visualize: `Sem fórmula: é só arrastar os campos da tabela para cada visual
-
-Importar:    Página Inicial > Obter dados > Pasta de Trabalho do Excel
-Chamados:    visual Cartão, com Contagem de Chamado
-Em aberto:   mesmo Cartão, filtrando Status = Em aberto
-Categoria:   Barras 100% empilhadas, Categoria na Legenda
-Setor:       Colunas, Setor no Eixo X, Contagem de Chamado no Eixo Y`,
+// Ícones em SVG (viewBox 24×24), desenhados aqui para não depender de imagens de fora.
+// SQL não tem logo oficial: vai o cilindro de banco de dados. Power BI: as três barras amarelas, simplificadas.
+const icons: Record<string, string> = {
+  sql: `<ellipse cx="12" cy="5.5" rx="7.5" ry="3" fill="none" stroke="#3987e5" stroke-width="1.8"/>
+    <path d="M4.5 5.5v13c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3v-13M4.5 12c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3" fill="none" stroke="#3987e5" stroke-width="1.8"/>`,
+  pbi: `<rect x="3" y="11" width="5" height="11" rx="1.2" fill="#c99700"/>
+    <rect x="9.5" y="6.5" width="5" height="15.5" rx="1.2" fill="#e8b600"/>
+    <rect x="16" y="2" width="5" height="20" rx="1.2" fill="#f2c811"/>`,
+  story: `<path d="M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-9l-5 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M8 13v-2M12 13V8M16 13v-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>`,
 };
 ---
 
-<section id="habilidades" class="render-later py-16 [contain-intrinsic-size:auto_1500px] sm:py-24 md:[contain-intrinsic-size:auto_1000px]">
+<section id="habilidades" class="render-later py-16 [contain-intrinsic-size:auto_1500px] sm:py-24 md:[contain-intrinsic-size:auto_1100px]">
   <div class="mx-auto max-w-5xl px-6">
     <SectionTitle
       title="Como eu trabalho"
-      subtitle="Quem decide não deveria precisar desconfiar do número. Meu trabalho é fazer esse número chegar limpo e fácil de entender, para que a pessoa só pense na decisão."
+      subtitle="Meu ponto mais forte é entender o contexto e as regras de onde eu trabalho. Quem decide não deveria precisar desconfiar do número: meu trabalho é fazer esse número chegar limpo e fácil de entender, para que a pessoa só pense na decisão."
     />
-    <div data-reveal class="mt-6 max-w-3xl space-y-4 leading-relaxed text-fg/85">
-      <p>
-        Acredito que minha principal função é conseguir extrair e transformar os dados em decisões para quem não pode
-        acompanhá-los de perto, sempre buscando entender a pergunta de negócio e o que está por trás dela.
+
+    <!-- No dia a dia: os princípios que já aplico no estágio, cada um com uma demonstração feita com dados reais -->
+    <div data-reveal class="mt-10">
+      <p class="flex items-center gap-3 text-sm text-muted">
+        <span class="h-px w-6 bg-line" aria-hidden="true"></span>
+        No dia a dia do estágio
       </p>
-      <p>
-        Depois que tenho meu objetivo definido e já sei qual pergunta quero responder, começo a estruturar o processo de
-        extração e tratamento dos dados, que creio ser hoje a parte que mais leva tempo. Primeiro defino de qual fonte
-        vou extrair os dados e quais regras de negócio serão aplicadas no tratamento. Depois vem a segunda etapa: deixar
-        os dados limpos e padronizados, seguindo as regras de negócio definidas, com o auxílio da IA. Ela acelera o que é
-        repetitivo, como sugerir fórmulas e padronizar textos, mas definir as regras e decidir o que cada número
-        significa continua sendo comigo. Também documento as regras que usei, para que qualquer pessoa chegue no mesmo
-        número.
-      </p>
-      <p>
-        Por último vem a visualização: defino os dados mais relevantes que vão para o dashboard, buscando deixá-lo de
-        fácil entendimento para os stakeholders, com gráficos e KPIs escolhidos com base no contexto da análise e no que
-        se quer visualizar.
-      </p>
+      <p class="mt-2 text-fg/85">Quatro coisas que eu já aplico, com exemplos reais do controle de notebooks.</p>
     </div>
+    <Principles />
 
-    <p data-reveal class="mt-12 text-fg/85 md:mt-16">
-      Na prática, o caminho de um chamado de TI até o dashboard, com dados fictícios:
-    </p>
-
-    <div data-reveal class="mt-8">
-      <EtlFlow />
-    </div>
-
-    <details data-reveal class="etl-details group mt-10">
-      <summary class="inline-flex cursor-pointer list-none items-center gap-2 rounded-full border border-line px-4 py-2 text-sm text-heading transition-colors hover:bg-white/5">
-        <span class="group-open:hidden">Ver o exemplo completo</span>
-        <span class="hidden group-open:inline">Esconder o exemplo</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden="true">
-          <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"></path>
-        </svg>
-      </summary>
-      <p class="mt-4 text-muted md:hidden">Abra cada etapa para ver o exemplo.</p>
-
-    <div class="etl mt-6 space-y-3 md:mt-8 md:space-y-0" data-etl>
-      <EtlStep index={0} {...pipeline[0]} open>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm tabular-nums">
-            <thead><tr>{rawCols.map((c) => <th class="border-b border-line px-3 py-2 text-left font-medium text-muted">{c}</th>)}</tr></thead>
-            <tbody>
-              {raw.map((r) => (
-                <tr>{r.row.map((v, ci) => r.bad[ci] ? (
-                  <td tabindex="0" class:list={['cell-tip border-b border-line px-3 py-2 whitespace-nowrap text-red-400', tipSide(ci, rawCols.length)]}>{v}<span class="tip">{r.bad[ci]}</span></td>
-                ) : (
-                  <td class="border-b border-line px-3 py-2 whitespace-nowrap text-fg/85">{v}</td>
-                ))}</tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
-        <p class="mt-2 text-sm text-muted">Primeiras {raw.length} de {total + duplicates} linhas</p>
-        <p class="mt-4 text-sm text-muted"><span class="mr-2 text-red-400">✕</span>Passe o mouse (ou toque) nas células em vermelho para ver cada erro</p>
-      </EtlStep>
-      <EtlStep index={1} {...pipeline[1]}>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm tabular-nums">
-            <thead><tr>{rawCols.map((c) => <th class="border-b border-line px-3 py-2 text-left font-medium text-muted">{c}</th>)}</tr></thead>
-            <tbody>
-              {clean.map((r, ri) => (
-                <tr>{r.row.map((v, ci) => r.fixed[ci] ? (
-                  <td tabindex="0" style={`--fix-delay: ${ri * 90}ms`} class:list={['cell-tip is-fixed border-b border-line px-3 py-2 whitespace-nowrap text-emerald-400', tipSide(ci, rawCols.length)]}>{v}<span class="tip">{r.fixed[ci]}</span></td>
-                ) : (
-                  <td class="border-b border-line px-3 py-2 whitespace-nowrap text-fg/85">{v}</td>
-                ))}</tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
-        <p class="mt-2 text-sm text-muted">Primeiras {clean.length} de {total} linhas</p>
-        <p class="mt-4 text-sm text-muted"><span class="mr-2 text-emerald-400">✓</span>{duplicates} chamados repetidos removidos · passe o mouse nas células em verde para ver cada correção</p>
-        <details class="mt-3">
-          <summary class="w-fit cursor-pointer py-2 text-sm text-muted transition-colors hover:text-heading">Ver como fazer no Excel</summary>
-          <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{howTo.transform}</pre>
-          <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
-        </details>
-      </EtlStep>
-      <EtlStep index={2} {...pipeline[2]}>
-        <div class="grid grid-cols-3 gap-2 sm:gap-4">
-          {kpis.map((k) => (
-            <div class="rounded border border-line px-3 py-3 sm:px-4">
-              <p class="text-sm text-muted">{k.label}</p>
-              <p class="mt-1 text-2xl font-semibold text-heading tabular-nums"><span data-count={k.value}>{k.value}</span></p>
-            </div>
-          ))}
-        </div>
-        <div class="mt-4 grid gap-4 sm:grid-cols-2">
-          <div class="rounded border border-line px-4 py-4">
-            <p class="text-sm text-muted">Chamados por categoria</p>
-            <div
-              role="img"
-              aria-label={byCategory.map((d) => `${d.name}: ${d.value}`).join(', ')}
-              class="etl-bar mt-3 flex h-20 gap-0.5 overflow-hidden rounded"
-            >
-              {byCategory.map((d, i) => (
-                <span class:list={['flex min-w-0 items-center justify-center font-mono text-sm', shades[i]]} style={`flex: ${d.value} 1 0`}>{d.value}</span>
-              ))}
-            </div>
-            <ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-fg/85" aria-hidden="true">
-              {byCategory.map((d, i) => (
-                <li class="inline-flex items-center gap-1.5"><span class:list={['h-2 w-2 rounded-full', shades[i]]} />{d.name}</li>
-              ))}
-            </ul>
-          </div>
-          <div class="rounded border border-line px-4 py-4">
-            <p class="text-sm text-muted">Chamados por setor</p>
-            <ul class="mt-3 grid grid-cols-3 items-end gap-3 text-center text-sm">
-              {bySector.map((d, i) => (
-                <li>
-                  <span class="block font-mono text-fg/85">{d.value}</span>
-                  <span
-                    class:list={['etl-col mx-auto mt-1 block w-8 rounded-t', i === 0 ? 'bg-accent' : 'bg-muted/60']}
-                    style={`height: ${(d.value / maxSector) * 4}rem; --bar-delay: ${i * 120}ms`}
-                  />
-                  <span class="mt-1.5 block truncate text-fg/85">{d.name}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-        <p class="mt-4 leading-relaxed text-fg/85">
-          O que isso mostra: impressora é o problema mais comum, e a Qualidade concentra 54 desses 78 chamados. Em vez de
-          resolver um por um, a TI pode investigar a causa nesse setor.
+    <!-- Onde pretendo chegar: o objetivo como analista + o que estou estudando agora. A palavra troca sozinha enquanto o cartão está na tela;
+         um clique numa etiqueta escolhe uma e para a troca. Sem JS, mostra a primeira e as três etiquetas. -->
+    <div data-study data-reveal class="mt-16 overflow-hidden md:mt-20 rounded-2xl border border-line bg-white/[0.03]">
+      <div class="p-6 sm:p-8">
+        <p class="flex items-center gap-2.5 text-sm text-muted">
+          <span class="study-pulse relative flex h-2 w-2" aria-hidden="true"><span class="h-2 w-2 rounded-full bg-good"></span></span>
+          Onde pretendo chegar
         </p>
-        <details class="mt-3">
-          <summary class="w-fit cursor-pointer py-2 text-sm text-muted transition-colors hover:text-heading">Ver como fazer no Power BI</summary>
-          <pre class="mt-3 overflow-x-auto rounded border border-line p-4 font-mono text-sm text-fg/85">{howTo.visualize}</pre>
-          <p class="mt-2 text-xs text-muted sm:hidden">← arraste para ver mais →</p>
-        </details>
-      </EtlStep>
+        <p class="mt-4 max-w-3xl font-display text-xl leading-snug font-semibold text-heading sm:text-2xl">
+          Levar o dado da fonte até a decisão.
+        </p>
+        <p class="mt-3 max-w-3xl leading-relaxed text-fg/85">
+          Quero conduzir o caminho completo da análise: montar o fluxo de ETL de ponta a ponta, aplicar os cálculos e
+          as regras de negócio para que eles cheguem corretos ao BI, e transformar tudo em dashboards que ajudem pessoas
+          não técnicas a decidir com base em informações confiáveis.
+        </p>
+      </div>
+
+      <div class="border-t border-line p-6 sm:p-8">
+        <p class="text-fg/85 sm:text-lg">
+          Agora estou estudando
+          <span class="study-roll relative block overflow-hidden font-display text-[clamp(1.25rem,6.5vw,2.25rem)] leading-[1.25] font-bold whitespace-nowrap text-heading" aria-live="polite">
+            <span data-roll class="study-track block">
+              {studying.map((s, i) => (
+                <span class="flex h-[1.25em] items-center gap-[0.3em]" aria-hidden={i === 0 ? undefined : 'true'}>
+                  <svg viewBox="0 0 24 24" class="size-[0.85em] flex-none" aria-hidden="true" set:html={icons[s.icon]} />
+                  {s.name}
+                </span>
+              ))}
+            </span>
+          </span>
+        </p>
+        <p class="study-whys mt-2 grid text-fg/70">
+          {studying.map((s, i) => <span data-why class:list={['study-why', i === 0 && 'is-on']}>{s.why}</span>)}
+        </p>
+
+        <div class="mt-6 flex flex-wrap items-center gap-2" role="group" aria-label="O que estou estudando">
+          {
+            studying.map((s, i) => (
+              <button type="button" data-pick={i} aria-pressed={i === 0 ? 'true' : 'false'} class:list={['study-chip relative flex cursor-pointer items-center gap-1.5 overflow-hidden rounded-full border border-line px-3.5 py-1.5 text-sm text-fg/80', i === 0 && 'is-on']}>
+                <svg viewBox="0 0 24 24" class="size-4 flex-none" aria-hidden="true" set:html={icons[s.icon]} />
+                {s.name}
+                <span class="study-chip-bar absolute bottom-0 left-0 h-0.5 w-full origin-left bg-heading" aria-hidden="true" />
+              </button>
+            ))
+          }
+        </div>
+
+        <p class="mt-6 text-sm text-muted">O objetivo é que esse caminho vire parte da minha rotina.</p>
+      </div>
     </div>
-    </details>
   </div>
 </section>
 
 <style>
-  /*
-    Celular: cards um embaixo do outro, cada um abre o próprio exemplo.
-    A partir de md: os cabeçalhos viram abas lado a lado e os exemplos ficam empilhados
-    no mesmo espaço embaixo delas, com a altura do maior, para a página não pular ao trocar.
-  */
-  :global(.etl-step:not([data-open]) > .etl-body) {
-    display: none;
+  /* "Onde pretendo chegar": o ponto verde pulsa devagar */
+  .study-pulse::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    background: var(--color-good);
+    animation: study-pulse 2s ease-out infinite;
   }
 
-  @media (min-width: 48rem) {
-    .etl {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .etl :global(.etl-step) {
-      display: contents;
-    }
-
-    .etl :global(.etl-head) {
-      border-block-width: 1px;
-    }
-
-    .etl :global(.etl-step:not(:first-child) > .etl-head) {
-      border-left-width: 1px;
-    }
-
-    .etl :global(.etl-body) {
-      grid-row: 2;
-      grid-column: 1 / -1;
-    }
-
-    .etl :global(.etl-step:not([data-open]) > .etl-body) {
-      display: block;
-      visibility: hidden;
-    }
-
-    .etl :global(.etl-step[data-open] > .etl-body) {
-      animation: etl-fade 0.3s ease;
-    }
-  }
-
-  /* No celular, o conteúdo do card aparece com um fade ao abrir */
-  :global(.etl-step[data-open] > .etl-body) {
-    animation: etl-fade 0.3s ease;
-  }
-
-  .etl-details > summary::-webkit-details-marker {
-    display: none;
-  }
-
-  @keyframes etl-fade {
-    from {
+  @keyframes study-pulse {
+    to {
+      transform: scale(3);
       opacity: 0;
     }
   }
-  /* Dica da célula: aparece acima dela ao passar o mouse, focar ou tocar */
-  .cell-tip {
-    position: relative;
-    cursor: help;
-    outline: none;
+
+  /* Palavra que rola: uma janela da altura de uma linha, e a lista sobe até a palavra escolhida */
+  .study-roll {
+    height: 1.25em;
   }
 
-  .cell-tip:focus-visible {
-    box-shadow: inset 0 0 0 1px currentColor;
+  .study-track {
+    transform: translateY(calc(var(--i, 0) * -1.25em));
+    transition: transform 0.6s cubic-bezier(0.7, 0, 0.2, 1);
   }
 
-  .tip {
-    position: absolute;
-    bottom: calc(100% - 4px);
-    left: 0.5rem;
-    z-index: 10;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.375rem;
-    background: #ffffff;
-    color: #0a0a0b;
-    font-size: 12px;
-    white-space: nowrap;
-    pointer-events: none;
+  /* Frase do "para quê": as três ocupam o mesmo lugar e só a escolhida aparece */
+  .study-why {
+    grid-area: 1 / 1;
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(6px);
     transition:
-      opacity 0.15s ease,
-      transform 0.15s ease;
+      opacity 0.4s ease,
+      transform 0.4s ease;
   }
 
-  .tip-end .tip {
-    left: auto;
-    right: 0.5rem;
-  }
-
-  .cell-tip:hover .tip,
-  .cell-tip:focus .tip {
+  .study-why.is-on {
     opacity: 1;
     transform: none;
+    transition-delay: 0.2s;
   }
 
-  /* Em telas de toque, o cursor "pointer" faz o toque ativar o :hover */
-  @media (hover: none) {
-    .cell-tip {
-      cursor: pointer;
+  .study-chip {
+    transition:
+      border-color 0.25s ease,
+      color 0.25s ease,
+      background-color 0.25s ease;
+  }
+
+  .study-chip:hover {
+    color: var(--color-heading);
+  }
+
+  .study-chip.is-on {
+    border-color: color-mix(in srgb, var(--color-heading) 50%, transparent);
+    background: rgb(255 255 255 / 0.06);
+    color: var(--color-heading);
+  }
+
+  .study-chip:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Barra de tempo na etiqueta ativa, enquanto a troca automática está ligada */
+  .study-chip-bar {
+    transform: scaleX(0);
+  }
+
+  [data-study].is-auto .study-chip.is-on .study-chip-bar {
+    animation: study-bar var(--cycle, 3.2s) linear both;
+  }
+
+  @keyframes study-bar {
+    to {
+      transform: scaleX(1);
     }
   }
 
-  /* Tratamento: ao abrir o card, as células corrigidas passam de vermelho a verde */
-  :global(.etl-step[data-open]) .is-fixed {
-    animation: cell-fix 0.9s ease both;
-    animation-delay: var(--fix-delay, 0ms);
-  }
-
-  @keyframes cell-fix {
-    0%,
-    35% {
-      color: var(--color-red-400);
+  @media (prefers-reduced-motion: reduce) {
+    .study-pulse::before {
+      animation: none;
+      opacity: 0;
     }
-  }
 
-  /* Visualização: a barra cresce para a direita e as colunas para cima ao abrir o card */
-  :global(.etl-step[data-open]) .etl-bar {
-    transform-origin: left;
-    animation: bar-grow 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  }
-
-  :global(.etl-step[data-open]) .etl-col {
-    transform-origin: bottom;
-    animation: col-grow 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-    animation-delay: var(--bar-delay, 0ms);
-  }
-
-  @keyframes bar-grow {
-    from {
-      transform: scaleX(0);
-    }
-  }
-
-  @keyframes col-grow {
-    from {
-      transform: scaleY(0);
+    .study-track,
+    .study-why {
+      transition: none;
     }
   }
 </style>
 
 <script>
-  const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // A partir daqui as etapas ficam lado a lado e só uma fica aberta por vez
-  const sideBySide = matchMedia('(min-width: 48rem)');
-  const counting = new WeakMap<HTMLElement, number>();
-  let listeners: AbortController | undefined;
-
-  // Números do exemplo contam de 0 até o valor quando ele é aberto
-  const countUp = (body: HTMLElement) => {
-    if (reduceMotion()) return;
-    body.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
-      const target = Number(el.dataset.count);
-      const decimals = Number(el.dataset.decimals ?? 0);
-      const prefix = el.dataset.prefix ?? '';
-      // Sem Intl: o formatador do navegador leva dezenas de ms para carregar e travava o toque
-      const format = (n: number) =>
-        prefix + n.toFixed(decimals).replace('.', ',').replace(/\B(?=(\d{3})(?!\d))/g, '.');
-      const start = performance.now();
-      const frame = (now: number) => {
-        const t = Math.min((now - start) / 900, 1);
-        el.textContent = format(target * (1 - (1 - t) ** 3));
-        if (t < 1) counting.set(el, requestAnimationFrame(frame));
-      };
-      cancelAnimationFrame(counting.get(el) ?? 0);
-      counting.set(el, requestAnimationFrame(frame));
-    });
-  };
+  const CYCLE_MS = 3200;
+  let cleanup: (() => void) | undefined;
 
   document.addEventListener('astro:page-load', () => {
-    // Ao voltar para a home o listener anterior não pode ficar preso à página antiga
-    listeners?.abort();
-    listeners = new AbortController();
-    const { signal } = listeners;
+    cleanup?.();
+    const root = document.querySelector<HTMLElement>('[data-study]');
+    if (!root) return;
 
-    document.querySelectorAll<HTMLElement>('[data-etl]').forEach((root) => {
-      const steps = [...root.querySelectorAll<HTMLElement>('.etl-step')];
-      const head = (step: HTMLElement) => step.querySelector<HTMLButtonElement>('.etl-head')!;
-      const body = (step: HTMLElement) => step.querySelector<HTMLElement>('.etl-body')!;
-      let clicked = false;
+    const track = root.querySelector<HTMLElement>('[data-roll]')!;
+    const words = [...track.children] as HTMLElement[];
+    const whys = [...root.querySelectorAll<HTMLElement>('[data-why]')];
+    const chips = [...root.querySelectorAll<HTMLButtonElement>('[data-pick]')];
+    root.style.setProperty('--cycle', `${CYCLE_MS}ms`);
 
-      const setOpen = (step: HTMLElement, open: boolean) => {
-        if (open && !step.hasAttribute('data-open')) countUp(body(step));
-        step.toggleAttribute('data-open', open);
-        head(step).setAttribute('aria-expanded', String(open));
-        body(step).inert = !open;
-        // Código aberto num exemplo fechado deixaria a área alta e vazia
-        if (!open) body(step).querySelectorAll('details').forEach((d) => (d.open = false));
-      };
+    let current = 0;
+    let auto = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let visible = false;
+    let timer = 0;
 
-      // Lado a lado: abre só a escolhida. Celular: cada card abre e fecha sozinho
-      const select = (step: HTMLElement) => steps.forEach((s) => setOpen(s, s === step));
+    const show = (i: number) => {
+      current = i;
+      track.style.setProperty('--i', String(i));
+      // Leitor de tela: só a palavra atual é lida
+      words.forEach((w, wi) => w.setAttribute('aria-hidden', String(wi !== i)));
+      whys.forEach((w, wi) => w.classList.toggle('is-on', wi === i));
+      chips.forEach((c, ci) => {
+        const on = ci === i;
+        c.classList.toggle('is-on', on);
+        c.setAttribute('aria-pressed', String(on));
+        // Reinicia a barra de tempo
+        const bar = c.querySelector<HTMLElement>('.study-chip-bar');
+        if (on && bar) {
+          bar.style.animation = 'none';
+          void bar.offsetWidth;
+          bar.style.animation = '';
+        }
+      });
+      schedule();
+    };
 
-      steps.forEach((step) =>
-        head(step).addEventListener('click', () => {
-          clicked = true;
-          if (sideBySide.matches) select(step);
-          else setOpen(step, !step.hasAttribute('data-open'));
-        }),
-      );
+    // Troca sozinha só com o cartão na tela e até alguém escolher uma etiqueta
+    const schedule = () => {
+      clearTimeout(timer);
+      const on = auto && visible;
+      root.classList.toggle('is-auto', on);
+      if (on) timer = window.setTimeout(() => show((current + 1) % words.length), CYCLE_MS);
+    };
 
-      // Ao virar lado a lado (girar o tablet, redimensionar), fica só uma etapa aberta
-      sideBySide.addEventListener(
-        'change',
-        (e) => {
-          if (e.matches) select(steps.find((s) => s.hasAttribute('data-open')) ?? steps[0]);
-        },
-        { signal },
-      );
+    chips.forEach((c, i) =>
+      c.addEventListener('click', () => {
+        auto = false;
+        show(i);
+      }),
+    );
 
-      if (reduceMotion()) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry.isIntersecting;
+        schedule();
+      },
+      { threshold: 0.5 },
+    );
+    io.observe(root);
 
-      // Lado a lado, na primeira vez que as abas aparecem, passa pelas etapas 2, 3 e 4 e volta à 1,
-      // mostrando que são clicáveis. Um clique interrompe a passagem.
-      const sweep = () =>
-        [...steps.slice(1), steps[0]].forEach((step, i) =>
-          setTimeout(() => !clicked && sideBySide.matches && select(step), (i + 1) * 1200),
-        );
-
-      const io = new IntersectionObserver(
-        ([entry]) => {
-          if (!entry.isIntersecting) return;
-          io.disconnect();
-          // Espera o fade de entrada das abas terminar
-          if (sideBySide.matches) setTimeout(() => !clicked && sweep(), 500);
-        },
-        { threshold: 0.6 },
-      );
-      io.observe(head(steps[0]));
-    });
+    cleanup = () => {
+      io.disconnect();
+      clearTimeout(timer);
+    };
   });
 </script>
