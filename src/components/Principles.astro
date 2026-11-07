@@ -486,6 +486,8 @@ const fixes = [
 <script>
   // Tempo de cada princípio na troca automática (a demonstração mais longa termina em ~3,5 s, sobra ~1,5 s para ler)
   const CYCLE_MS = 5000;
+  // Celular: tempo em cada cartão na passagem automática da primeira visita
+  const TOUR_MS = 4000;
   let cleanup: (() => void) | undefined;
 
   document.addEventListener('astro:page-load', () => {
@@ -561,12 +563,34 @@ const fixes = [
       select((current + step + tabs.length) % tabs.length, { focus: true });
     });
 
+    // Celular: na primeira vez que o bloco aparece, os cartões passam sozinhos (2, 3, 4) e voltam ao primeiro,
+    // mostrando que dá para deslizar. Tocar, arrastar ou o bloco sair da tela interrompe a passagem.
+    let toured = false;
+    let tourTimer = 0;
+    const centerOn = (i: number) =>
+      stage.scrollTo({ left: panels[i].offsetLeft - (stage.clientWidth - panels[i].offsetWidth) / 2, behavior: 'smooth' });
+    const tour = (step: number) => {
+      tourTimer = window.setTimeout(() => {
+        if (!visible || desktop.matches) return;
+        centerOn(step % panels.length);
+        if (step < panels.length) tour(step + 1);
+      }, TOUR_MS);
+    };
+    const stopTour = () => clearTimeout(tourTimer);
+    const touchEvents = ['pointerdown', 'touchstart', 'wheel'] as const;
+    touchEvents.forEach((ev) => stage.addEventListener(ev, stopTour, { passive: true }));
+
     // Bloco na tela: liga a troca automática e roda a demonstração atual
     const io = new IntersectionObserver(
       ([entry]) => {
         const was = visible;
         visible = entry.isIntersecting;
         if (visible && !was) play(panels[current]);
+        if (!visible) stopTour();
+        if (visible && !was && !toured && !reduced && !desktop.matches) {
+          toured = true;
+          tour(1);
+        }
         schedule();
       },
       { threshold: 0.35 },
@@ -599,7 +623,9 @@ const fixes = [
     cleanup = () => {
       io.disconnect();
       stage.removeEventListener('scroll', onScroll);
+      touchEvents.forEach((ev) => stage.removeEventListener(ev, stopTour));
       clearTimeout(timer);
+      stopTour();
       desktop.removeEventListener('change', onResize);
     };
   });
