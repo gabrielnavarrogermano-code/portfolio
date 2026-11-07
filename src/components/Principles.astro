@@ -263,7 +263,7 @@ const fixes = [
   }
 
   [data-principles].is-auto .pr-tab.is-active .pr-progress {
-    animation: pr-progress var(--cycle, 7s) linear both;
+    animation: pr-progress var(--cycle, 5s) linear both;
   }
 
   @keyframes pr-progress {
@@ -484,8 +484,8 @@ const fixes = [
 </style>
 
 <script>
-  // Tempo de cada princípio na troca automática (a demonstração mais longa termina em ~3,5 s)
-  const CYCLE_MS = 7000;
+  // Tempo de cada princípio na troca automática (a demonstração mais longa termina em ~3,5 s, sobra ~1,5 s para ler)
+  const CYCLE_MS = 5000;
   let cleanup: (() => void) | undefined;
 
   document.addEventListener('astro:page-load', () => {
