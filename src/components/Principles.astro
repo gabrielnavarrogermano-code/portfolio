@@ -1,7 +1,9 @@
 ---
 // "Como eu trabalho": 4 princípios, cada um com uma demonstração animada feita com dados do projeto de notebooks.
-// Computador: abas à esquerda e um palco à direita; as demonstrações passam sozinhas enquanto estão na tela,
-// e um clique escolhe uma (e para a troca automática). Celular: cartões que deslizam para o lado.
+// Computador: abas à esquerda e um palco à direita; a pessoa clica na aba que quer ver.
+// Celular: cartões que a pessoa desliza para o lado.
+// Na primeira vez que o bloco aparece, faz uma varredura rápida (2, 3, 4 e volta ao 1), como alguém passando o mouse,
+// só para mostrar que há mais conteúdo e que dá para clicar; qualquer clique, toque ou tecla interrompe.
 // Sem JS ou com movimento reduzido, cada demonstração já aparece no estado final.
 const principles = [
   {
@@ -47,7 +49,7 @@ const fixes = [
 ---
 
 <div data-principles class="mt-6 grid gap-4 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-6">
-  <!-- Computador: abas com o título e a frase de cada princípio; a barra embaixo mostra o tempo até o próximo -->
+  <!-- Computador: abas com o título e a frase de cada princípio -->
   <div role="tablist" aria-label="Princípios" aria-orientation="vertical" class="hidden flex-col gap-1 md:flex">
     {
       principles.map((p, i) => (
@@ -66,7 +68,6 @@ const fixes = [
             <span class="pr-tab-title font-semibold">{p.title}</span>
           </span>
           <span class="pr-tab-text mt-1 block pl-7 text-sm leading-relaxed text-muted">{p.text}</span>
-          <span class="pr-progress absolute bottom-0 left-0 h-0.5 w-full origin-left bg-heading" aria-hidden="true" />
         </button>
       ))
     }
@@ -255,21 +256,6 @@ const fixes = [
   .pr-tab:focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
-  }
-
-  /* Barra de tempo: só corre na aba ativa enquanto a troca automática está ligada */
-  .pr-progress {
-    transform: scaleX(0);
-  }
-
-  [data-principles].is-auto .pr-tab.is-active .pr-progress {
-    animation: pr-progress var(--cycle, 5s) linear both;
-  }
-
-  @keyframes pr-progress {
-    to {
-      transform: scaleX(1);
-    }
   }
 
   /* Computador: as demonstrações ficam empilhadas no mesmo lugar e só a ativa aparece */
@@ -484,10 +470,10 @@ const fixes = [
 </style>
 
 <script>
-  // Tempo de cada princípio na troca automática (a demonstração mais longa termina em ~3,5 s, sobra ~1,5 s para ler)
-  const CYCLE_MS = 5000;
-  // Celular: tempo em cada cartão na passagem automática da primeira visita
-  const TOUR_MS = 4000;
+  // Varredura inicial: espera antes de começar e tempo em cada aba (no celular um pouco mais, por causa do deslize)
+  const SWEEP_START_MS = 1200;
+  const SWEEP_STEP_MS = 700;
+  const SWEEP_STEP_MOBILE_MS = 900;
   let cleanup: (() => void) | undefined;
 
   document.addEventListener('astro:page-load', () => {
@@ -501,12 +487,9 @@ const fixes = [
     const stage = root.querySelector<HTMLElement>('[data-stage]')!;
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const desktop = matchMedia('(min-width: 48rem)');
-    root.style.setProperty('--cycle', `${CYCLE_MS}ms`);
 
     let current = 0;
-    let auto = !reduced;
     let visible = false;
-    let timer = 0;
 
     // Reinicia a demonstração do painel (tirar e pôr a classe faz as animações rodarem de novo)
     const play = (panel: HTMLElement) => {
@@ -516,42 +499,55 @@ const fixes = [
       panel.classList.add('is-play');
     };
 
-    const select = (i: number, { focus = false } = {}) => {
+    // animate: false mostra a demonstração já no estado final (usado na varredura, para não piscar)
+    const select = (i: number, { focus = false, animate = true } = {}) => {
       current = i;
       tabs.forEach((t, ti) => {
         const on = ti === i;
         t.classList.toggle('is-active', on);
         t.setAttribute('aria-selected', String(on));
         t.tabIndex = on ? 0 : -1;
-        // Reinicia a barra de tempo da aba
-        const bar = t.querySelector<HTMLElement>('.pr-progress');
-        if (on && bar) {
-          bar.style.animation = 'none';
-          void bar.offsetWidth;
-          bar.style.animation = '';
-        }
       });
       panels.forEach((p, pi) => p.classList.toggle('is-active', pi === i));
       dots.forEach((d, di) => d.classList.toggle('is-active', di === i));
-      play(panels[i]);
+      if (animate) play(panels[i]);
+      else panels[i].classList.remove('is-play');
       if (focus) tabs[i].focus();
-      schedule();
     };
 
-    // Troca automática: só no computador, com o bloco na tela e enquanto ninguém escolheu uma aba
-    const schedule = () => {
-      clearTimeout(timer);
-      const on = auto && visible && desktop.matches;
-      root.classList.toggle('is-auto', on);
-      if (on) timer = window.setTimeout(() => select((current + 1) % tabs.length), CYCLE_MS);
+    // Varredura inicial: uma vez só, pausa se o bloco sai da tela e termina de vez quando a pessoa interage
+    let sweepStep = 1;
+    let sweeping = !reduced;
+    let sweepTimer = 0;
+    const centerOn = (i: number) =>
+      stage.scrollTo({ left: panels[i].offsetLeft - (stage.clientWidth - panels[i].offsetWidth) / 2, behavior: 'smooth' });
+    const scheduleSweep = () => {
+      clearTimeout(sweepTimer);
+      if (!sweeping || !visible) return;
+      const wait = sweepStep === 1 ? SWEEP_START_MS : desktop.matches ? SWEEP_STEP_MS : SWEEP_STEP_MOBILE_MS;
+      sweepTimer = window.setTimeout(() => {
+        const i = sweepStep % panels.length;
+        sweepStep++;
+        // Voltou ao primeiro: fim da varredura, e a demonstração dele roda de novo
+        if (i === 0) stopSweep();
+        if (desktop.matches) select(i, { animate: i === 0 });
+        else centerOn(i);
+        scheduleSweep();
+      }, wait);
+    };
+    const stopSweep = () => {
+      sweeping = false;
+      clearTimeout(sweepTimer);
     };
 
     tabs.forEach((t, i) =>
       t.addEventListener('click', () => {
-        auto = false;
+        stopSweep();
         select(i);
       }),
     );
+    const touchEvents = ['pointerdown', 'touchstart'] as const;
+    touchEvents.forEach((ev) => stage.addEventListener(ev, stopSweep, { passive: true }));
 
     // Setas do teclado trocam de aba
     root.querySelector('[role="tablist"]')?.addEventListener('keydown', (e) => {
@@ -559,39 +555,17 @@ const fixes = [
       const step = key === 'ArrowDown' || key === 'ArrowRight' ? 1 : key === 'ArrowUp' || key === 'ArrowLeft' ? -1 : 0;
       if (!step) return;
       e.preventDefault();
-      auto = false;
+      stopSweep();
       select((current + step + tabs.length) % tabs.length, { focus: true });
     });
 
-    // Celular: na primeira vez que o bloco aparece, os cartões passam sozinhos (2, 3, 4) e voltam ao primeiro,
-    // mostrando que dá para deslizar. Tocar, arrastar ou o bloco sair da tela interrompe a passagem.
-    let toured = false;
-    let tourTimer = 0;
-    const centerOn = (i: number) =>
-      stage.scrollTo({ left: panels[i].offsetLeft - (stage.clientWidth - panels[i].offsetWidth) / 2, behavior: 'smooth' });
-    const tour = (step: number) => {
-      tourTimer = window.setTimeout(() => {
-        if (!visible || desktop.matches) return;
-        centerOn(step % panels.length);
-        if (step < panels.length) tour(step + 1);
-      }, TOUR_MS);
-    };
-    const stopTour = () => clearTimeout(tourTimer);
-    const touchEvents = ['pointerdown', 'touchstart', 'wheel'] as const;
-    touchEvents.forEach((ev) => stage.addEventListener(ev, stopTour, { passive: true }));
-
-    // Bloco na tela: liga a troca automática e roda a demonstração atual
+    // Bloco na tela: roda a demonstração atual e segue (ou pausa) a varredura inicial
     const io = new IntersectionObserver(
       ([entry]) => {
         const was = visible;
         visible = entry.isIntersecting;
         if (visible && !was) play(panels[current]);
-        if (!visible) stopTour();
-        if (visible && !was && !toured && !reduced && !desktop.matches) {
-          toured = true;
-          tour(1);
-        }
-        schedule();
+        if (visible !== was) scheduleSweep();
       },
       { threshold: 0.35 },
     );
@@ -612,21 +586,18 @@ const fixes = [
         current = i;
         dots.forEach((d, di) => d.classList.toggle('is-active', di === i));
         panels.forEach((p, pi) => p.classList.toggle('is-active', pi === i));
-        if (visible) play(panels[i]);
+        // Durante a varredura o cartão só aparece no estado final; depois, roda a demonstração
+        if (sweeping) panels[i].classList.remove('is-play');
+        else if (visible) play(panels[i]);
       });
     };
     stage.addEventListener('scroll', onScroll, { passive: true });
 
-    const onResize = () => schedule();
-    desktop.addEventListener('change', onResize);
-
     cleanup = () => {
       io.disconnect();
       stage.removeEventListener('scroll', onScroll);
-      touchEvents.forEach((ev) => stage.removeEventListener(ev, stopTour));
-      clearTimeout(timer);
-      stopTour();
-      desktop.removeEventListener('change', onResize);
+      touchEvents.forEach((ev) => stage.removeEventListener(ev, stopSweep));
+      clearTimeout(sweepTimer);
     };
   });
 </script>

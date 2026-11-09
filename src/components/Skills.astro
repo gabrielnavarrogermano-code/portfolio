@@ -2,7 +2,7 @@
 import SectionTitle from './SectionTitle.astro';
 import Principles from './Principles.astro';
 
-// O que estou estudando agora e para quê: a palavra rola entre os três, e a frase de baixo acompanha
+// O que estou estudando agora e para quê
 const studying = [
   { name: 'SQL', icon: 'sql', why: 'para consultar os dados e montar tabelas direto na fonte.' },
   { name: 'DAX no Power BI', icon: 'pbi', why: 'para aplicar as regras de negócio dentro do Power BI, começando pelo básico.' },
@@ -39,12 +39,11 @@ const icons: Record<string, string> = {
     </div>
     <Principles />
 
-    <!-- Onde pretendo chegar: o objetivo como analista + o que estou estudando agora. A palavra troca sozinha enquanto o cartão está na tela;
-         um clique numa etiqueta escolhe uma e para a troca. Sem JS, mostra a primeira e as três etiquetas. -->
+    <!-- Onde pretendo chegar: o objetivo como analista + o que estou estudando agora -->
     <div data-study data-reveal class="mt-16 overflow-hidden md:mt-20 rounded-2xl border border-line bg-white/[0.03]">
       <div class="p-6 sm:p-8">
         <p class="flex items-center gap-2.5 text-sm text-muted">
-          <span class="study-pulse relative flex h-2 w-2" aria-hidden="true"><span class="h-2 w-2 rounded-full bg-good"></span></span>
+          <span class="h-2 w-2 rounded-full bg-good" aria-hidden="true"></span>
           Onde pretendo chegar
         </p>
         <p class="mt-4 max-w-3xl font-display text-xl leading-snug font-semibold text-heading sm:text-2xl">
@@ -58,203 +57,23 @@ const icons: Record<string, string> = {
       </div>
 
       <div class="border-t border-line p-6 sm:p-8">
-        <p class="text-fg/85 sm:text-lg">
-          Agora estou estudando
-          <span class="study-roll relative block overflow-hidden font-display text-[clamp(1.25rem,6.5vw,2.25rem)] leading-[1.25] font-bold whitespace-nowrap text-heading" aria-live="polite">
-            <span data-roll class="study-track block">
-              {studying.map((s, i) => (
-                <span class="flex h-[1.25em] items-center gap-[0.3em]" aria-hidden={i === 0 ? undefined : 'true'}>
-                  <svg viewBox="0 0 24 24" class="size-[0.85em] flex-none" aria-hidden="true" set:html={icons[s.icon]} />
-                  {s.name}
-                </span>
-              ))}
-            </span>
-          </span>
-        </p>
-        <p class="study-whys mt-2 grid text-fg/70">
-          {studying.map((s, i) => <span data-why class:list={['study-why', i === 0 && 'is-on']}>{s.why}</span>)}
-        </p>
-
-        <div class="mt-6 flex flex-wrap items-center gap-2" role="group" aria-label="O que estou estudando">
+        <p class="text-fg/85 sm:text-lg">Agora estou estudando</p>
+        <ul class="mt-5 grid gap-4 sm:grid-cols-3">
           {
-            studying.map((s, i) => (
-              <button type="button" data-pick={i} aria-pressed={i === 0 ? 'true' : 'false'} class:list={['study-chip relative flex cursor-pointer items-center gap-1.5 overflow-hidden rounded-full border border-line px-3.5 py-1.5 text-sm text-fg/80', i === 0 && 'is-on']}>
-                <svg viewBox="0 0 24 24" class="size-4 flex-none" aria-hidden="true" set:html={icons[s.icon]} />
-                {s.name}
-                <span class="study-chip-bar absolute bottom-0 left-0 h-0.5 w-full origin-left bg-heading" aria-hidden="true" />
-              </button>
+            studying.map((s) => (
+              <li class="rounded-xl border border-line p-4">
+                <p class="flex items-center gap-2 font-display text-lg font-semibold text-heading">
+                  <svg viewBox="0 0 24 24" class="size-5 flex-none" aria-hidden="true" set:html={icons[s.icon]} />
+                  {s.name}
+                </p>
+                <p class="mt-1.5 text-sm text-fg/70">{s.why.charAt(0).toUpperCase() + s.why.slice(1)}</p>
+              </li>
             ))
           }
-        </div>
+        </ul>
 
         <p class="mt-6 text-sm text-muted">O objetivo é que esse caminho vire parte da minha rotina.</p>
       </div>
     </div>
   </div>
 </section>
-
-<style>
-  /* "Onde pretendo chegar": o ponto verde pulsa devagar */
-  .study-pulse::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 9999px;
-    background: var(--color-good);
-    animation: study-pulse 2s ease-out infinite;
-  }
-
-  @keyframes study-pulse {
-    to {
-      transform: scale(3);
-      opacity: 0;
-    }
-  }
-
-  /* Palavra que rola: uma janela da altura de uma linha, e a lista sobe até a palavra escolhida */
-  .study-roll {
-    height: 1.25em;
-  }
-
-  .study-track {
-    transform: translateY(calc(var(--i, 0) * -1.25em));
-    transition: transform 0.6s cubic-bezier(0.7, 0, 0.2, 1);
-  }
-
-  /* Frase do "para quê": as três ocupam o mesmo lugar e só a escolhida aparece */
-  .study-why {
-    grid-area: 1 / 1;
-    opacity: 0;
-    transform: translateY(6px);
-    transition:
-      opacity 0.4s ease,
-      transform 0.4s ease;
-  }
-
-  .study-why.is-on {
-    opacity: 1;
-    transform: none;
-    transition-delay: 0.2s;
-  }
-
-  .study-chip {
-    transition:
-      border-color 0.25s ease,
-      color 0.25s ease,
-      background-color 0.25s ease;
-  }
-
-  .study-chip:hover {
-    color: var(--color-heading);
-  }
-
-  .study-chip.is-on {
-    border-color: color-mix(in srgb, var(--color-heading) 50%, transparent);
-    background: rgb(255 255 255 / 0.06);
-    color: var(--color-heading);
-  }
-
-  .study-chip:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
-  }
-
-  /* Barra de tempo na etiqueta ativa, enquanto a troca automática está ligada */
-  .study-chip-bar {
-    transform: scaleX(0);
-  }
-
-  [data-study].is-auto .study-chip.is-on .study-chip-bar {
-    animation: study-bar var(--cycle, 3.2s) linear both;
-  }
-
-  @keyframes study-bar {
-    to {
-      transform: scaleX(1);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .study-pulse::before {
-      animation: none;
-      opacity: 0;
-    }
-
-    .study-track,
-    .study-why {
-      transition: none;
-    }
-  }
-</style>
-
-<script>
-  const CYCLE_MS = 3200;
-  let cleanup: (() => void) | undefined;
-
-  document.addEventListener('astro:page-load', () => {
-    cleanup?.();
-    const root = document.querySelector<HTMLElement>('[data-study]');
-    if (!root) return;
-
-    const track = root.querySelector<HTMLElement>('[data-roll]')!;
-    const words = [...track.children] as HTMLElement[];
-    const whys = [...root.querySelectorAll<HTMLElement>('[data-why]')];
-    const chips = [...root.querySelectorAll<HTMLButtonElement>('[data-pick]')];
-    root.style.setProperty('--cycle', `${CYCLE_MS}ms`);
-
-    let current = 0;
-    let auto = !matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let visible = false;
-    let timer = 0;
-
-    const show = (i: number) => {
-      current = i;
-      track.style.setProperty('--i', String(i));
-      // Leitor de tela: só a palavra atual é lida
-      words.forEach((w, wi) => w.setAttribute('aria-hidden', String(wi !== i)));
-      whys.forEach((w, wi) => w.classList.toggle('is-on', wi === i));
-      chips.forEach((c, ci) => {
-        const on = ci === i;
-        c.classList.toggle('is-on', on);
-        c.setAttribute('aria-pressed', String(on));
-        // Reinicia a barra de tempo
-        const bar = c.querySelector<HTMLElement>('.study-chip-bar');
-        if (on && bar) {
-          bar.style.animation = 'none';
-          void bar.offsetWidth;
-          bar.style.animation = '';
-        }
-      });
-      schedule();
-    };
-
-    // Troca sozinha só com o cartão na tela e até alguém escolher uma etiqueta
-    const schedule = () => {
-      clearTimeout(timer);
-      const on = auto && visible;
-      root.classList.toggle('is-auto', on);
-      if (on) timer = window.setTimeout(() => show((current + 1) % words.length), CYCLE_MS);
-    };
-
-    chips.forEach((c, i) =>
-      c.addEventListener('click', () => {
-        auto = false;
-        show(i);
-      }),
-    );
-
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        visible = entry.isIntersecting;
-        schedule();
-      },
-      { threshold: 0.5 },
-    );
-    io.observe(root);
-
-    cleanup = () => {
-      io.disconnect();
-      clearTimeout(timer);
-    };
-  });
-</script>

@@ -82,4 +82,4 @@ order: 2                # posição na lista (menor aparece primeiro)
 
 ## Contato
 
-[LinkedIn](https://www.linkedin.com/in/gabriel-navarro-germano/) · gabrielnavarrogermano@gmail.com
+[LinkedIn](https://www.linkedin.com/in/gabrielnavarrogermano/) · gabrielnavarrogermano@gmail.com

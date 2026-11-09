@@ -94,21 +94,6 @@ body {
   opacity: 0.6;
 }
 
-/* Cursor piscando do efeito de digitação */
-.caret {
-  display: inline-block;
-  width: 2px;
-  height: 1em;
-  margin-left: 4px;
-  vertical-align: -0.1em;
-  background: var(--color-accent);
-  animation: blink 1s steps(1) infinite;
-}
-
-@keyframes blink {
-  50% { opacity: 0; }
-}
-
 /* Barra de progresso de leitura na nav */
 .read-progress {
   transform: scaleX(var(--progress, 0));

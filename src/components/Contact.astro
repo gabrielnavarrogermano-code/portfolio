@@ -1,5 +1,6 @@
 ---
 import { site } from '../data/site';
+import { temCurriculo } from '../lib/curriculo';
 ---
 
 <section id="contato" class="render-later mx-auto max-w-5xl px-6 pb-16 [contain-intrinsic-size:auto_550px] sm:pb-24">
@@ -31,6 +32,20 @@ import { site } from '../data/site';
         >
           {site.email}
         </button>
+        {
+          temCurriculo && (
+            <a
+              href={site.curriculo}
+              download="Curriculo-Gabriel-Navarro-Germano.pdf"
+              class="inline-flex items-center gap-2 rounded-full border border-line px-6 py-3 text-sm text-fg transition hover:border-heading/40 hover:text-heading"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4" aria-hidden="true">
+                <path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              Baixar currículo
+            </a>
+          )
+        }
       </div>
 
       <div class="mt-5 flex justify-center gap-6 text-sm">

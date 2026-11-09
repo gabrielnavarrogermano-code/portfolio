@@ -3,8 +3,14 @@ import { site } from '../data/site';
 ---
 
 <footer class="on-black border-t border-line bg-ink">
-  <div class="mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 px-6 py-8 text-sm text-muted sm:flex-row">
+  <div class="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm text-muted sm:flex-row">
     <p>© {new Date().getFullYear()} {site.name}</p>
-    <p class="text-xs">Feito com Astro + Tailwind</p>
+    <div class="flex flex-col items-center gap-x-5 sm:flex-row">
+      <a href={`mailto:${site.email}`} class="py-2 transition hover:text-heading">{site.email}</a>
+      <div class="flex gap-5">
+        <a href={site.linkedin} target="_blank" rel="noopener" class="py-2 transition hover:text-heading">LinkedIn ↗</a>
+        <a href={site.github} target="_blank" rel="noopener" class="py-2 transition hover:text-heading">GitHub ↗</a>
+      </div>
+    </div>
   </div>
 </footer>

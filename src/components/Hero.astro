@@ -2,8 +2,9 @@
 import { Image } from 'astro:assets';
 import foto from '../assets/gabriel.png';
 import { site } from '../data/site';
+import { temCurriculo } from '../lib/curriculo';
 
-const words = ['extração e tratamento de dados', 'pipelines de ETL', 'dashboards e KPIs'];
+const focus = ['Excel', 'Power BI', 'ETL'];
 ---
 
 <section id="inicio" class="hero-grid relative isolate flex min-h-svh flex-col pt-28 pb-8 sm:pt-32">
@@ -28,25 +29,32 @@ const words = ['extração e tratamento de dados', 'pipelines de ETL', 'dashboar
           <span class="mt-3 block text-3xl leading-tight font-bold sm:text-4xl">Análise de Dados & BI</span>
         </h1>
 
-        <p data-reveal style="--delay: 150ms" class="mt-5 min-h-10 font-mono text-sm text-accent sm:min-h-5">
-          <span class="text-muted">foco:</span>{' '}
-          <span id="typed" data-words={JSON.stringify(words)}>{words[0]}</span><span class="caret"></span>
+        <p data-reveal style="--delay: 150ms" class="mt-5 font-mono text-sm text-accent">
+          <span class="text-muted">foco:</span> {focus.join(' · ')}
         </p>
 
         <div data-reveal style="--delay: 250ms" class="mt-10 flex flex-wrap items-center justify-center gap-3">
           <a
-            href="#habilidades"
+            href="#contato"
             class="group inline-flex items-center gap-2 rounded-full bg-heading px-6 py-3 font-medium text-bg transition hover:bg-heading/80"
           >
-            Ver como trabalho
+            Entre em contato
             <span class="transition-transform group-hover:translate-x-1">→</span>
           </a>
-          <a
-            href="#contato"
-            class="inline-flex items-center rounded-full border border-line bg-bg px-6 py-3 font-medium text-heading transition hover:border-heading/40 hover:bg-heading/5"
-          >
-            Entre em contato
-          </a>
+          {
+            temCurriculo && (
+              <a
+                href={site.curriculo}
+                download="Curriculo-Gabriel-Navarro-Germano.pdf"
+                class="inline-flex items-center gap-2 rounded-full border border-line bg-bg px-6 py-3 font-medium text-heading transition hover:border-heading/40 hover:bg-heading/5"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4" aria-hidden="true">
+                  <path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                Currículo
+              </a>
+            )
+          }
           <a
             href={site.linkedin}
             target="_blank"
@@ -80,7 +88,7 @@ const words = ['extração e tratamento de dados', 'pipelines de ETL', 'dashboar
     <a
       href="#apresentacao"
       aria-label="Rolar para a apresentação"
-      class="mx-auto mt-8 inline-flex h-10 w-10 items-center justify-center rounded-full text-muted transition hover:text-heading motion-safe:animate-bounce"
+      class="mx-auto mt-8 inline-flex h-10 w-10 items-center justify-center rounded-full text-muted transition hover:text-heading"
     >
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-5 w-5" aria-hidden="true">
         <path d="M12 5v14M5 12l7 7 7-7" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -88,54 +96,3 @@ const words = ['extração e tratamento de dados', 'pipelines de ETL', 'dashboar
     </a>
   </div>
 </section>
-
-<script>
-  let timer: number | undefined;
-  let observer: IntersectionObserver | undefined;
-
-  function initHero() {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    // Efeito de digitação
-    const typed = document.getElementById('typed');
-    if (!typed) return;
-    const words: string[] = JSON.parse(typed.dataset.words ?? '[]');
-    let w = 0;
-    let i = words[0].length;
-    let deleting = true;
-    let visible = true;
-    const tick = () => {
-      if (!visible) return;
-      const word = words[w];
-      i += deleting ? -1 : 1;
-      typed.textContent = word.slice(0, i);
-      let delay = deleting ? 45 : 90;
-      if (!deleting && i === word.length) {
-        deleting = true;
-        delay = 1800;
-      } else if (deleting && i === 0) {
-        deleting = false;
-        w = (w + 1) % words.length;
-        delay = 300;
-      }
-      timer = window.setTimeout(tick, delay);
-    };
-
-    // Fora da tela não digita: cada letra faz o navegador recalcular a página
-    let started = false;
-    observer?.disconnect();
-    observer = new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting;
-      clearTimeout(timer);
-      if (visible) timer = window.setTimeout(tick, started ? 300 : 2000);
-      started = true;
-    });
-    observer.observe(typed);
-  }
-
-  document.addEventListener('astro:page-load', initHero);
-  document.addEventListener('astro:before-swap', () => {
-    clearTimeout(timer);
-    observer?.disconnect();
-  });
-</script>
