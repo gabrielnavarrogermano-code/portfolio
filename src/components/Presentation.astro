@@ -2,74 +2,36 @@
 import CardToggle from './CardToggle.astro';
 import SectionTitle from './SectionTitle.astro';
 
-// Atividades do estágio, curtas o bastante para virar tags
-const experience = ['Infraestrutura de redes', 'Diagnóstico e reparo de hardware'];
-
-const tools = ['Kanban', 'SharePoint', 'Microsoft 365 Admin', 'Entra ID'];
+const tools = ['Microsoft 365 Admin', 'Entra ID', 'SharePoint', 'Kanban'];
 
 // Progresso do curso: atualize o semestre a cada período
 const semester = 2;
 const totalSemesters = 8;
-
-// Card "gabriel.py": a apresentação escrita como um dicionário Python
-const profile: [string, string | string[]][] = [
-  ['curso', 'Engenharia de Software'],
-  ['semestre', `${semester}º de ${totalSemesters}`],
-  ['foco', ['Inteligência de Dados', 'Análise de Dados']],
-  ['estudando', ['SQL', 'DAX no Power BI', 'Data storytelling']],
-  ['busca', ['Estágio em Dados', 'Júnior em Dados']],
-];
 ---
 
 <section id="apresentacao" class="mx-auto max-w-5xl px-6 py-16 sm:py-24">
-  <div class="grid grid-cols-1 gap-12 lg:grid-cols-5">
-    <div class="lg:col-span-2">
-      <div class="lg:sticky lg:top-28">
-        <SectionTitle title="Prazer, Gabriel" />
+  <SectionTitle title="Prazer, Gabriel" />
 
-        <div data-reveal style="--delay: 100ms" class="mt-8 overflow-hidden rounded-2xl border border-line bg-white/[0.03]">
-          <div class="flex items-center gap-1.5 border-b border-line px-4 py-3">
-            <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
-            <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
-            <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
-            <span class="ml-2 font-mono text-xs text-muted">gabriel.py</span>
-          </div>
-          <!-- Cores no estilo do tema GitHub Dark do VS Code: comentário cinza, variável laranja, strings azul-claro e colchetes coloridos por nível -->
-          <pre class="overflow-x-auto p-4 font-mono text-[11px] leading-relaxed text-[#c9d1d9] sm:p-5 sm:text-[13px]"><code><span class="text-[#8b949e]"># do negócio real a respostas confiáveis</span>
-<span class="text-[#ffa657]">gabriel</span> = <span class="text-[#79c0ff]">{'{'}</span>
-{
-  profile.map(([key, value]) => (
-    <Fragment>
-      {'  '}<span class="text-[#a5d6ff]">"{key}"</span>: {typeof value === 'string' ? (
-        <Fragment><span class="text-[#a5d6ff]">"{value}"</span>,{'\n'}</Fragment>
-      ) : (
-        <Fragment><span class="text-[#56d364]">[</span>{'\n'}{value.map((v) => (
-          <Fragment>{'    '}<span class="text-[#a5d6ff]">"{v}"</span>,{'\n'}</Fragment>
-        ))}{'  '}<span class="text-[#56d364]">]</span>,{'\n'}</Fragment>
-      )}
-    </Fragment>
-  ))
-}<span class="text-[#79c0ff]">{'}'}</span></code></pre>
-        </div>
-      </div>
-    </div>
-
-    <div class="lg:col-span-3">
+  <!-- Computador: o texto à esquerda e, ao lado, os cards de Formação e Experiência. Celular: tudo em uma coluna -->
+  <div class="mt-8 grid grid-cols-1 gap-6 sm:mt-10 lg:grid-cols-2 lg:gap-12">
+    <div>
       <article data-reveal>
-        <p class="leading-relaxed text-fg/85">
+        <p class="leading-relaxed text-fg/85 sm:text-lg">
           Eu cresci em uma família de empreendedores, tanto meu pai quanto meu avô. Acompanhar esse processo de gestão
           de perto me fez querer entender o que poderia melhorar em um negócio. Sempre fui alguém com uma certa
           facilidade com números, só precisava descobrir onde poderia aplicá-los em uma empresa. Foi na faculdade que a
           análise de dados se mostrou um caminho para isso.
         </p>
-        <p class="mt-4 leading-relaxed text-fg/85">
+        <p class="mt-4 leading-relaxed text-fg/85 sm:text-lg">
           Hoje sou estagiário de TI em uma indústria farmacêutica. Atendendo chamados e cuidando de acessos, busco
           entender de perto como cada área trabalha e do que ela precisa para seguir em frente. Foi ali que entendi que
           um dado só faz sentido quando ajuda alguém a resolver algum problema.
         </p>
       </article>
+    </div>
 
-      <div class="mt-6 grid grid-cols-1 gap-3 sm:mt-8 md:grid-cols-2 md:gap-6 lg:grid-cols-1">
+    <div>
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-6 lg:grid-cols-1">
         <article data-reveal data-collapse style="--delay: 100ms" class="rounded-2xl border border-line p-5 transition-colors max-sm:data-open:border-heading/30 max-sm:data-open:bg-white/[0.03] sm:p-6">
           <div class="relative max-sm:pr-8">
             <p class="text-sm text-accent">Formação</p>
@@ -102,24 +64,13 @@ const profile: [string, string | string[]][] = [
             <CardToggle label="Experiência atual: ver detalhes" target="experiencia-detalhes" />
           </div>
           <div id="experiencia-detalhes" data-collapse-body>
-            <p class="mt-4 leading-relaxed text-fg/85">
-              Meu dia a dia consiste em resolver chamados de helpdesk, gerenciar permissões e acessos de usuários na empresa
-              e documentar processos operacionais padrão.
-            </p>
             <a
               href="/projetos/controle-de-notebooks/"
-              class="group mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent"
+              class="group mt-4 inline-flex items-center gap-1 text-sm font-medium text-accent"
             >
               Ver o projeto de controle de notebooks
               <span class="transition-transform group-hover:translate-x-1">→</span>
             </a>
-            <ul class="mt-5 flex flex-wrap gap-2">
-              {
-                experience.map((item) => (
-                  <li class="rounded-full border border-line px-3.5 py-1.5 text-sm text-fg/85">{item}</li>
-                ))
-              }
-            </ul>
             <ul class="mt-4 flex flex-wrap gap-2" aria-label="Ferramentas">
               {
                 tools.map((t) => (
