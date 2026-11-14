@@ -14,6 +14,7 @@
   --color-fg: #e8eaee;
   --color-muted: #a3a6ae;
   --color-accent: #4c86ff;
+  --color-ice: #e8f0ff; /* branco-gelo: o tom da luz do horizonte, usado na capa e no botão Contato do menu */
 
   /* Cores do dashboard de notebooks (só nele; o site continua preto e branco).
      viz-1/viz-2: dados normais, duas séries (validadas para daltonismo no fundo escuro).
@@ -115,7 +116,7 @@ body {
 
 /* Capa: o branco puro vira um branco-gelo levemente azulado, do mesmo tom da luz do horizonte */
 .hero-ice {
-  --color-heading: #e8f0ff;
+  --color-heading: var(--color-ice);
 }
 
 /* Horizonte da capa: o preto desce para o azul até uma linha de luz e volta ao preto na emenda com a
