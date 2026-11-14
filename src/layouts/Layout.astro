@@ -36,7 +36,6 @@ const image = new URL('/og.png', Astro.site);
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={image} />
-    <script is:inline>document.documentElement.classList.add('js');</script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -51,27 +50,12 @@ const image = new URL('/og.png', Astro.site);
     <noscript><link href="https://fonts.googleapis.com/css2?family=Tektur:wdth,wght@75..100,400..900&family=Geist:wght@400..700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" /></noscript>
     <title>{title}</title>
     <ClientRouter />
-    <noscript><style>[data-reveal] { opacity: 1; }</style></noscript>
   </head>
   <body class="min-h-screen font-sans text-fg antialiased">
     <slot />
 
     <script>
-      // Revela elementos [data-reveal] ao entrar na tela
       document.addEventListener('astro:page-load', () => {
-        const io = new IntersectionObserver(
-          (entries) => {
-            for (const entry of entries) {
-              if (entry.isIntersecting) {
-                entry.target.classList.add('is-visible');
-                io.unobserve(entry.target);
-              }
-            }
-          },
-          { threshold: 0.1, rootMargin: '0px 0px -12% 0px' },
-        );
-        document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
-
         // Desenha uma seção adiada por vez quando o navegador está ocioso, para não travar ao chegar nela rolando
         const later = [...document.querySelectorAll('.render-later')];
         const idle = window.requestIdleCallback ?? ((fn: () => void) => setTimeout(fn, 200));

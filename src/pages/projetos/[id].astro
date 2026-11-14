@@ -28,15 +28,15 @@ const minutes = Math.max(1, Math.ceil((p.body ?? '').split(/\s+/).length / 200))
         <span class="transition-transform group-hover:-translate-x-1">←</span> Voltar aos projetos
       </a>
 
-      <p data-reveal class="mt-8 text-sm text-accent">
+      <p class="mt-8 text-sm text-accent">
         {p.data.kind} <span class="text-muted">· {minutes} min de leitura</span>
       </p>
-      <h1 data-reveal style="--delay: 80ms" class="mt-3 max-w-3xl text-4xl font-bold tracking-tight text-heading sm:text-5xl">
+      <h1 class="mt-3 max-w-3xl text-4xl font-bold tracking-tight text-heading sm:text-5xl">
         {p.data.title}
       </h1>
-      <p data-reveal style="--delay: 160ms" class="mt-4 max-w-2xl text-lg text-muted">{p.data.summary}</p>
+      <p class="mt-4 max-w-2xl text-lg text-muted">{p.data.summary}</p>
 
-      <div data-reveal style="--delay: 240ms" class="mt-8 flex flex-wrap items-center gap-2">
+      <div class="mt-8 flex flex-wrap items-center gap-2">
         <span class="text-sm text-muted">{p.data.tools.join(' · ')}</span>
         {
           p.data.dashboard && (

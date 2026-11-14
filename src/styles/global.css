@@ -5,7 +5,8 @@
   --font-display: "Tektur", "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
 
-  /* Fundo preto e texto branco como base; o azul aparece só nos destaques (links, foco, progresso, hover). Sem degradês. */
+  /* Fundo preto e texto branco como base; o azul aparece nos destaques (links, foco, progresso, hover)
+     e no horizonte da capa, o único degradê do site. */
   --color-bg: #0a0a0b;
   --color-ink: #0a0a0b;
   --color-heading: #ffffff;
@@ -54,39 +55,37 @@ h3 {
   letter-spacing: 0.005em;
 }
 
-/* Título da capa: entra estreito e se alarga até a largura final, uma vez, quando a fonte carrega */
-.hero-title {
-  font-stretch: 100%;
+/* Lanterna de cor: só a região debaixo do mouse muda de cor; ao sair, a luz se apaga.
+   Título: branco, acende em azul. Focos: o inverso, azuis, acendem em branco.
+   O script do Hero atualiza a posição (--fx, --fy) e liga a classe .is-lit. */
+@property --spot-r {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
 }
 
-/* Se o script não rodar, o título aparece sozinho depois de 2,5 s */
-.js .hero-title:not(.is-in) {
-  opacity: 0;
-  animation: hero-failsafe 0s 2.5s forwards;
+[data-fill] {
+  background: radial-gradient(circle var(--spot-r) at var(--fx, 50%) var(--fy, 50%), var(--paint) 45%, var(--base) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  transition: --spot-r 0.25s ease-out;
 }
 
-@keyframes hero-failsafe {
-  to {
-    opacity: 1;
-  }
+[data-fill].is-lit {
+  --spot-r: var(--spot);
 }
 
-.hero-title.is-in {
-  animation: hero-stretch 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+.hero-title[data-fill] {
+  --base: var(--color-heading);
+  --paint: var(--color-accent);
+  --spot: 90px;
 }
 
-@keyframes hero-stretch {
-  from {
-    opacity: 0;
-    font-stretch: 75%;
-  }
-  40% {
-    opacity: 1;
-  }
-  to {
-    opacity: 1;
-    font-stretch: 100%;
-  }
+.hero-focus-items[data-fill] {
+  --base: var(--color-accent);
+  --paint: var(--color-heading);
+  --spot: 40px;
 }
 
 :focus-visible {
@@ -104,20 +103,9 @@ html {
   color: var(--color-bg);
 }
 
-/* Elementos que aparecem ao rolar a página: só um fade */
 html,
 body {
   overflow-x: clip;
-}
-
-[data-reveal] {
-  opacity: 0;
-  transition: opacity 0.6s ease;
-  transition-delay: var(--delay, 0ms);
-}
-
-[data-reveal].is-visible {
-  opacity: 1;
 }
 
 /* Seções fora da tela ficam para depois da abertura; o Layout as libera quando o navegador está ocioso */
@@ -125,16 +113,63 @@ body {
   content-visibility: auto;
 }
 
-/* Textura de pontos no fundo da capa (pontos sólidos, sem degradê visível) */
-.hero-grid::before {
+/* Capa: o branco puro vira um branco-gelo levemente azulado, do mesmo tom da luz do horizonte */
+.hero-ice {
+  --color-heading: #e8f0ff;
+}
+
+/* Horizonte da capa: o preto desce para o azul até uma linha de luz e volta ao preto na emenda com a
+   seção seguinte. O texto fica todo sobre o preto. O brilho (.horizon-glow) segue o mouse na horizontal;
+   o script do Hero atualiza --gx. */
+.horizon {
+  --gx: 50%;
+  background: linear-gradient(
+    180deg,
+    #0a0a0b 0%,
+    #0a0a0b 50%,
+    #050c26 68%,
+    #0a2470 80%,
+    #1846c4 88%,
+    #3a74ea 92.5%,
+    #1a3f9e 96%,
+    #0a0a0b 100%
+  );
+}
+
+/* Brilho sobre a linha do horizonte: um azul mais claro e difuso no ponto do cursor, apagando para os lados.
+   Sem branco: o ponto mais claro continua sendo azul, em harmonia com o degradê.
+   ::before é o halo largo; ::after é o miolo, um pouco mais concentrado. */
+.horizon-glow {
+  position: absolute;
+  bottom: 7.5%;
+  left: 0;
+  width: min(80vw, 760px);
+  height: 64px;
+  transform: translate(calc(var(--gx) - 50%), 50%);
+}
+
+.horizon-glow::before,
+.horizon-glow::after {
   content: "";
   position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image: radial-gradient(circle, var(--color-line) 1px, transparent 1.5px);
-  background-size: 28px 28px;
-  opacity: 0.6;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-radius: 9999px;
+}
+
+.horizon-glow::before {
+  height: 56px;
+  margin-top: -28px;
+  background: linear-gradient(90deg, transparent, rgb(90 140 250 / 0.55) 50%, transparent);
+  filter: blur(18px);
+}
+
+.horizon-glow::after {
+  height: 10px;
+  margin-top: -5px;
+  background: linear-gradient(90deg, transparent, rgb(120 165 255 / 0.6) 50%, transparent);
+  filter: blur(4px);
 }
 
 /* Barra de progresso de leitura na nav */
@@ -258,12 +293,6 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-  }
-
-  [data-reveal] {
-    opacity: 1;
-    transform: none;
-    filter: none;
   }
 }
 

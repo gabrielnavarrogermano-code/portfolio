@@ -7,7 +7,12 @@ import { temCurriculo } from '../lib/curriculo';
 const focus = ['Excel', 'Power BI', 'ETL'];
 ---
 
-<section id="inicio" class="hero-grid relative isolate flex min-h-svh flex-col pt-28 pb-8 sm:pt-32">
+<section id="inicio" class="hero-ice relative isolate flex min-h-svh flex-col pt-28 pb-8 sm:pt-32">
+  <!-- Horizonte: céu de estrelas no preto, descendo para o azul até uma linha de luz que segue o mouse -->
+  <div data-horizon aria-hidden="true" class="horizon pointer-events-none absolute inset-0 overflow-hidden" style="z-index: -1">
+    <canvas data-stars class="absolute inset-0 h-full w-full"></canvas>
+    <div class="horizon-glow"></div>
+  </div>
   <div class="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6">
     <div class="flex flex-1 flex-col items-center justify-center text-center">
       <Image
@@ -26,14 +31,14 @@ const focus = ['Excel', 'Power BI', 'ETL'];
           <span class="block font-sans text-base font-medium tracking-normal text-muted sm:text-lg">
             Gabriel Navarro Germano
           </span>
-          <span class="hero-title mt-4 block text-4xl leading-[1.05] font-bold text-balance sm:text-5xl">Análise de Dados & BI</span>
+          <span data-fill class="hero-title mt-4 inline-block text-4xl leading-[1.05] font-bold text-balance sm:text-5xl">Análise de Dados & BI</span>
         </h1>
 
-        <p data-reveal style="--delay: 150ms" class="mt-5 font-mono text-sm text-accent">
-          <span class="text-muted">foco:</span> {focus.join(' · ')}
+        <p class="mt-5 font-mono text-sm">
+          <span class="text-muted">foco:</span> <span data-fill class="hero-focus-items">{focus.join(' · ')}</span>
         </p>
 
-        <div data-reveal style="--delay: 250ms" class="mt-10 flex flex-wrap items-center justify-center gap-3">
+        <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
           <a
             href="#contato"
             class="group inline-flex items-center gap-2 rounded-full bg-heading px-6 py-3 font-medium text-bg transition hover:bg-accent"
@@ -88,7 +93,7 @@ const focus = ['Excel', 'Power BI', 'ETL'];
     <a
       href="#apresentacao"
       aria-label="Rolar para a apresentação"
-      class="mx-auto mt-8 inline-flex h-10 w-10 items-center justify-center rounded-full text-muted transition hover:text-heading"
+      class="mx-auto mt-8 inline-flex h-10 w-10 items-center justify-center rounded-full text-heading transition hover:bg-heading/10"
     >
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-5 w-5" aria-hidden="true">
         <path d="M12 5v14M5 12l7 7 7-7" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -98,14 +103,146 @@ const focus = ['Excel', 'Power BI', 'ETL'];
 </section>
 
 <script>
-  // Título da capa: espera a fonte Tektur (até 1,2 s) e então roda a animação de largura
+  // Título e focos: só a região debaixo do mouse muda de cor (lanterna).
+  // Horizonte: a faixa de luz acompanha o mouse na horizontal, com um leve atraso; sem mouse (ou com ele parado
+  // há 3 s), passeia devagar sozinha.
+  // Estrelas: pequenas e esparsas, somem perto do horizonte; algumas cintilam devagar. Ficam em 3 camadas que
+  // deslizam ao contrário do mouse (as mais próximas mais), dando profundidade.
+  // Tudo para quando a capa sai da tela; quem pediu menos movimento vê as estrelas e a faixa paradas.
+  type Star = { x: number; y: number; r: number; a: number; depth: number; tw: number; phase: number };
+  const STAR_COLOR = '232, 240, 255'; // branco-gelo, o mesmo tom da luz do horizonte
+  const PARALLAX = 18; // deslocamento máximo (px) da camada mais próxima
+
+  let controller: AbortController | undefined;
+
   document.addEventListener('astro:page-load', () => {
-    const title = document.querySelector('.hero-title');
-    if (!title) return;
-    const start = () => title.classList.add('is-in');
-    Promise.race([
-      document.fonts.load('700 1em Tektur'),
-      new Promise((resolve) => setTimeout(resolve, 1200)),
-    ]).then(start, start);
+    controller?.abort();
+    controller = new AbortController();
+    const { signal } = controller;
+
+    const hero = document.getElementById('inicio');
+    if (!hero) return;
+
+    hero.querySelectorAll<HTMLElement>('[data-fill]').forEach((el) => {
+      el.addEventListener(
+        'pointermove',
+        (e) => {
+          if (e.pointerType !== 'mouse') return;
+          const r = el.getBoundingClientRect();
+          el.style.setProperty('--fx', `${e.clientX - r.left}px`);
+          el.style.setProperty('--fy', `${e.clientY - r.top}px`);
+          el.classList.add('is-lit');
+        },
+        { signal },
+      );
+      el.addEventListener('pointerleave', () => el.classList.remove('is-lit'), { signal });
+    });
+
+    const horizon = hero.querySelector<HTMLElement>('[data-horizon]');
+    const canvas = hero.querySelector<HTMLCanvasElement>('canvas[data-stars]');
+    const ctx = canvas?.getContext('2d');
+    if (!horizon || !canvas || !ctx) return;
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    let w = 0;
+    let h = 0;
+    let stars: Star[] = [];
+
+    // Mais estrelas no topo; a chance cai até zero a 70% da altura (a atmosfera apaga as estrelas)
+    const makeStars = () => {
+      const list: Star[] = [];
+      const tries = Math.round((w * h) / 2600);
+      for (let i = 0; i < tries; i++) {
+        const y = Math.random() * h * 0.7;
+        if (Math.random() > (1 - y / (h * 0.7)) ** 1.4) continue;
+        const depth = [0.3, 0.6, 1][Math.floor(Math.random() * 3)];
+        list.push({
+          x: Math.random() * (w + PARALLAX * 2) - PARALLAX,
+          y,
+          r: 0.4 + depth * 0.6 + Math.random() * 0.4,
+          a: 0.25 + Math.random() * 0.6,
+          depth,
+          tw: Math.random() < 0.15 ? 0.6 + Math.random() * 0.8 : 0,
+          phase: Math.random() * Math.PI * 2,
+        });
+      }
+      stars = list;
+    };
+
+    const draw = (now: number, ox: number, oy: number) => {
+      ctx.clearRect(0, 0, w, h);
+      for (const s of stars) {
+        const twinkle = s.tw ? 0.55 + 0.45 * Math.sin((now / 1000) * s.tw + s.phase) : 1;
+        const fade = 1 - Math.min(1, s.y / (h * 0.7)) ** 2; // apaga ao descer para o horizonte
+        ctx.fillStyle = `rgba(${STAR_COLOR}, ${(s.a * twinkle * fade).toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(s.x + ox * s.depth, s.y + oy * s.depth, s.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = hero.clientWidth;
+      h = hero.clientHeight;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      makeStars();
+      if (still) draw(0, 0, 0);
+    };
+    const ro = new ResizeObserver(resize);
+    ro.observe(hero);
+    signal.addEventListener('abort', () => ro.disconnect());
+
+    if (still) return;
+
+    let gx = hero.clientWidth / 2;
+    let mouseX = gx;
+    let mouseY = hero.clientHeight / 2;
+    let lastMove = -Infinity;
+    let px = 0; // deslocamento suavizado das estrelas
+    let py = 0;
+    let raf = 0;
+    let visible = true;
+
+    const frame = (now: number) => {
+      raf = 0;
+      const active = now - lastMove < 3000;
+      const target = active ? mouseX : w / 2 + Math.sin(now / 2600) * w * 0.3;
+      gx += (target - gx) * 0.06;
+      horizon.style.setProperty('--gx', `${gx.toFixed(1)}px`);
+
+      const tx = active ? -((mouseX / w) * 2 - 1) * PARALLAX : 0;
+      const ty = active ? -((mouseY / h) * 2 - 1) * PARALLAX * 0.5 : 0;
+      px += (tx - px) * 0.05;
+      py += (ty - py) * 0.05;
+      draw(now, px, py);
+
+      if (visible) raf = requestAnimationFrame(frame);
+    };
+
+    hero.addEventListener(
+      'pointermove',
+      (e) => {
+        if (e.pointerType !== 'mouse') return;
+        const r = hero.getBoundingClientRect();
+        mouseX = e.clientX - r.left;
+        mouseY = e.clientY - r.top;
+        lastMove = performance.now();
+      },
+      { signal },
+    );
+
+    const io = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (visible && !raf) raf = requestAnimationFrame(frame);
+    });
+    io.observe(hero);
+
+    signal.addEventListener('abort', () => {
+      io.disconnect();
+      cancelAnimationFrame(raf);
+    });
   });
 </script>

@@ -14,7 +14,7 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
   <div class="mt-12 grid gap-5 md:grid-cols-2">
     {
       projetos.map((p, i) => (
-        <div data-reveal style={`--delay: ${i * 100}ms`} class:list={['flex flex-col', i === 0 && projetos.length % 2 === 1 && 'md:col-span-2']}>
+        <div class:list={['flex flex-col', i === 0 && projetos.length % 2 === 1 && 'md:col-span-2']}>
           <h3 class="text-xl font-semibold text-heading">O problema</h3>
           <p class="mt-2 max-w-2xl leading-relaxed text-fg/85">{p.data.problem}</p>
 
