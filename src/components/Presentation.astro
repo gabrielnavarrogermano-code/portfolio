@@ -1,6 +1,7 @@
 ---
 import CardToggle from './CardToggle.astro';
 import SectionTitle from './SectionTitle.astro';
+import BgWord from './BgWord.astro';
 
 const tools = ['Microsoft 365 Admin', 'Entra ID', 'SharePoint', 'Kanban'];
 
@@ -9,7 +10,8 @@ const semester = 2;
 const totalSemesters = 8;
 ---
 
-<section id="apresentacao" class="mx-auto max-w-5xl px-6 py-16 sm:py-24">
+<section id="apresentacao" class="relative isolate mx-auto max-w-5xl px-6 pt-32 pb-16 sm:pt-44 sm:pb-24">
+  <BgWord word="SOBRE" />
   <SectionTitle title="Prazer, Gabriel" />
 
   <!-- Computador: o texto à esquerda e, ao lado, os cards de Formação e Experiência. Celular: tudo em uma coluna -->
@@ -66,7 +68,7 @@ const totalSemesters = 8;
           <div id="experiencia-detalhes" data-collapse-body>
             <a
               href="/projetos/controle-de-notebooks/"
-              class="group mt-4 inline-flex items-center gap-1 text-sm font-medium text-accent"
+              class="group mt-4 inline-flex items-center gap-1 text-sm font-medium text-link"
             >
               Ver o projeto de controle de notebooks
               <span class="transition-transform group-hover:translate-x-1">→</span>

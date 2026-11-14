@@ -5,16 +5,20 @@
   --font-display: "Tektur", "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
 
-  /* Fundo preto e texto branco como base; o azul aparece nos destaques (links, foco, progresso, hover)
-     e no horizonte da capa, o único degradê do site. */
+  /* Fundo preto e texto branco como base, com duas cores de papéis bem separados:
+     - accent (lima neon): o que deve chamar atenção (focos, números, traços, progresso, foco do teclado);
+     - link (azul-escuro): só o que é clicável (texto de links); link-strong é o fundo azul do hover dos botões.
+     Atrás da capa, um céu de estrelas. */
   --color-bg: #0a0a0b;
   --color-ink: #0a0a0b;
   --color-heading: #ffffff;
   --color-line: #2a2b30;
   --color-fg: #e8eaee;
   --color-muted: #a3a6ae;
-  --color-accent: #4c86ff;
-  --color-ice: #e8f0ff; /* branco-gelo: o tom da luz do horizonte, usado na capa e no botão Contato do menu */
+  --color-accent: #c8ff3a;
+  --color-link: #4a74f0;
+  --color-link-strong: #2f5bdb;
+  --color-ice: #f4f4f2; /* branco da capa e do botão Contato do menu: um branco neutro, um pouco menos duro que o puro */
 
   /* Cores do dashboard de notebooks (só nele; o site continua preto e branco).
      viz-1/viz-2: dados normais, duas séries (validadas para daltonismo no fundo escuro).
@@ -34,7 +38,9 @@
   --color-fg: #2a2e36;
   --color-muted: #5a5f6b;
   --color-line: #e3e5e9;
-  --color-accent: #1f5bff;
+  --color-accent: #4d7c0f; /* lima escuro: o neon some sobre o branco */
+  --color-link: #2445c4;
+  --color-link-strong: #2445c4;
 }
 
 /* Blocos pretos (menu e rodapé) */
@@ -42,7 +48,9 @@
   --color-heading: #ffffff;
   --color-fg: #e8eaee;
   --color-muted: #a3a6ae;
-  --color-accent: #4c86ff;
+  --color-accent: #c8ff3a;
+  --color-link: #4a74f0;
+  --color-link-strong: #2f5bdb;
   --color-bg: #0a0a0b;
   --color-line: #2a2b30;
 }
@@ -114,63 +122,22 @@ body {
   content-visibility: auto;
 }
 
-/* Capa: o branco puro vira um branco-gelo levemente azulado, do mesmo tom da luz do horizonte */
+/* Capa: o branco puro vira o branco neutro do --color-ice */
 .hero-ice {
   --color-heading: var(--color-ice);
 }
 
-/* Horizonte da capa: o preto desce para o azul até uma linha de luz e volta ao preto na emenda com a
-   seção seguinte. O texto fica todo sobre o preto. O brilho (.horizon-glow) segue o mouse na horizontal;
-   o script do Hero atualiza --gx. */
-.horizon {
-  --gx: 50%;
-  background: linear-gradient(
-    180deg,
-    #0a0a0b 0%,
-    #0a0a0b 50%,
-    #050c26 68%,
-    #0a2470 80%,
-    #1846c4 88%,
-    #3a74ea 92.5%,
-    #1a3f9e 96%,
-    #0a0a0b 100%
-  );
-}
-
-/* Brilho sobre a linha do horizonte: um azul mais claro e difuso no ponto do cursor, apagando para os lados.
-   Sem branco: o ponto mais claro continua sendo azul, em harmonia com o degradê.
-   ::before é o halo largo; ::after é o miolo, um pouco mais concentrado. */
-.horizon-glow {
-  position: absolute;
-  bottom: 7.5%;
-  left: 0;
-  width: min(80vw, 760px);
-  height: 64px;
-  transform: translate(calc(var(--gx) - 50%), 50%);
-}
-
-.horizon-glow::before,
-.horizon-glow::after {
+/* Menu: a seção em que a pessoa está ganha um pontinho lima antes do nome */
+[data-nav-link][aria-current="location"]::before {
   content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 8px;
   border-radius: 9999px;
-}
-
-.horizon-glow::before {
-  height: 56px;
-  margin-top: -28px;
-  background: linear-gradient(90deg, transparent, rgb(90 140 250 / 0.55) 50%, transparent);
-  filter: blur(18px);
-}
-
-.horizon-glow::after {
-  height: 10px;
-  margin-top: -5px;
-  background: linear-gradient(90deg, transparent, rgb(120 165 255 / 0.6) 50%, transparent);
-  filter: blur(4px);
+  background: var(--color-accent);
+  vertical-align: middle;
+  transform: translateY(-1px);
 }
 
 /* Barra de progresso de leitura na nav */
@@ -238,7 +205,7 @@ body {
 }
 
 .prose-case a {
-  color: var(--color-accent);
+  color: var(--color-link);
   text-decoration: underline;
   text-underline-offset: 3px;
 }

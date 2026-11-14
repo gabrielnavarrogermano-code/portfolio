@@ -1,26 +1,39 @@
 ---
-// "Como eu trabalho": 4 princípios, cada um com uma demonstração animada feita com dados do projeto de notebooks.
-// Computador: abas à esquerda e um palco à direita; a pessoa clica na aba que quer ver.
-// Celular: cartões que a pessoa desliza para o lado.
-// Na primeira vez que o bloco aparece, faz uma varredura rápida (2, 3, 4 e volta ao 1), como alguém passando o mouse,
-// só para mostrar que há mais conteúdo e que dá para clicar; qualquer clique, toque ou tecla interrompe.
-// Sem JS ou com movimento reduzido, cada demonstração já aparece no estado final.
+// "Como eu trabalho": 4 princípios num baralho. Cada princípio é um cartão (título, frase e uma demonstração
+// animada com dados do projeto de notebooks).
+// Os cartões começam deitados uns sobre os outros em 3D (como uma pilha de roupas dobradas). Quando o baralho está
+// bem visível, a pilha fica parada um instante, para a pessoa ver os cartões de lado, e então se levanta devagar até
+// virar um baralho de frente: o 01 na frente e os outros levemente girados atrás.
+// Na primeira vez, o baralho passa sozinho pelos 4 cartões e volta ao 01; qualquer clique ou toque interrompe.
+// Clicar no cartão da frente (ou no botão "Próximo princípio") manda ele para o fundo e traz o próximo, que roda
+// a sua demonstração. Depois do último cartão, o baralho se deita de volta na pilha e espera um novo clique. Sem JS ou com movimento reduzido, o baralho já aparece montado e as demonstrações no estado final.
+// result: o resultado concreto de cada princípio no projeto (os mesmos números das demonstrações).
+// tone: fundo do cartão, um grafite cada vez mais claro, do quase preto (01) ao cinza-chumbo (04); no baralho e na
+// pilha deitada, as bordas formam uma escada de cinzas.
 const principles = [
   {
     title: 'Começo pela pergunta, não pela planilha',
     text: 'É a decisão que o número vai apoiar que define quais dados entram na base.',
+    result: '2 colunas novas na base',
+    tone: 'linear-gradient(160deg, #0b0b0c 35%, #141416 100%)',
   },
   {
     title: 'Toda regra fica escrita',
     text: 'Duas pessoas olhando a mesma base precisam chegar no mesmo número.',
+    result: '1 notebook, não 2',
+    tone: 'linear-gradient(160deg, #0c0c0e 30%, #19191c 100%)',
   },
   {
     title: 'O dashboard mostra o que precisa de ação',
     text: 'Um total sozinho não diz se está bom ou ruim. Meta e status dizem.',
+    result: '84,9% da meta, faltam 11',
+    tone: 'linear-gradient(160deg, #0d0d0f 25%, #1f1f23 100%)',
   },
   {
     title: 'A IA acelera, eu decido',
     text: 'A IA cuida do repetitivo. A regra e o significado de cada número são comigo.',
+    result: '3 setores padronizados, 1 regra definida por mim',
+    tone: 'linear-gradient(160deg, #0e0e10 20%, #27272c 100%)',
   },
 ];
 
@@ -48,52 +61,25 @@ const fixes = [
 ];
 ---
 
-<div data-principles class="mt-6 grid gap-4 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-6">
-  <!-- Computador: abas com o título e a frase de cada princípio -->
-  <div role="tablist" aria-label="Princípios" aria-orientation="vertical" class="hidden flex-col gap-1 md:flex">
-    {
-      principles.map((p, i) => (
-        <button
-          type="button"
-          role="tab"
-          id={`pr-tab-${i}`}
-          aria-controls={`pr-panel-${i}`}
-          aria-selected={i === 0 ? 'true' : 'false'}
-          tabindex={i === 0 ? 0 : -1}
-          data-tab={i}
-          class:list={['pr-tab relative cursor-pointer overflow-hidden rounded-xl border px-4 py-3.5 text-left', i === 0 && 'is-active']}
-        >
-          <span class="flex items-baseline gap-3">
-            <span class="font-mono text-xs text-muted">0{i + 1}</span>
-            <span class="pr-tab-title font-semibold">{p.title}</span>
-          </span>
-          <span class="pr-tab-text mt-1 block pl-7 text-sm leading-relaxed text-muted">{p.text}</span>
-        </button>
-      ))
-    }
-  </div>
-
-  <!-- Palco: no computador, uma demonstração por vez no mesmo lugar; no celular, cartões lado a lado -->
-  <div data-stage class="pr-stage relative -mx-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-2 md:mx-0 md:grid md:overflow-visible md:p-0">
-    {
-      principles.map((p, i) => (
-        <section
-          role="tabpanel"
-          id={`pr-panel-${i}`}
-          aria-labelledby={`pr-tab-${i}`}
-          data-panel={i}
-          class:list={['pr-panel flex w-[85%] flex-none snap-center flex-col rounded-2xl border border-line p-5 sm:w-[70%] md:w-auto md:p-6', i === 0 && 'is-active']}
-        >
-          <!-- Celular: o título vai no próprio cartão, porque as abas ficam escondidas -->
-          <div class="md:hidden">
-            <p class="font-mono text-xs text-muted">0{i + 1}</p>
-            <h3 class="mt-1.5 font-semibold text-heading">{p.title}</h3>
-            <p class="mt-1 text-sm leading-relaxed text-muted">{p.text}</p>
+<div data-principles class="mx-auto mt-10 max-w-3xl">
+  <div data-deck class="pr-deck grid pt-14">
+  {
+    principles.map((p, i) => (
+      <article data-card={i} class="pr-card" style={`--k: ${i}`} aria-label={`Princípio ${i + 1} de ${principles.length}: ${p.title}`}>
+        <div class="pr-card-inner relative grid gap-6 rounded-3xl border border-white/10 p-6 sm:p-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10" style={`--card-bg: ${p.tone}`}>
+          <!-- Número no canto: é a parte que aparece atrás no baralho, então mostra qual cartão vem a seguir -->
+          <span class="pr-corner absolute top-3 right-4 font-mono text-[11px] text-heading/70" aria-hidden="true">0{i + 1}</span>
+          <div class="flex flex-col">
+            <p class="font-display text-5xl leading-none font-bold text-accent sm:text-6xl" aria-hidden="true">0{i + 1}</p>
+            <h3 class="mt-6 text-2xl leading-tight font-bold text-heading sm:text-3xl">{p.title}</h3>
+            <p class="mt-3 leading-relaxed text-fg/80">{p.text}</p>
+            <p class="mt-auto flex items-start gap-3 pt-6 font-display text-lg leading-snug font-bold text-heading">
+              <span class="mt-1.5 h-4 w-1 flex-none rounded-full bg-accent" aria-hidden="true"></span>
+              {p.result}
+            </p>
           </div>
 
-          <p class="mt-5 text-xs tracking-wide text-fg/60 uppercase md:mt-0">Exemplo real · controle de notebooks</p>
-
-          <div class="pr-demo mt-3 flex min-h-64 flex-1 flex-col justify-center rounded-xl border border-line bg-white/[0.02] p-4 sm:p-5" aria-hidden="true">
+          <div class="pr-demo flex min-h-64 flex-col justify-center rounded-2xl border border-white/10 bg-black/40 p-4 sm:p-5" aria-hidden="true">
             {i === 0 && (
               <div>
                 <p class="d-pop inline-block rounded-2xl rounded-bl-sm bg-heading px-4 py-2.5 text-sm font-medium text-bg">
@@ -213,84 +199,125 @@ const fixes = [
               </div>
             )}
           </div>
-        </section>
-      ))
-    }
+        </div>
+      </article>
+    ))
+  }
   </div>
 
-  <!-- Celular: pontos que mostram qual cartão está na tela -->
-  <div class="flex justify-center gap-2 md:hidden" aria-hidden="true">
-    {principles.map((_, i) => <span data-dot={i} class:list={['pr-dot h-1.5 w-1.5 rounded-full', i === 0 && 'is-active']} />)}
+  <button
+    type="button"
+    data-open
+    class="pr-open mx-auto mt-8 cursor-pointer items-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm font-medium text-heading transition hover:border-link hover:bg-link-strong/15"
+  >
+    Clique na pilha para ver os princípios
+  </button>
+
+  <div class="pr-controls mt-8 flex flex-wrap items-center justify-between gap-4">
+    <p class="text-sm text-muted" aria-live="polite">
+      <span data-count class="font-mono text-heading">1</span> de {principles.length}
+      <span class="hidden sm:inline">· clique no cartão para ver o próximo</span>
+    </p>
+    <button
+      type="button"
+      data-next
+      class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm font-medium text-heading transition hover:border-link hover:bg-link-strong/15"
+    >
+      Próximo princípio
+    </button>
   </div>
 </div>
 
 <style>
-  /* Abas */
-  .pr-tab {
-    border-color: transparent;
+  /* ---------- Baralho ----------
+     Todos os cartões ocupam a mesma célula do grid. --k é a posição no baralho (0 = na frente):
+     quanto mais atrás, mais deslocado, girado e escuro. */
+  .pr-deck {
+    perspective: 1800px;
+  }
+
+  .pr-card {
+    grid-area: 1 / 1;
+    z-index: calc(10 - var(--k));
+    transform-origin: 50% 100%;
+    transform: translate(calc(var(--k) * 14px), calc(var(--k) * -11px)) rotate(calc(var(--k) * -1.6deg));
+    filter: brightness(calc(1 - var(--k) * 0.2));
     transition:
-      background-color 0.25s ease,
-      border-color 0.25s ease;
+      transform 1.1s cubic-bezier(0.45, 0, 0.25, 1),
+      filter 1.1s ease,
+      opacity 0.45s ease;
+    transition-delay: var(--delay, 0s);
   }
 
-  .pr-tab:hover {
-    background: rgb(255 255 255 / 0.03);
+  /* Pilha se levantando: mais lento, um cartão de cada vez (--delay vem do script) */
+  .pr-deck.is-rising .pr-card {
+    transition-duration: 1.6s, 1.2s, 0.45s;
   }
 
-  .pr-tab-title {
-    color: var(--color-fg);
-    opacity: 0.7;
-    transition: opacity 0.25s ease;
+  .pr-card[data-front] {
+    cursor: pointer;
   }
 
-  .pr-tab.is-active {
-    border-color: var(--color-line);
-    background: rgb(255 255 255 / 0.04);
+  .pr-corner {
+    transition: opacity 0.4s ease;
   }
 
-  .pr-tab.is-active .pr-tab-title {
-    color: var(--color-heading);
-    opacity: 1;
+  .pr-card[data-front] .pr-corner {
+    opacity: 0;
   }
 
-  .pr-tab:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
+  .pr-card-inner {
+    height: 100%;
+    background: var(--card-bg, #0e0f13);
+    box-shadow: 0 24px 48px -24px rgb(0 0 0 / 0.9);
   }
 
-  /* Computador: as demonstrações ficam empilhadas no mesmo lugar e só a ativa aparece */
-  @media (min-width: 48rem) {
-    .pr-panel {
-      grid-area: 1 / 1;
-      transition:
-        opacity 0.35s ease,
-        visibility 0.35s;
-    }
+  /* Começo: deitados uns sobre os outros em 3D, vistos de lado, como uma pilha de roupas dobradas (o 01 por cima) */
+  .pr-deck.is-pile .pr-card {
+    transform: translateY(calc(var(--k) * 26px - 200px)) rotateX(62deg) rotateZ(-24deg) scale(0.62);
+    filter: brightness(calc(1 - var(--k) * 0.12));
+  }
 
-    .pr-panel:not(.is-active) {
-      visibility: hidden;
-      opacity: 0;
+  /* Celular: cartões altos, então a pilha fica menor e menos girada para caber na tela */
+  @media (max-width: 47.99rem) {
+    .pr-deck.is-pile .pr-card {
+      transform: translate(30px, calc(var(--k) * 20px - 260px)) rotateX(60deg) rotateZ(-14deg) scale(0.55);
     }
   }
 
-  .pr-stage {
-    scrollbar-width: none;
+  /* Descarte: o cartão da frente é jogado para o lado, girando, sem sumir; depois o script manda ele para o fundo
+     e ele desliza de volta por baixo dos outros (a transição normal do .pr-card) */
+  /* Vai longe o bastante para sair de cima do baralho: assim, quando passa para o fundo, nada some de repente */
+  .pr-card.is-out {
+    transform: translate(calc(100% + 40px), -24px) rotate(9deg);
+    transition: transform 0.6s cubic-bezier(0.3, 0.7, 0.3, 1);
   }
 
-  .pr-stage::-webkit-scrollbar {
+  /* Pilha deitada: aparece só o convite para abrir; contador e botão surgem depois que o baralho se monta */
+  .pr-deck.is-pile .pr-card {
+    cursor: pointer;
+  }
+
+  .pr-open {
     display: none;
   }
 
-  .pr-dot {
-    background: var(--color-line);
-    transition:
-      background-color 0.25s ease,
-      width 0.25s ease;
+  .pr-deck.is-pile ~ .pr-open {
+    display: flex;
   }
 
-  .pr-dot.is-active {
-    width: 1rem;
-    background: var(--color-heading);
+  .pr-deck.is-pile ~ .pr-controls {
+    display: none;
+  }
+
+  .pr-controls {
+    animation: pr-fade 0.6s ease 1.6s both;
+  }
+
+  @keyframes pr-fade {
+    from {
+      opacity: 0;
+    }
   }
 
   /* ---------- Demonstrações ----------
@@ -461,143 +488,182 @@ const fixes = [
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .pr-panel,
-    .pr-tab,
-    .pr-dot {
+    .pr-card {
       transition: none;
     }
   }
 </style>
 
 <script>
-  // Varredura inicial: espera antes de começar e tempo em cada aba (no celular um pouco mais, por causa do deslize)
-  const SWEEP_START_MS = 1200;
-  const SWEEP_STEP_MS = 700;
-  const SWEEP_STEP_MOBILE_MS = 900;
+  // Tempos da entrada e da passagem automática (ms)
+  const PILE_HOLD_MS = 1200; // pilha parada de lado antes de se levantar
+  const RISE_STAGGER_S = 0.18; // intervalo entre os cartões ao se levantarem
+  const RISE_MS = 2300; // até o último cartão terminar de se levantar
+  const OUT_MS = 600; // cartão sendo jogado para o lado antes de deslizar para o fundo
+  const LAY_DOWN_WAIT_MS = 700; // depois do último cartão, espera o descarte assentar antes de deitar a pilha
+  const AUTO_STEP_MS = 4800; // tempo em cada cartão na passagem automática (dá para ver a demonstração)
+  // Interruptores (teste): a pilha só se levanta quando a pessoa clica nela, e sem passagem automática.
+  // Para voltar ao comportamento anterior (levanta sozinha ao aparecer e passa pelos cartões), troque os dois.
+  const START_ON_CLICK = true;
+  const AUTO_PLAY = false;
   let cleanup: (() => void) | undefined;
 
   document.addEventListener('astro:page-load', () => {
     cleanup?.();
     const root = document.querySelector<HTMLElement>('[data-principles]');
-    if (!root) return;
+    const deck = root?.querySelector<HTMLElement>('[data-deck]');
+    if (!root || !deck) return;
 
-    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-tab]')];
-    const panels = [...root.querySelectorAll<HTMLElement>('[data-panel]')];
-    const dots = [...root.querySelectorAll<HTMLElement>('[data-dot]')];
-    const stage = root.querySelector<HTMLElement>('[data-stage]')!;
+    const cards = [...deck.querySelectorAll<HTMLElement>('[data-card]')];
+    const count = root.querySelector<HTMLElement>('[data-count]');
+    const nextBtn = root.querySelector<HTMLButtonElement>('[data-next]');
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const desktop = matchMedia('(min-width: 48rem)');
+    const timers: number[] = [];
+    const later = (fn: () => void, ms: number) => timers.push(window.setTimeout(fn, ms));
 
-    let current = 0;
-    let visible = false;
+    // order[posição] = índice do cartão; posição 0 é a frente
+    const order = cards.map((_, i) => i);
 
-    // Reinicia a demonstração do painel (tirar e pôr a classe faz as animações rodarem de novo)
-    const play = (panel: HTMLElement) => {
+    // Reinicia a demonstração do cartão (tirar e pôr a classe faz as animações rodarem de novo)
+    const play = (card: HTMLElement) => {
       if (reduced) return;
-      panel.classList.remove('is-play');
-      void panel.offsetWidth;
-      panel.classList.add('is-play');
+      card.classList.remove('is-play');
+      void card.offsetWidth;
+      card.classList.add('is-play');
     };
 
-    // animate: false mostra a demonstração já no estado final (usado na varredura, para não piscar)
-    const select = (i: number, { focus = false, animate = true } = {}) => {
-      current = i;
-      tabs.forEach((t, ti) => {
-        const on = ti === i;
-        t.classList.toggle('is-active', on);
-        t.setAttribute('aria-selected', String(on));
-        t.tabIndex = on ? 0 : -1;
+    const apply = () => {
+      cards.forEach((card, i) => {
+        const k = order.indexOf(i);
+        card.style.setProperty('--k', String(k));
+        card.toggleAttribute('data-front', k === 0);
+        // Só o cartão da frente é lido por leitores de tela
+        card.setAttribute('aria-hidden', String(k !== 0));
       });
-      panels.forEach((p, pi) => p.classList.toggle('is-active', pi === i));
-      dots.forEach((d, di) => d.classList.toggle('is-active', di === i));
-      if (animate) play(panels[i]);
-      else panels[i].classList.remove('is-play');
-      if (focus) tabs[i].focus();
+      if (count) count.textContent = String(order[0] + 1);
+      // No último cartão, o botão avisa que o próximo passo é guardar o baralho
+      if (nextBtn) nextBtn.textContent = START_ON_CLICK && order[0] === cards.length - 1 ? 'Voltar à pilha' : 'Próximo princípio';
     };
 
-    // Varredura inicial: uma vez só, pausa se o bloco sai da tela e termina de vez quando a pessoa interage
-    let sweepStep = 1;
-    let sweeping = !reduced;
-    let sweepTimer = 0;
-    const centerOn = (i: number) =>
-      stage.scrollTo({ left: panels[i].offsetLeft - (stage.clientWidth - panels[i].offsetWidth) / 2, behavior: 'smooth' });
-    const scheduleSweep = () => {
-      clearTimeout(sweepTimer);
-      if (!sweeping || !visible) return;
-      const wait = sweepStep === 1 ? SWEEP_START_MS : desktop.matches ? SWEEP_STEP_MS : SWEEP_STEP_MOBILE_MS;
-      sweepTimer = window.setTimeout(() => {
-        const i = sweepStep % panels.length;
-        sweepStep++;
-        // Voltou ao primeiro: fim da varredura, e a demonstração dele roda de novo
-        if (i === 0) stopSweep();
-        if (desktop.matches) select(i, { animate: i === 0 });
-        else centerOn(i);
-        scheduleSweep();
-      }, wait);
-    };
-    const stopSweep = () => {
-      sweeping = false;
-      clearTimeout(sweepTimer);
+    let busy = false;
+    let started = false;
+    let ready = false; // baralho já montado
+
+    // Fim do baralho: depois do último cartão, os cartões se deitam de volta na pilha de lado (na ordem inversa
+    // da subida: os de trás primeiro, o 01 por último) e a pilha volta a esperar um clique
+    const layDown = () => {
+      busy = true;
+      ready = false;
+      later(() => {
+        cards.forEach((c, i) => c.style.setProperty('--delay', `${(cards.length - 1 - order.indexOf(i)) * RISE_STAGGER_S}s`));
+        deck.classList.add('is-rising', 'is-pile');
+        later(() => {
+          cards.forEach((c) => c.style.removeProperty('--delay'));
+          deck.classList.remove('is-rising');
+          started = false;
+          busy = false;
+        }, RISE_MS);
+      }, LAY_DOWN_WAIT_MS);
     };
 
-    tabs.forEach((t, i) =>
-      t.addEventListener('click', () => {
-        stopSweep();
-        select(i);
+    const next = () => {
+      if (busy) return;
+      busy = true;
+      const wasLast = START_ON_CLICK && !reduced && order[0] === cards.length - 1;
+      const front = cards[order[0]];
+      front.classList.add('is-out');
+      // A demonstração do próximo já começa enquanto o de cima é jogado, para ele não aparecer pronto e reiniciar
+      if (!wasLast) play(cards[order[1]]);
+      later(
+        () => {
+          order.push(order.shift()!);
+          front.classList.remove('is-out');
+          apply();
+          busy = false;
+          if (wasLast) layDown();
+        },
+        reduced ? 0 : OUT_MS,
+      );
+    };
+
+    // Passagem automática: só na primeira vez, pausa fora da tela e para de vez em qualquer interação
+    let auto = AUTO_PLAY && !reduced;
+    let autoSteps = 0;
+    let autoTimer = 0;
+    let visible = false;
+    const scheduleAuto = () => {
+      clearTimeout(autoTimer);
+      if (!auto || !visible || !ready) return;
+      autoTimer = window.setTimeout(() => {
+        next();
+        autoSteps++;
+        // Deu a volta e voltou ao 01: fim da passagem automática
+        if (autoSteps >= cards.length) auto = false;
+        scheduleAuto();
+      }, AUTO_STEP_MS);
+    };
+    const stopAuto = () => {
+      auto = false;
+      clearTimeout(autoTimer);
+    };
+
+    cards.forEach((card) =>
+      card.addEventListener('click', () => {
+        if (deck.classList.contains('is-pile')) return rise(0);
+        if (!card.hasAttribute('data-front')) return;
+        stopAuto();
+        next();
       }),
     );
-    const touchEvents = ['pointerdown', 'touchstart'] as const;
-    touchEvents.forEach((ev) => stage.addEventListener(ev, stopSweep, { passive: true }));
-
-    // Setas do teclado trocam de aba
-    root.querySelector('[role="tablist"]')?.addEventListener('keydown', (e) => {
-      const key = (e as KeyboardEvent).key;
-      const step = key === 'ArrowDown' || key === 'ArrowRight' ? 1 : key === 'ArrowUp' || key === 'ArrowLeft' ? -1 : 0;
-      if (!step) return;
-      e.preventDefault();
-      stopSweep();
-      select((current + step + tabs.length) % tabs.length, { focus: true });
+    nextBtn?.addEventListener('click', () => {
+      stopAuto();
+      next();
     });
+    deck.addEventListener('pointerdown', stopAuto, { passive: true });
+    apply();
 
-    // Bloco na tela: roda a demonstração atual e segue (ou pausa) a varredura inicial
+    // Entrada: começa deitado. Com START_ON_CLICK, só se levanta no clique; senão, sozinho quando está bem visível
+    const below = deck.getBoundingClientRect().top > window.innerHeight * 0.6;
+    if (!reduced && (START_ON_CLICK || below)) deck.classList.add('is-pile');
+
+    const rise = (hold: number) => {
+      if (started) return;
+      started = true;
+      if (!deck.classList.contains('is-pile')) {
+        ready = true;
+        play(cards[order[0]]);
+        scheduleAuto();
+        return;
+      }
+      later(() => {
+        cards.forEach((c, i) => c.style.setProperty('--delay', `${order.indexOf(i) * RISE_STAGGER_S}s`));
+        deck.classList.add('is-rising');
+        deck.classList.remove('is-pile');
+        later(() => {
+          cards.forEach((c) => c.style.removeProperty('--delay'));
+          deck.classList.remove('is-rising');
+          ready = true;
+          play(cards[order[0]]);
+          scheduleAuto();
+        }, RISE_MS);
+      }, hold);
+    };
+    root.querySelector('[data-open]')?.addEventListener('click', () => rise(0));
+
     const io = new IntersectionObserver(
       ([entry]) => {
-        const was = visible;
         visible = entry.isIntersecting;
-        if (visible && !was) play(panels[current]);
-        if (visible !== was) scheduleSweep();
+        if (visible && !started && !START_ON_CLICK) rise(PILE_HOLD_MS);
+        else scheduleAuto();
       },
-      { threshold: 0.35 },
+      { threshold: 0.6 },
     );
-    io.observe(root);
-
-    // Celular: o cartão que está no centro da faixa é o ativo e roda a sua demonstração
-    // (o mais perto do centro da faixa, conferido a cada rolagem, no máximo uma vez por quadro)
-    let ticking = false;
-    const onScroll = () => {
-      if (ticking || desktop.matches) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        ticking = false;
-        const center = stage.scrollLeft + stage.clientWidth / 2;
-        const dist = panels.map((p) => Math.abs(p.offsetLeft + p.offsetWidth / 2 - center));
-        const i = dist.indexOf(Math.min(...dist));
-        if (i === current) return;
-        current = i;
-        dots.forEach((d, di) => d.classList.toggle('is-active', di === i));
-        panels.forEach((p, pi) => p.classList.toggle('is-active', pi === i));
-        // Durante a varredura o cartão só aparece no estado final; depois, roda a demonstração
-        if (sweeping) panels[i].classList.remove('is-play');
-        else if (visible) play(panels[i]);
-      });
-    };
-    stage.addEventListener('scroll', onScroll, { passive: true });
+    io.observe(deck);
 
     cleanup = () => {
       io.disconnect();
-      stage.removeEventListener('scroll', onScroll);
-      touchEvents.forEach((ev) => stage.removeEventListener(ev, stopSweep));
-      clearTimeout(sweepTimer);
+      timers.forEach(clearTimeout);
+      clearTimeout(autoTimer);
     };
   });
 </script>

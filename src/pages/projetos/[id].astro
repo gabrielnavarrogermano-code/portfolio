@@ -40,14 +40,14 @@ const minutes = Math.max(1, Math.ceil((p.body ?? '').split(/\s+/).length / 200))
         <span class="text-sm text-muted">{p.data.tools.join(' · ')}</span>
         {
           p.data.dashboard && (
-            <a href={p.data.dashboard} target="_blank" rel="noopener" class="ml-2 text-sm text-accent hover:underline">
+            <a href={p.data.dashboard} target="_blank" rel="noopener" class="ml-2 text-sm text-link hover:underline">
               Ver dashboard ↗
             </a>
           )
         }
         {
           p.data.repo && (
-            <a href={p.data.repo} target="_blank" rel="noopener" class="ml-2 text-sm text-accent hover:underline">
+            <a href={p.data.repo} target="_blank" rel="noopener" class="ml-2 text-sm text-link hover:underline">
               Código ↗
             </a>
           )

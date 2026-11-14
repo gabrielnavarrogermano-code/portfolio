@@ -1,11 +1,13 @@
 ---
 import { getCollection } from 'astro:content';
 import SectionTitle from './SectionTitle.astro';
+import BgWord from './BgWord.astro';
 
 const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order - b.data.order);
 ---
 
-<section id="projetos" class="render-later mx-auto max-w-5xl px-6 py-16 [contain-intrinsic-size:auto_640px] sm:py-24">
+<section id="projetos" class="render-later relative isolate mx-auto max-w-5xl px-6 pt-32 pb-16 [contain-intrinsic-size:auto_640px] sm:pt-44 sm:pb-24">
+  <BgWord word="PROJETOS" />
   <SectionTitle
     title="Dados que viram decisão"
     subtitle="Na empresa onde estou, o volume de dados ainda é pequeno. Achei que era a hora certa de organizar as informações, antes que isso virasse um problema."
@@ -22,20 +24,20 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
           <div class="mt-5 ml-4 flex flex-1 sm:ml-8">
             <a
               href={`/projetos/${p.id}/`}
-              class="group flex w-full max-w-3xl flex-col rounded-2xl border border-line bg-bg p-5 transition-colors hover:border-accent/40 sm:p-6"
+              class="group flex w-full max-w-3xl flex-col rounded-2xl border border-line bg-bg p-5 transition-colors hover:border-link/60 sm:p-6"
             >
               <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                <h4 class="text-lg font-semibold text-heading transition-colors group-hover:text-accent sm:text-xl">
+                <h4 class="text-lg font-semibold text-heading transition-colors group-hover:text-link sm:text-xl">
                   {p.data.title}
                 </h4>
-                <span class="flex-none rounded-full border border-line px-2 py-0.5 text-xs text-muted">{p.data.kind}</span>
+                <span class="flex-none rounded-full border border-accent/50 px-2 py-0.5 text-xs text-accent">{p.data.kind}</span>
               </div>
 
               <p class="mt-2 leading-relaxed text-muted">{p.data.summary}</p>
 
               <div class="mt-auto flex flex-wrap items-center justify-between gap-x-6 gap-y-2 pt-4 text-sm">
                 <p class="text-muted">{p.data.tools.join(' · ')}</p>
-                <span class="inline-flex items-center gap-1 font-medium text-accent">
+                <span class="inline-flex items-center gap-1 font-medium text-link">
                   Ler estudo de caso
                   <span class="transition-transform group-hover:translate-x-1">→</span>
                 </span>

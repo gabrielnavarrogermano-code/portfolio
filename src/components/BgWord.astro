@@ -1,0 +1,64 @@
+---
+// Palavra gigante no fundo de uma seção: Tektur só com o contorno, quase transparente, da largura da tela.
+// Fica presa dentro da própria seção (nunca aparece na seção anterior): começa no topo dela e, depois que a seção
+// passa do topo da tela, anda mais devagar que o conteúdo (parallax), dando profundidade.
+// É cenário: fica escondida de leitores de tela e não recebe cliques.
+// A seção que a usa precisa de `relative isolate` e de espaço em cima (padding) para a palavra.
+interface Props {
+  word: string;
+}
+
+const { word } = Astro.props;
+---
+
+<div class="bg-word pointer-events-none absolute inset-y-0 left-1/2 -z-10 w-screen -translate-x-1/2 select-none" style={`--len: ${[...word].length}`} aria-hidden="true">
+  <span data-bg-word class="block pt-6 text-center font-display leading-[0.85] font-bold whitespace-nowrap sm:pt-8">{word}</span>
+</div>
+
+<style>
+  /* A caixa ocupa a seção inteira e corta o que sair dela: a palavra nunca invade outra seção */
+  .bg-word {
+    overflow: clip;
+  }
+
+  /* Tamanho pela quantidade de letras (--len), para palavras curtas e longas ocuparem a largura da tela */
+  .bg-word span {
+    font-size: min(19rem, calc(150vw / var(--len)));
+    color: transparent;
+    -webkit-text-stroke: 1.5px rgb(255 255 255 / 0.075);
+    will-change: transform;
+  }
+</style>
+
+<script>
+  // Quanto a palavra "atrasa" em relação ao conteúdo (0 = acompanha, 1 = parada na tela)
+  const LAG = 0.3;
+  let cleanup: (() => void) | undefined;
+
+  document.addEventListener('astro:page-load', () => {
+    cleanup?.();
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const words = [...document.querySelectorAll<HTMLElement>('[data-bg-word]')];
+    if (!words.length) return;
+
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const vh = window.innerHeight;
+      for (const el of words) {
+        const top = el.parentElement!.getBoundingClientRect().top;
+        if (top > vh || top < -vh * 2) continue; // longe da tela: não mexe
+        // Só anda depois que o topo da seção passa do topo da tela; antes disso, fica parada no topo da seção
+        el.style.transform = `translate3d(0, ${(Math.max(0, -top) * LAG).toFixed(1)}px, 0)`;
+      }
+    };
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    update();
+    cleanup = () => window.removeEventListener('scroll', onScroll);
+  });
+</script>

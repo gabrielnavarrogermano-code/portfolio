@@ -1,4 +1,7 @@
 ---
+// Título de seção: grande, em Tektur, e entra uma vez só quando chega na tela, subindo de trás de uma
+// linha invisível; a frase de apoio aparece logo depois. Títulos que já estão na tela ao abrir a página,
+// sem JS ou com movimento reduzido, aparecem direto.
 interface Props {
   title: string;
   subtitle?: string;
@@ -7,7 +10,57 @@ interface Props {
 const { title, subtitle } = Astro.props;
 ---
 
-<div class="max-w-2xl">
-  <h2 class="text-3xl font-semibold tracking-tight text-heading sm:text-4xl">{title}</h2>
-  {subtitle && <p class="mt-3 text-lg text-muted">{subtitle}</p>}
+<div data-title-reveal class="max-w-3xl">
+  <h2 class="overflow-hidden pb-1 text-4xl leading-[1.05] font-bold text-heading sm:text-5xl md:text-6xl">
+    <span class="title-line block">{title}</span>
+  </h2>
+  {subtitle && <p class="title-sub mt-4 max-w-2xl text-lg text-muted">{subtitle}</p>}
 </div>
+
+<style>
+  .title-line {
+    transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .title-sub {
+    transition:
+      opacity 0.6s ease 0.3s,
+      transform 0.6s ease 0.3s;
+  }
+
+  .is-armed .title-line {
+    transform: translateY(110%);
+  }
+
+  .is-armed .title-sub {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+</style>
+
+<script>
+  let io: IntersectionObserver | undefined;
+
+  document.addEventListener('astro:page-load', () => {
+    io?.disconnect();
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.classList.remove('is-armed');
+          io?.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.4 },
+    );
+
+    // Só esconde (e anima depois) o que ainda está abaixo da tela
+    document.querySelectorAll<HTMLElement>('[data-title-reveal]').forEach((el) => {
+      if (el.getBoundingClientRect().top < window.innerHeight * 0.9) return;
+      el.classList.add('is-armed');
+      io?.observe(el);
+    });
+  });
+</script>
