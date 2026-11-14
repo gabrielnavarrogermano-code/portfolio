@@ -26,7 +26,7 @@ const focus = ['Excel', 'Power BI', 'ETL'];
           <span class="block font-sans text-base font-medium tracking-normal text-muted sm:text-lg">
             Gabriel Navarro Germano
           </span>
-          <span class="mt-3 block text-3xl leading-tight font-bold sm:text-4xl">Análise de Dados & BI</span>
+          <span class="hero-title mt-4 block text-4xl leading-[1.05] font-bold text-balance sm:text-5xl">Análise de Dados & BI</span>
         </h1>
 
         <p data-reveal style="--delay: 150ms" class="mt-5 font-mono text-sm text-accent">
@@ -36,7 +36,7 @@ const focus = ['Excel', 'Power BI', 'ETL'];
         <div data-reveal style="--delay: 250ms" class="mt-10 flex flex-wrap items-center justify-center gap-3">
           <a
             href="#contato"
-            class="group inline-flex items-center gap-2 rounded-full bg-heading px-6 py-3 font-medium text-bg transition hover:bg-heading/80"
+            class="group inline-flex items-center gap-2 rounded-full bg-heading px-6 py-3 font-medium text-bg transition hover:bg-accent"
           >
             Entre em contato
             <span class="transition-transform group-hover:translate-x-1">→</span>
@@ -46,7 +46,7 @@ const focus = ['Excel', 'Power BI', 'ETL'];
               <a
                 href={site.curriculo}
                 download="Curriculo-Gabriel-Navarro-Germano.pdf"
-                class="inline-flex items-center gap-2 rounded-full border border-line bg-bg px-6 py-3 font-medium text-heading transition hover:border-heading/40 hover:bg-heading/5"
+                class="inline-flex items-center gap-2 rounded-full border border-line bg-bg px-6 py-3 font-medium text-heading transition hover:border-accent/60 hover:bg-accent/10"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4" aria-hidden="true">
                   <path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14" stroke-linecap="round" stroke-linejoin="round" />
@@ -60,7 +60,7 @@ const focus = ['Excel', 'Power BI', 'ETL'];
             target="_blank"
             rel="noopener"
             aria-label="LinkedIn"
-            class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-line bg-bg text-muted transition hover:border-heading/40 hover:text-heading"
+            class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-line bg-bg text-muted transition hover:border-accent/60 hover:text-heading"
           >
             <svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
               <path
@@ -73,7 +73,7 @@ const focus = ['Excel', 'Power BI', 'ETL'];
             target="_blank"
             rel="noopener"
             aria-label="GitHub"
-            class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-line bg-bg text-muted transition hover:border-heading/40 hover:text-heading"
+            class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-line bg-bg text-muted transition hover:border-accent/60 hover:text-heading"
           >
             <svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
               <path
@@ -96,3 +96,16 @@ const focus = ['Excel', 'Power BI', 'ETL'];
     </a>
   </div>
 </section>
+
+<script>
+  // Título da capa: espera a fonte Tektur (até 1,2 s) e então roda a animação de largura
+  document.addEventListener('astro:page-load', () => {
+    const title = document.querySelector('.hero-title');
+    if (!title) return;
+    const start = () => title.classList.add('is-in');
+    Promise.race([
+      document.fonts.load('700 1em Tektur'),
+      new Promise((resolve) => setTimeout(resolve, 1200)),
+    ]).then(start, start);
+  });
+</script>
