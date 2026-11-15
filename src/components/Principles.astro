@@ -66,7 +66,7 @@ const fixes = [
   {
     principles.map((p, i) => (
       <article data-card={i} class="pr-card" style={`--k: ${i}`} aria-label={`Princípio ${i + 1} de ${principles.length}: ${p.title}`}>
-        <div class="pr-card-inner relative grid gap-6 rounded-3xl border border-white/10 p-6 sm:p-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10" style={`--card-bg: ${p.tone}`}>
+        <div class="pr-card-inner on-black relative grid gap-6 rounded-3xl border border-white/10 p-6 sm:p-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10" style={`--card-bg: ${p.tone}`}>
           <!-- Número no canto: é a parte que aparece atrás no baralho, então mostra qual cartão vem a seguir -->
           <span class="pr-corner absolute top-3 right-4 font-mono text-[11px] text-heading/70" aria-hidden="true">0{i + 1}</span>
           <div class="flex flex-col">
@@ -208,7 +208,7 @@ const fixes = [
   <button
     type="button"
     data-open
-    class="pr-open mx-auto mt-8 cursor-pointer items-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm font-medium text-heading transition hover:border-link hover:bg-link-strong/15"
+    class="pr-open mx-auto mt-8 cursor-pointer items-center gap-2 rounded-full bg-heading px-5 py-2.5 text-sm font-medium text-bg transition hover:bg-link-strong hover:text-white"
   >
     Clique na pilha para ver os princípios
   </button>
@@ -221,7 +221,7 @@ const fixes = [
     <button
       type="button"
       data-next
-      class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm font-medium text-heading transition hover:border-link hover:bg-link-strong/15"
+      class="inline-flex cursor-pointer items-center gap-2 rounded-full bg-heading px-5 py-2.5 text-sm font-medium text-bg transition hover:bg-link-strong hover:text-white"
     >
       Próximo princípio
     </button>
@@ -269,7 +269,7 @@ const fixes = [
   .pr-card-inner {
     height: 100%;
     background: var(--card-bg, #0e0f13);
-    box-shadow: 0 24px 48px -24px rgb(0 0 0 / 0.9);
+    box-shadow: 0 28px 50px -24px rgb(0 0 0 / 0.55);
   }
 
   /* Começo: deitados uns sobre os outros em 3D, vistos de lado, como uma pilha de roupas dobradas (o 01 por cima) */

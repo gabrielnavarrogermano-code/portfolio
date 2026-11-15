@@ -43,6 +43,20 @@
   --color-link-strong: #2445c4;
 }
 
+/* Folha branca ("Como eu trabalho"): uma seção clara no meio do site preto. O lima some sobre o branco,
+   então o destaque vira um verde-oliva escuro; os cartões do baralho continuam escuros (.on-black). */
+.on-paper {
+  --color-bg: #f5f5f4;
+  --color-heading: #0a0a0b;
+  --color-fg: #2a2e36;
+  --color-muted: #5a5f6b;
+  --color-line: #dcdcd8;
+  --color-accent: #4d7c0f;
+  --color-link: #2445c4;
+  --color-link-strong: #2445c4;
+  --bg-word-stroke: rgb(10 10 11 / 0.1); /* um pouco mais que os 7,5% do preto: no claro o contorno aparece menos */
+}
+
 /* Blocos pretos (menu e rodapé) */
 .on-black {
   --color-heading: #ffffff;
