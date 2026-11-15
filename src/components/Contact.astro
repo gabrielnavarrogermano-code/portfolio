@@ -23,7 +23,7 @@ const canais = [
   <ol class="mt-12 border-t border-line">
     {
       canais.map((c, i) => (
-        <li class="ch-row group relative grid grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 border-b border-line py-5 sm:grid-cols-[4.5rem_minmax(0,1fr)_minmax(0,1fr)_9rem] sm:gap-x-8 sm:py-7">
+        <li class="ch-row group relative grid grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 border-b border-line py-4 sm:grid-cols-[4.5rem_minmax(0,1fr)_minmax(0,1fr)_9rem] sm:gap-x-8 sm:py-5">
           <span class="ch-num font-mono text-xs text-muted transition-colors">( 0{i + 1} )</span>
 
           <!-- O link cobre a linha inteira (pelo ::after); o botão de copiar fica por cima dele -->
@@ -48,7 +48,7 @@ const canais = [
                 Copiar
               </button>
             )}
-            <span class="ch-icon pointer-events-none grid size-11 place-items-center rounded-full border border-line text-lg text-heading transition" aria-hidden="true">
+            <span class="ch-icon pointer-events-none grid size-9 place-items-center sm:size-11 rounded-full border border-line text-lg text-heading transition" aria-hidden="true">
               {c.icon}
             </span>
           </span>
@@ -60,7 +60,7 @@ const canais = [
 
 <style>
   .ch-link {
-    font-size: clamp(2.25rem, 6vw, 4.25rem);
+    font-size: clamp(1.75rem, 5vw, 3.25rem);
     font-stretch: 75%;
     font-variation-settings: 'wdth' 75;
   }
