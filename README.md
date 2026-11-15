@@ -27,7 +27,8 @@ src/
 │   ├── NotebookSheet.astro    # Simulação animada da planilha do controle de notebooks
 │   ├── Contact.astro          # Contato
 │   ├── Footer.astro           # Rodapé
-│   └── SectionTitle.astro     # Título padrão das seções
+│   ├── SectionTitle.astro     # Título padrão das seções
+│   └── BgWord.astro           # Palavra gigante em contorno no fundo de uma seção
 ├── content/projetos/          # Estudos de caso em Markdown (um arquivo = um projeto)
 ├── content.config.ts          # Campos aceitos no cabeçalho de cada projeto
 ├── data/site.ts               # Nome, e-mail e links de contato

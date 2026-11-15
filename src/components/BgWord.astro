@@ -1,32 +1,58 @@
 ---
 // Palavra gigante no fundo de uma seção: Tektur só com o contorno, quase transparente, da largura da tela.
-// Fica presa dentro da própria seção (nunca aparece na seção anterior): começa no topo dela e, depois que a seção
-// passa do topo da tela, anda mais devagar que o conteúdo (parallax), dando profundidade.
-// É cenário: fica escondida de leitores de tela e não recebe cliques.
-// A seção que a usa precisa de `relative isolate` e de espaço em cima (padding) para a palavra.
+// Todas as palavras do site têm o mesmo enquadramento:
+// - mesmo tamanho (calculado pela palavra mais longa, para todas caberem na tela);
+// - o espaço acima do título é proporcional ao tamanho da palavra (um espaçador invisível, logo depois dela),
+//   então o título sempre cai a 56% da altura da palavra, no computador e no celular;
+// - `lead`: altura (px) do que vem antes do título dentro da seção (ex.: a etiqueta do projeto), descontada do
+//   espaçador para o título ficar na mesma posição.
+// Fica presa dentro da própria seção: começa no topo dela e, depois que a seção passa do topo da tela, anda mais
+// devagar que o conteúdo (parallax). É cenário: escondida de leitores de tela e sem cliques.
+// A seção que a usa precisa de `relative isolate` e não deve ter padding em cima (o espaçador cuida disso).
 interface Props {
   word: string;
+  lead?: number;
 }
 
-const { word } = Astro.props;
+const { word, lead = 0 } = Astro.props;
 ---
 
-<div class="bg-word pointer-events-none absolute inset-y-0 left-1/2 -z-10 w-screen -translate-x-1/2 select-none" style={`--len: ${[...word].length}`} aria-hidden="true">
-  <span data-bg-word class="block pt-6 text-center font-display leading-[0.85] font-bold whitespace-nowrap sm:pt-8">{word}</span>
+<div class="bg-word pointer-events-none absolute inset-y-0 left-1/2 -z-10 w-screen -translate-x-1/2 select-none" aria-hidden="true">
+  <span data-bg-word class="block text-center font-display leading-[0.85] font-bold whitespace-nowrap">{word}</span>
 </div>
+<div class="bg-word-space" style={`--lead: ${lead}px`} aria-hidden="true"></div>
 
 <style>
+  /* Tamanho único: a palavra mais longa (PROJETOS, 8 letras) ocupa a largura da tela */
+  .bg-word,
+  .bg-word-space {
+    --bw-size: min(16rem, 18.75vw);
+    --bw-pad: 1.5rem;
+  }
+
+  @media (min-width: 40rem) {
+    .bg-word,
+    .bg-word-space {
+      --bw-pad: 2rem;
+    }
+  }
+
   /* A caixa ocupa a seção inteira e corta o que sair dela: a palavra nunca invade outra seção */
   .bg-word {
     overflow: clip;
   }
 
-  /* Tamanho pela quantidade de letras (--len), para palavras curtas e longas ocuparem a largura da tela */
   .bg-word span {
-    font-size: min(19rem, calc(150vw / var(--len)));
+    padding-top: var(--bw-pad);
+    font-size: var(--bw-size);
     color: transparent;
     -webkit-text-stroke: 1.5px var(--bg-word-stroke, rgb(255 255 255 / 0.075));
     will-change: transform;
+  }
+
+  /* Espaço até o título: margem de cima + 56% da altura da palavra (0,56 × 0,85 da fonte) - o que vem antes */
+  .bg-word-space {
+    height: calc(var(--bw-pad) + 0.476 * var(--bw-size) - var(--lead));
   }
 </style>
 

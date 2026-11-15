@@ -281,7 +281,12 @@ const fixes = [
   /* Celular: cartões altos, então a pilha fica menor e menos girada para caber na tela */
   @media (max-width: 47.99rem) {
     .pr-deck.is-pile .pr-card {
-      transform: translate(30px, calc(var(--k) * 20px - 260px)) rotateX(60deg) rotateZ(-14deg) scale(0.55);
+      transform: translate(30px, calc(var(--k) * 20px - 350px)) rotateX(60deg) rotateZ(-14deg) scale(0.55);
+    }
+
+    /* Pilha fechada ocupa menos altura que o cartão aberto: sem espaço vazio grande antes e depois dela */
+    .pr-deck.is-pile {
+      height: 420px;
     }
   }
 

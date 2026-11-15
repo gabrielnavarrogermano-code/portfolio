@@ -6,7 +6,7 @@ import BgWord from './BgWord.astro';
 const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order - b.data.order);
 ---
 
-<section id="projetos" class="render-later relative isolate mx-auto max-w-5xl px-6 pt-32 pb-16 [contain-intrinsic-size:auto_640px] sm:pt-44 sm:pb-24">
+<section id="projetos" class="render-later relative isolate mx-auto max-w-5xl px-6 pb-16 [contain-intrinsic-size:auto_640px] sm:pb-24">
   <BgWord word="PROJETOS" />
   <SectionTitle
     title="Dados que viram decisão"
