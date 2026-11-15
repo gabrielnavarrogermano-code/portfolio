@@ -1,51 +1,199 @@
 ---
 import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
 import SectionTitle from './SectionTitle.astro';
 import BgWord from './BgWord.astro';
 
 const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order - b.data.order);
 ---
 
-<section id="projetos" class="render-later relative isolate mx-auto max-w-5xl px-6 pb-16 [contain-intrinsic-size:auto_640px] sm:pb-24">
+<section id="projetos" class="render-later relative isolate mx-auto max-w-5xl px-6 pb-16 [contain-intrinsic-size:auto_1100px] sm:pb-24">
   <BgWord word="PROJETOS" />
   <SectionTitle
     title="Dados que viram decisão"
     subtitle="Na empresa onde estou, o volume de dados ainda é pequeno. Achei que era a hora certa de organizar as informações, antes que isso virasse um problema."
   />
 
-  <div class="mt-12 grid gap-5 md:grid-cols-2">
+  <div class="mt-12 space-y-16">
     {
       projetos.map((p, i) => (
-        <div class:list={['flex flex-col', i === 0 && projetos.length % 2 === 1 && 'md:col-span-2']}>
-          <h3 class="text-xl font-semibold text-heading">O problema</h3>
-          <p class="mt-2 max-w-2xl leading-relaxed text-fg/85">{p.data.problem}</p>
+        <article>
+          <!-- Card: uma faixa escura no topo com o número e o tipo; abaixo, a imagem começa em preto e branco; no hover ganha cor, aproxima e troca para a outra
+               página do dashboard -->
+          <a
+            href={`/projetos/${p.id}/`}
+           
+            class="project-card group relative block overflow-hidden rounded-2xl border border-line bg-ink"
+          >
+            <div class="relative aspect-[4/5] sm:aspect-[16/10]">
+              {p.data.cover && (
+                <Image
+                  src={p.data.cover}
+                  alt=""
+                  widths={[640, 1024, 1600]}
+                  sizes="(min-width: 1024px) 976px, 100vw"
+                  format="webp"
+                  class="pc-img absolute inset-x-0 top-16 bottom-0 h-[calc(100%-4rem)] w-full object-cover object-left-top sm:top-20 sm:h-[calc(100%-5rem)]"
+                />
+              )}
+              {p.data.coverHover && (
+                <Image
+                  src={p.data.coverHover}
+                  alt=""
+                  widths={[640, 1024, 1600]}
+                  sizes="(min-width: 1024px) 976px, 100vw"
+                  format="webp"
+                  class="pc-img-hover absolute inset-x-0 top-16 bottom-0 h-[calc(100%-4rem)] w-full object-cover object-left-top sm:top-20 sm:h-[calc(100%-5rem)]"
+                />
+              )}
+              <div class="pc-shade pointer-events-none absolute inset-0 bg-gradient-to-t from-ink via-ink/60 to-ink/10" aria-hidden="true" />
 
-          <!-- Recuo: o card é a resposta ao problema acima -->
-          <div class="mt-5 ml-4 flex flex-1 sm:ml-8">
-            <a
-              href={`/projetos/${p.id}/`}
-              class="group flex w-full max-w-3xl flex-col rounded-2xl border border-line bg-bg p-5 transition-colors hover:border-link/60 sm:p-6"
-            >
-              <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                <h4 class="text-lg font-semibold text-heading transition-colors group-hover:text-link sm:text-xl">
+              <div class="absolute inset-x-0 top-0 flex items-center justify-between gap-4 p-5 font-mono text-[11px] tracking-[0.15em] text-heading uppercase sm:p-7 sm:text-xs">
+                <span class="rounded-full border border-heading/30 bg-ink/60 px-3 py-1 backdrop-blur-sm">( 0{i + 1} )</span>
+                <span class="rounded-full border border-heading/30 bg-ink/60 px-3 py-1 backdrop-blur-sm">{p.data.kind}</span>
+              </div>
+
+              <div class="absolute inset-x-0 bottom-0 p-5 sm:p-8">
+                <h3 class="pc-title max-w-3xl font-display leading-[0.9] font-black text-heading uppercase">
                   {p.data.title}
-                </h4>
-                <span class="flex-none rounded-full border border-accent/50 px-2 py-0.5 text-xs text-accent">{p.data.kind}</span>
+                </h3>
               </div>
+            </div>
+          </a>
 
-              <p class="mt-2 leading-relaxed text-muted">{p.data.summary}</p>
-
-              <div class="mt-auto flex flex-wrap items-center justify-between gap-x-6 gap-y-2 pt-4 text-sm">
-                <p class="text-muted">{p.data.tools.join(' · ')}</p>
-                <span class="inline-flex items-center gap-1 font-medium text-link">
-                  Ler estudo de caso
-                  <span class="transition-transform group-hover:translate-x-1">→</span>
-                </span>
+          <!-- Abaixo do card: a ficha do projeto (como na página do estudo) e o link em uma linha grande -->
+          <dl class="mt-8 grid border-t border-line md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)]">
+            {[
+              { label: 'O problema', value: p.data.problem },
+              // espaço que não quebra dentro de cada nome: "Power BI" não se divide entre linhas
+              { label: 'Ferramentas', value: p.data.tools.map((t) => t.replaceAll(' ', ' ')).join(' · ') },
+              ...(p.data.result ? [{ label: 'Resultado', value: p.data.result }] : []),
+            ].map((f) => (
+              <div class="border-b border-line py-5 md:border-r md:border-b-0 md:px-6 md:first:pl-0 md:last:border-r-0">
+                <dt class="font-mono text-[11px] tracking-[0.15em] text-muted uppercase">( {f.label} )</dt>
+                <dd class="mt-2 leading-relaxed text-fg/85">{f.value}</dd>
               </div>
+            ))}
+          </dl>
+
+          <div class="pc-next group relative flex items-center gap-4 border-b border-line md:border-t py-6 sm:gap-8 sm:py-7 md:mt-6">
+            <a href={`/projetos/${p.id}/`} class="pc-next-link flex-1 font-display leading-none font-black text-heading uppercase transition-colors">
+              <span data-flip>Ler estudo de caso</span>
             </a>
+            <span class="pc-next-icon pointer-events-none grid size-12 flex-none place-items-center rounded-full border border-line text-lg text-heading transition" aria-hidden="true">→</span>
           </div>
-        </div>
+        </article>
       ))
     }
   </div>
 </section>
+
+<style>
+  /* Linha "Ler estudo de caso": a linha inteira é clicável e acende em lima, como no contato */
+  .pc-next-link {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-stretch: 75%;
+    font-variation-settings: 'wdth' 75;
+  }
+
+  .pc-next-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .pc-next {
+    transition: background-color 0.3s ease;
+  }
+
+  .pc-next:hover,
+  .pc-next:focus-within {
+    background-color: rgb(255 255 255 / 0.025);
+  }
+
+  .pc-next:hover .pc-next-link,
+  .pc-next:focus-within .pc-next-link {
+    color: var(--color-accent);
+  }
+
+  .pc-next:hover .pc-next-icon,
+  .pc-next:focus-within .pc-next-icon {
+    border-color: var(--color-accent);
+    background-color: var(--color-accent);
+    color: var(--color-ink);
+  }
+
+  .pc-next-link:focus-visible {
+    outline: none;
+  }
+
+  .pc-next:has(.pc-next-link:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
+  }
+
+  .pc-title {
+    font-size: clamp(2rem, 6.5vw, 4.75rem);
+    font-stretch: 75%;
+    font-variation-settings: 'wdth' 75;
+    text-wrap: balance;
+  }
+
+  .pc-img,
+  .pc-img-hover {
+    transition:
+      filter 0.7s ease,
+      opacity 0.7s ease,
+      transform 1.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .pc-img {
+    filter: brightness(0.8);
+  }
+
+  .pc-shade {
+    transition: opacity 0.7s ease;
+  }
+
+  .pc-img-hover {
+    opacity: 0;
+  }
+
+  /* Só em quem tem mouse: o preto e branco e a troca de imagem */
+  @media (hover: hover) and (pointer: fine) {
+    .pc-img {
+      filter: grayscale(1) brightness(0.6);
+      transform: scale(1.02);
+    }
+
+    .pc-img-hover {
+      filter: blur(14px);
+      transform: scale(1.08);
+    }
+
+    .project-card:hover .pc-img {
+      filter: grayscale(0) brightness(0.85) blur(6px);
+      transform: scale(1.08);
+    }
+
+    .project-card:hover .pc-img-hover {
+      opacity: 1;
+      filter: blur(0);
+      transform: scale(1.04);
+      transition-delay: 0.15s;
+    }
+
+    /* O degradê clareia para as cores do painel aparecerem; o título continua legível embaixo */
+    .project-card:hover .pc-shade {
+      opacity: 0.7;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pc-img,
+    .pc-img-hover {
+      transition-duration: 0.01ms;
+    }
+  }
+</style>
+

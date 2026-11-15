@@ -4,21 +4,23 @@
   --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Tektur", "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-serif: "Instrument Serif", ui-serif, Georgia, serif; /* segunda voz: só a frase de apresentação da capa */
 
-  /* Fundo preto e texto branco como base, com duas cores de papéis bem separados:
+  /* Base em tons quentes: preto-café e off-white de papel, com duas cores de papéis bem separados:
      - accent (lima neon): o que deve chamar atenção (focos, números, traços, progresso, foco do teclado);
      - link (azul-escuro): só o que é clicável (texto de links); link-strong é o fundo azul do hover dos botões.
-     Atrás da capa, um céu de estrelas. */
-  --color-bg: #0a0a0b;
-  --color-ink: #0a0a0b;
-  --color-heading: #ffffff;
-  --color-line: #2a2b30;
-  --color-fg: #e8eaee;
-  --color-muted: #a3a6ae;
+     Na capa, o nome gigante. */
+  --color-bg: #121110;
+  --color-ink: #121110;
+  --color-heading: #f4f2ed;
+  --color-line: #2f2d2a;
+  --color-fg: #e8e6e1;
+  --color-muted: #a3a097;
+  --color-card: #f8f7f3; /* cartão claro dentro da folha "Como eu trabalho" */
   --color-accent: #c8ff3a;
   --color-link: #4a74f0;
   --color-link-strong: #2f5bdb;
-  --color-ice: #f4f4f2; /* branco da capa e do botão Contato do menu: um branco neutro, um pouco menos duro que o puro */
+  --color-ice: #f0eee8; /* branco da capa e do botão Contato: um off-white quente, menos duro que o puro */
 
   /* Cores do dashboard de notebooks (só nele; o site continua preto e branco).
      viz-1/viz-2: dados normais, duas séries (validadas para daltonismo no fundo escuro).
@@ -33,11 +35,11 @@
 
 /* Blocos claros: invertem as cores do site (fundo branco, informações em preto) */
 .on-light {
-  --color-bg: #ffffff;
-  --color-heading: #0a0a0b;
-  --color-fg: #2a2e36;
-  --color-muted: #5a5f6b;
-  --color-line: #e3e5e9;
+  --color-bg: #f6f5f1;
+  --color-heading: #121110;
+  --color-fg: #2b2925;
+  --color-muted: #5f5b53;
+  --color-line: #e2dfd8;
   --color-accent: #4d7c0f; /* lima escuro: o neon some sobre o branco */
   --color-link: #2445c4;
   --color-link-strong: #2445c4;
@@ -46,27 +48,27 @@
 /* Folha branca ("Como eu trabalho"): uma seção clara no meio do site preto. O lima some sobre o branco,
    então o destaque vira um verde-oliva escuro; os cartões do baralho continuam escuros (.on-black). */
 .on-paper {
-  --color-bg: #f5f5f4;
-  --color-heading: #0a0a0b;
-  --color-fg: #2a2e36;
-  --color-muted: #5a5f6b;
-  --color-line: #dcdcd8;
+  --color-bg: #ecebe5;
+  --color-heading: #121110;
+  --color-fg: #2b2925;
+  --color-muted: #5f5b53;
+  --color-line: #d5d2ca;
   --color-accent: #4d7c0f;
   --color-link: #2445c4;
   --color-link-strong: #2445c4;
-  --bg-word-stroke: rgb(10 10 11 / 0.1); /* um pouco mais que os 7,5% do preto: no claro o contorno aparece menos */
+  --bg-word-stroke: rgb(18 17 16 / 0.1); /* um pouco mais que os 7,5% do preto: no claro o contorno aparece menos */
 }
 
 /* Blocos pretos (menu e rodapé) */
 .on-black {
-  --color-heading: #ffffff;
-  --color-fg: #e8eaee;
-  --color-muted: #a3a6ae;
+  --color-heading: #f4f2ed;
+  --color-fg: #e8e6e1;
+  --color-muted: #a3a097;
   --color-accent: #c8ff3a;
   --color-link: #4a74f0;
   --color-link-strong: #2f5bdb;
-  --color-bg: #0a0a0b;
-  --color-line: #2a2b30;
+  --color-bg: #121110;
+  --color-line: #2f2d2a;
 }
 
 /* Títulos em Tektur: letras quadradas, de cantos retos, com cara de código.
@@ -102,7 +104,48 @@ h3 {
 .hero-title[data-fill] {
   --base: var(--color-heading);
   --paint: var(--color-accent);
-  --spot: 90px;
+  --spot: 160px;
+}
+
+/* Hover com letras girando: cada letra tomba para trás e volta pela frente, uma depois da outra (placar).
+   O script do Layout quebra o texto de cada [data-flip] em letras e liga .is-flipping no hover. */
+.flip-char {
+  display: inline-block;
+  white-space: pre;
+  backface-visibility: hidden;
+}
+
+[data-flip].is-flipping .flip-char {
+  animation: char-flip 0.5s calc(var(--i) * 22ms) both;
+}
+
+@keyframes char-flip {
+  0% {
+    transform: perspective(12em) rotateX(0deg);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  45% {
+    transform: perspective(12em) rotateX(90deg);
+  }
+  45.01% {
+    transform: perspective(12em) rotateX(-90deg);
+    animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1);
+  }
+  100% {
+    transform: perspective(12em) rotateX(0deg);
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .hero-focus-items[data-fill] {
@@ -119,6 +162,11 @@ h3 {
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 6rem;
+}
+
+/* Com a rolagem suave (Lenis) ligada, quem anima é ela: a suavização do navegador brigaria com a dela */
+html.lenis {
+  scroll-behavior: auto;
 }
 
 ::selection {
@@ -141,19 +189,6 @@ body {
   --color-heading: var(--color-ice);
 }
 
-/* Menu: a seção em que a pessoa está ganha um pontinho lima antes do nome */
-[data-nav-link][aria-current="location"]::before {
-  content: "";
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin-right: 8px;
-  border-radius: 9999px;
-  background: var(--color-accent);
-  vertical-align: middle;
-  transform: translateY(-1px);
-}
-
 /* Barra de progresso de leitura na nav */
 .read-progress {
   transform: scaleX(var(--progress, 0));
@@ -167,23 +202,41 @@ body {
   color: var(--color-fg);
 }
 
+/* Títulos do texto numerados como o resto do site: "( 01 )" em mono lima em cima e o título em Tektur
+   estreita, caixa alta, com uma linha separando as seções */
+.prose-case {
+  counter-reset: secao;
+}
+
 .prose-case h2 {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 3rem 0 1rem;
-  font-size: 1.5rem;
-  font-weight: 700;
+  counter-increment: secao;
+  margin: 4rem 0 1.25rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--color-line);
+  font-size: clamp(2rem, 3.6vw, 2.75rem);
+  line-height: 0.95;
+  font-weight: 900;
+  font-stretch: 75%;
+  font-variation-settings: 'wdth' 75;
+  text-transform: uppercase;
   color: var(--color-heading);
 }
 
 .prose-case h2::before {
-  content: "";
-  flex: none;
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 9999px;
-  background: var(--color-accent);
+  content: "( " counter(secao, decimal-leading-zero) " )";
+  display: block;
+  margin-bottom: 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  color: var(--color-accent);
+}
+
+/* O primeiro título vem logo depois da nota: sem linha nem espaço grande em cima */
+.prose-case blockquote + h2,
+.prose-case > h2:first-child {
+  margin-top: 2.5rem;
 }
 
 .prose-case h3 {
@@ -224,17 +277,19 @@ body {
   text-underline-offset: 3px;
 }
 
+/* Nota (ex.: "Projeto real..."): texto em mono, com um traço lima à esquerda */
 .prose-case blockquote {
   margin: 1.5rem 0;
-  padding: 1rem 1.25rem;
-  border-left: 2px solid #0a0a0b;
-  border-radius: 0 0.75rem 0.75rem 0;
-  background: #ffffff;
-  color: #2a2e36;
+  padding: 0.25rem 0 0.25rem 1rem;
+  border-left: 2px solid var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--color-muted);
 }
 
 .prose-case blockquote strong {
-  color: #0a0a0b;
+  color: var(--color-heading);
 }
 
 .prose-case blockquote p {

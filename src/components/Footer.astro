@@ -1,16 +1,62 @@
 ---
 import { site } from '../data/site';
+
+// Rodapé enxuto, no estilo do resto do site: logo e "voltar ao topo" em cima; direitos, links e área embaixo.
+// Os links ficam aqui porque a página do projeto não tem a seção de contato.
+const links = [
+  { label: 'E-mail', href: `mailto:${site.email}` },
+  { label: 'LinkedIn', href: site.linkedin, external: true },
+  { label: 'GitHub', href: site.github, external: true },
+];
 ---
 
-<footer class="on-black border-t border-line bg-ink">
-  <div class="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm text-muted sm:flex-row">
-    <p>© {new Date().getFullYear()} {site.name}</p>
-    <div class="flex flex-col items-center gap-x-5 sm:flex-row">
-      <a href={`mailto:${site.email}`} class="py-2 transition hover:text-heading">{site.email}</a>
-      <div class="flex gap-5">
-        <a href={site.linkedin} target="_blank" rel="noopener" class="py-2 transition hover:text-heading">LinkedIn ↗</a>
-        <a href={site.github} target="_blank" rel="noopener" class="py-2 transition hover:text-heading">GitHub ↗</a>
-      </div>
+<footer class="on-black bg-ink">
+  <div class="mx-auto max-w-5xl px-6">
+    <div class="flex items-center justify-between gap-4 border-t border-line py-6">
+      <a href="/" class="font-display font-semibold tracking-tight text-heading">
+        gabriel<span class="text-accent">.</span>dados
+      </a>
+      <button
+        type="button"
+        data-to-top
+        class="group inline-flex cursor-pointer items-center gap-3 font-mono text-[11px] tracking-[0.15em] text-heading uppercase"
+      >
+        <span data-flip>Voltar ao topo</span>
+        <span
+          class="grid size-9 place-items-center rounded-full border border-line text-sm transition group-hover:-translate-y-0.5 group-hover:border-accent group-hover:bg-accent group-hover:text-ink"
+          aria-hidden="true">↑</span
+        >
+      </button>
+    </div>
+
+    <div class="flex flex-col gap-4 border-t border-line py-6 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:flex-row sm:items-center sm:justify-between">
+      <p>© {new Date().getFullYear()} {site.name}</p>
+      <ul class="flex gap-5">
+        {
+          links.map((l) => (
+            <li>
+              <a
+                href={l.href}
+                class="transition-colors hover:text-accent"
+                {...(l.external ? { target: '_blank', rel: 'noopener' } : {})}
+              >
+                <span data-flip>{l.label}</span> ↗
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <p>Análise de Dados & BI</p>
     </div>
   </div>
 </footer>
+
+<script>
+  // Voltar ao topo: desliza com a rolagem suave (Lenis) quando ela está ligada
+  document.addEventListener('astro:page-load', () => {
+    document.querySelector('[data-to-top]')?.addEventListener('click', () => {
+      if (window.lenis) window.lenis.scrollTo(0);
+      else window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    });
+  });
+</script>

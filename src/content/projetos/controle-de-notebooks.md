@@ -6,6 +6,16 @@ kind: Extração e Tratamento
 tools: [Microsoft 365, Excel, Power BI]
 order: 1
 demo: notebooks
+cover: ../../assets/projetos/notebooks-licencas.png
+coverHover: ../../assets/projetos/notebooks-seguranca.png
+context: Estágio de TI · Hebe's Life Science
+deliverable: Base em Excel + dashboard no Power BI
+result: A base e o dashboard viraram a fonte central de consulta.
+stats:
+  - { value: '100', label: 'linhas na base' }
+  - { value: '9', label: 'colunas por colaborador' }
+  - { value: '3', label: 'páginas no dashboard' }
+  - { value: '1', label: 'fonte central de consulta' }
 ---
 
 > Projeto real, feito no estágio de TI na Hebe's Life Science. A simulação acima usa dados fictícios.

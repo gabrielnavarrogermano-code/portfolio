@@ -41,14 +41,14 @@ const image = new URL('/og.png', Astro.site);
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <!-- Fontes sem bloquear a primeira pintura: o texto aparece logo e troca de fonte quando ela chega -->
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Tektur:wdth,wght@75..100,400..900&family=Geist:wght@400..700&family=Geist+Mono:wght@400;500&display=swap" />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Tektur:wdth,wght@75..100,400..900&family=Instrument+Serif:ital@0;1&family=Geist:wght@400..700&family=Geist+Mono:wght@400;500&display=swap" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Tektur:wdth,wght@75..100,400..900&family=Geist:wght@400..700&family=Geist+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Tektur:wdth,wght@75..100,400..900&family=Instrument+Serif:ital@0;1&family=Geist:wght@400..700&family=Geist+Mono:wght@400;500&display=swap"
       rel="stylesheet"
       media="print"
       onload="this.media='all'"
     />
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Tektur:wdth,wght@75..100,400..900&family=Geist:wght@400..700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" /></noscript>
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Tektur:wdth,wght@75..100,400..900&family=Instrument+Serif:ital@0;1&family=Geist:wght@400..700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" /></noscript>
     <title>{title}</title>
     <ClientRouter />
     <!-- Web Analytics da Vercel: conta visitas sem cookies; só funciona no site publicado, com o Analytics ativado no painel -->
@@ -58,6 +58,8 @@ const image = new URL('/og.png', Astro.site);
     <slot />
 
     <script>
+      import '../lib/smooth-scroll';
+
       document.addEventListener('astro:page-load', () => {
         // Desenha uma seção adiada por vez quando o navegador está ocioso, para não travar ao chegar nela rolando
         const later = [...document.querySelectorAll('.render-later')];
@@ -67,6 +69,26 @@ const image = new URL('/og.png', Astro.site);
           if (later.length) idle(next);
         };
         idle(next);
+
+        // Hover com letras girando: quebra o texto de cada [data-flip] em letras (o texto inteiro continua
+        // disponível para leitores de tela) e gira quando o mouse entra no link ou botão em volta
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        document.querySelectorAll<HTMLElement>('[data-flip]:not([data-flip-ready])').forEach((el) => {
+          el.dataset.flipReady = '';
+          const text = el.textContent?.trim() ?? '';
+          const chars = [...text]
+            .map((c, i) => `<span class="flip-char" style="--i:${i}">${c.replace('&', '&amp;').replace('<', '&lt;')}</span>`)
+            .join('');
+          el.innerHTML = `<span class="sr-only">${text.replace('&', '&amp;').replace('<', '&lt;')}</span><span aria-hidden="true">${chars}</span>`;
+
+          const host = el.closest<HTMLElement>('a, button') ?? el;
+          host.addEventListener('pointerenter', (e) => {
+            if (e.pointerType !== 'mouse' || el.classList.contains('is-flipping')) return;
+            el.classList.add('is-flipping');
+            const last = el.querySelector<HTMLElement>('.flip-char:last-child');
+            last?.addEventListener('animationend', () => el.classList.remove('is-flipping'), { once: true });
+          });
+        });
       });
     </script>
   </body>

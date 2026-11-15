@@ -5,22 +5,10 @@ import Principles from './Principles.astro';
 
 // O que estou estudando agora e para quê
 const studying = [
-  { name: 'SQL', icon: 'sql', why: 'para consultar os dados e montar tabelas direto na fonte.' },
-  { name: 'DAX no Power BI', icon: 'pbi', why: 'para aplicar as regras de negócio dentro do Power BI, começando pelo básico.' },
-  { name: 'Data storytelling', icon: 'story', why: 'para contar uma história com comparações nos dashboards.' },
+  { name: 'SQL', why: 'Para consultar os dados e montar tabelas direto na fonte.' },
+  { name: 'DAX no Power BI', why: 'Para aplicar as regras de negócio dentro do Power BI, começando pelo básico.' },
+  { name: 'Data storytelling', why: 'Para contar uma história com comparações nos dashboards.' },
 ];
-
-// Ícones em SVG (viewBox 24×24), desenhados aqui para não depender de imagens de fora.
-// SQL não tem logo oficial: vai o cilindro de banco de dados. Power BI: as três barras amarelas, simplificadas.
-const icons: Record<string, string> = {
-  sql: `<ellipse cx="12" cy="5.5" rx="7.5" ry="3" fill="none" stroke="#3987e5" stroke-width="1.8"/>
-    <path d="M4.5 5.5v13c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3v-13M4.5 12c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3" fill="none" stroke="#3987e5" stroke-width="1.8"/>`,
-  pbi: `<rect x="3" y="11" width="5" height="11" rx="1.2" fill="#c99700"/>
-    <rect x="9.5" y="6.5" width="5" height="15.5" rx="1.2" fill="#e8b600"/>
-    <rect x="16" y="2" width="5" height="20" rx="1.2" fill="#f2c811"/>`,
-  story: `<path d="M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-9l-5 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-    <path d="M8 13v-2M12 13V8M16 13v-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>`,
-};
 ---
 
 <section id="habilidades" class="on-paper render-later relative isolate mx-2 overflow-clip rounded-[2rem] bg-bg pb-16 sm:mx-4 sm:rounded-[3rem] [contain-intrinsic-size:auto_1500px] sm:pb-24 md:[contain-intrinsic-size:auto_1100px]">
@@ -32,51 +20,55 @@ const icons: Record<string, string> = {
     />
 
     <!-- No dia a dia: os princípios que já aplico no estágio, cada um com uma demonstração feita com dados reais -->
-    <div class="mt-10">
-      <p class="flex items-center gap-3 text-sm text-muted">
-        <span class="h-px w-6 bg-line" aria-hidden="true"></span>
-        No dia a dia do estágio
-      </p>
-      <p class="mt-2 text-fg/85">Quatro coisas que eu já aplico, com exemplos reais do controle de notebooks.</p>
+    <div class="mt-12 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+      <p class="font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">( No dia a dia do estágio )</p>
+      <p class="text-sm text-muted">Quatro princípios, com exemplos reais do controle de notebooks.</p>
     </div>
     <Principles />
 
-    <!-- Onde pretendo chegar: o objetivo como analista + o que estou estudando agora -->
-    <div data-study class="mt-16 overflow-hidden rounded-2xl border border-line bg-white md:mt-20">
-      <div class="p-6 sm:p-8">
-        <p class="flex items-center gap-2.5 text-sm text-muted">
-          <span class="h-2 w-2 rounded-full bg-accent" aria-hidden="true"></span>
-          Onde pretendo chegar
+    <!-- Onde pretendo chegar: o objetivo em destaque (serifa, como na capa e no Sobre) e o que estou estudando -->
+    <div class="mt-20 grid gap-10 md:mt-28 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-16">
+      <div>
+        <p class="font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">( Onde pretendo chegar )</p>
+        <p class="mt-5 font-serif text-[2.25rem] leading-[1.05] text-balance text-heading sm:text-5xl">
+          Levar o dado da fonte <em class="text-accent">até a decisão.</em>
         </p>
-        <p class="mt-4 flex max-w-3xl items-start gap-3 font-display text-xl leading-snug font-semibold text-heading sm:text-2xl">
-          <span class="mt-1.5 h-5 w-1 flex-none rounded-full bg-accent" aria-hidden="true"></span>
-          Levar o dado da fonte até a decisão.
-        </p>
-        <p class="mt-3 max-w-3xl leading-relaxed text-fg/85">
+        <p class="mt-6 max-w-xl leading-relaxed text-fg/85">
           Quero conduzir o caminho completo da análise: montar o fluxo de ETL de ponta a ponta, aplicar os cálculos e
           as regras de negócio para que eles cheguem corretos ao BI, e transformar tudo em dashboards que ajudem pessoas
           não técnicas a decidir com base em informações confiáveis.
         </p>
       </div>
 
-      <div class="border-t border-line p-6 sm:p-8">
-        <p class="text-fg/85 sm:text-lg">Agora estou estudando</p>
-        <ul class="mt-5 grid gap-4 sm:grid-cols-3">
+      <div>
+        <p class="font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">( Agora estou estudando )</p>
+        <ol class="mt-5 border-t border-line">
           {
-            studying.map((s) => (
-              <li class="rounded-xl border border-line p-4">
-                <p class="flex items-center gap-2 font-display text-lg font-semibold text-heading">
-                  <svg viewBox="0 0 24 24" class="size-5 flex-none" aria-hidden="true" set:html={icons[s.icon]} />
-                  {s.name}
-                </p>
-                <p class="mt-1.5 text-sm text-fg/70">{s.why.charAt(0).toUpperCase() + s.why.slice(1)}</p>
+            studying.map((s, i) => (
+              <li class="study-row grid grid-cols-[3rem_minmax(0,1fr)] gap-x-4 border-b border-line py-5">
+                <span class="pt-1.5 font-mono text-xs text-muted">( 0{i + 1} )</span>
+                <div>
+                  <p class="study-name font-display text-2xl leading-none font-black text-heading uppercase">{s.name}</p>
+                  <p class="mt-2 text-sm leading-relaxed text-fg/75">{s.why}</p>
+                </div>
               </li>
             ))
           }
-        </ul>
-
-        <p class="mt-6 text-sm text-muted">O objetivo é que esse caminho vire parte da minha rotina.</p>
+        </ol>
+        <p class="mt-5 text-sm text-muted">O objetivo é que esse caminho vire parte da minha rotina.</p>
       </div>
     </div>
   </div>
 </section>
+
+<style>
+  .study-name {
+    font-stretch: 75%;
+    font-variation-settings: 'wdth' 75;
+    transition: color 0.3s ease;
+  }
+
+  .study-row:hover .study-name {
+    color: var(--color-accent);
+  }
+</style>

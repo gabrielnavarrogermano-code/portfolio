@@ -7,53 +7,93 @@ import { temCurriculo } from '../lib/curriculo';
 const focus = ['Excel', 'Power BI', 'ETL'];
 ---
 
-<section id="inicio" class="hero-ice relative isolate flex min-h-svh flex-col pt-28 pb-8 sm:pt-32">
-  <!-- Céu de estrelas atrás da capa: as estrelas reagem ao mouse em camadas -->
-  <canvas data-stars aria-hidden="true" class="pointer-events-none absolute inset-0 h-full w-full" style="z-index: -1"></canvas>
-  <div class="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6">
-    <div class="flex flex-1 flex-col items-center justify-center text-center">
-      <Image
-        src={foto}
-        alt="Foto de Gabriel Navarro Germano"
-        widths={[160, 320]}
-        sizes="(min-width: 640px) 160px, 128px"
-        format="webp"
-        loading="eager"
-        fetchpriority="high"
-        class="h-32 w-32 rounded-full border border-line object-cover object-[50%_30%] ring-2 ring-accent/30 ring-offset-4 ring-offset-bg sm:h-40 sm:w-40"
-      />
+<!-- Abertura: na primeira visita da sessão, antes de pintar a capa, liga a tela de carregamento.
+     Quem pediu menos movimento (ou já viu nesta sessão) vai direto para o site. -->
+<script is:inline>
+  (function () {
+    try {
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (sessionStorage.getItem('intro-seen')) return;
+      sessionStorage.setItem('intro-seen', '1');
+      var root = document.documentElement;
+      root.classList.add('show-loader', 'intro-pending');
+      // Trava de segurança: se algo falhar, em 4,5 s o site aparece e a rolagem volta
+      setTimeout(function () {
+        root.classList.remove('show-loader', 'intro-pending');
+      }, 4500);
+    } catch (e) {}
+  })();
+</script>
 
-      <div class="mt-8">
-        <h1 class="tracking-tight text-heading">
-          <span class="block font-sans text-base font-medium tracking-normal text-muted sm:text-lg">
-            Gabriel Navarro Germano
-          </span>
-          <span data-fill class="hero-title mt-4 inline-block text-4xl leading-[1.05] font-bold text-balance sm:text-5xl">Análise de Dados & BI</span>
-        </h1>
+<!-- Tela de carregamento: contador de 0% a 100% e depois sobe, revelando a capa -->
+<div data-loader class="hero-loader on-black fixed inset-0 z-[100] flex-col items-center justify-center bg-bg" aria-hidden="true">
+  <p class="font-mono text-xs tracking-[0.2em] text-muted uppercase">( 20 26 )</p>
+  <p data-loader-count class="loader-count mt-4 font-display text-8xl leading-none font-black text-accent tabular-nums sm:text-9xl">0%</p>
+  <p class="mt-6 font-mono text-xs tracking-[0.2em] text-heading uppercase">Gabriel Navarro <span class="text-link">·</span> Portfólio</p>
+</div>
 
-        <p class="mt-5 font-mono text-sm">
-          <span class="text-muted">foco:</span> <span data-fill class="hero-focus-items">{focus.join(' · ')}</span>
-        </p>
+<section id="inicio" class="hero-ice relative isolate flex min-h-svh flex-col pt-24 sm:pt-28">
+  <!-- Linha de rótulos no topo -->
+  <div class="mx-auto w-full max-w-5xl px-6">
+    <div class="hero-fade flex items-center justify-between gap-4 border-t border-line pt-3 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">
+      <p class="flex items-center gap-2">
+        <span class="size-1.5 flex-none rounded-full bg-accent" aria-hidden="true"></span>
+        Análise de Dados & BI
+      </p>
+      <p>Portfólio <span class="text-heading">( 20 26 )</span></p>
+    </div>
+  </div>
 
-        <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
-          <a
-            href="#contato"
-            class="group inline-flex items-center gap-2 rounded-full bg-heading px-6 py-3 font-medium text-bg transition hover:bg-link-strong hover:text-white"
-          >
-            Entre em contato
-            <span class="transition-transform group-hover:translate-x-1">→</span>
-          </a>
+  <!-- Centro, em três colunas: os focos, uma frase de apresentação e os botões -->
+  <div class="hero-fade mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-6 py-10">
+    <div class="grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,2.2fr)_auto] md:items-start md:gap-10">
+      <!-- Frase em serifa (Instrument Serif): contrasta com a Tektur do nome; o destaque em lima vai em itálico -->
+      <p class="max-w-xl font-serif text-[2.1rem] leading-[1.08] text-balance text-heading sm:text-[2.6rem] md:order-2 lg:text-5xl">
+        Da infraestrutura à visualização de dados, <em class="text-accent">gerando insights corporativos.</em>
+      </p>
+
+      <!-- Foto em retrato (preto e branco, ganha cor no hover) e os focos logo abaixo; no celular, lado a lado -->
+      <div class="flex items-end gap-5 md:order-1 md:flex-col md:items-start md:gap-5">
+        <div class="hero-photo w-28 flex-none sm:w-32 md:w-full md:max-w-44">
+          <Image
+            src={foto}
+            alt="Foto de Gabriel Navarro Germano"
+            widths={[240, 480]}
+            sizes="(min-width: 768px) 176px, 128px"
+            format="webp"
+            loading="eager"
+            fetchpriority="high"
+            class="aspect-[4/5] size-full object-cover object-[50%_25%]"
+          />
+        </div>
+        <div>
+          <p class="font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">( Foco )</p>
+          <ul data-fill class="hero-focus-items mt-3 font-mono text-sm leading-relaxed sm:text-base">
+            {focus.map((f) => <li>{f}</li>)}
+          </ul>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3 md:order-3 md:flex-col md:items-end">
+        <a
+          href="#contato"
+          class="group inline-flex items-center gap-2 rounded-full bg-heading px-6 py-3 font-medium whitespace-nowrap text-bg transition hover:bg-link-strong hover:text-white"
+        >
+          <span data-flip>Entre em contato</span>
+          <span class="transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
+        </a>
+        <div class="flex items-center gap-3">
           {
             temCurriculo && (
               <a
                 href={site.curriculo}
                 download="Curriculo-Gabriel-Navarro-Germano.pdf"
-                class="inline-flex items-center gap-2 rounded-full border border-line bg-bg px-6 py-3 font-medium text-heading transition hover:border-link hover:bg-link-strong/15"
+                class="inline-flex items-center gap-2 rounded-full border border-line bg-bg px-5 py-3 font-medium text-heading transition hover:border-link hover:bg-link-strong/15"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4" aria-hidden="true">
                   <path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
-                Currículo
+                <span data-flip>Currículo</span>
               </a>
             )
           }
@@ -62,7 +102,7 @@ const focus = ['Excel', 'Power BI', 'ETL'];
             target="_blank"
             rel="noopener"
             aria-label="LinkedIn"
-            class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-line bg-bg text-muted transition hover:border-link hover:text-heading"
+            class="inline-flex h-12 w-12 flex-none items-center justify-center rounded-full border border-line bg-bg text-muted transition hover:border-link hover:text-heading"
           >
             <svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
               <path
@@ -75,7 +115,7 @@ const focus = ['Excel', 'Power BI', 'ETL'];
             target="_blank"
             rel="noopener"
             aria-label="GitHub"
-            class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-line bg-bg text-muted transition hover:border-link hover:text-heading"
+            class="inline-flex h-12 w-12 flex-none items-center justify-center rounded-full border border-line bg-bg text-muted transition hover:border-link hover:text-heading"
           >
             <svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
               <path
@@ -86,32 +126,170 @@ const focus = ['Excel', 'Power BI', 'ETL'];
         </div>
       </div>
     </div>
-
-    <a
-      href="#apresentacao"
-      aria-label="Rolar para a apresentação"
-      class="mx-auto mt-8 inline-flex h-10 w-10 items-center justify-center rounded-full text-heading transition hover:bg-heading/10"
-    >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-5 w-5" aria-hidden="true">
-        <path d="M12 5v14M5 12l7 7 7-7" stroke-linecap="round" stroke-linejoin="round"></path>
-      </svg>
-    </a>
   </div>
+
+  <!-- Nome gigante: ocupa a largura da tela (uma linha no computador, três no celular).
+       As palavras acendem em lima debaixo do mouse. -->
+  <h1 class="hero-name px-3 pb-3 sm:px-4 sm:pb-4">
+    <span class="sr-only">{site.name}, Análise de Dados & BI</span>
+    <span class="hero-name-text" aria-hidden="true">
+      <span class="hero-name-line"><span data-fill class="hero-title hero-name-word">Gabriel</span></span>
+      <span class="hero-name-line"><span data-fill class="hero-title hero-name-word" style="--delay: 0.08s">Navarro</span></span>
+      <span class="hero-name-line"><span data-fill class="hero-title hero-name-word" style="--delay: 0.16s">Germano</span></span>
+    </span>
+  </h1>
 </section>
 
-<script>
-  // Título e focos: só a região debaixo do mouse muda de cor (lanterna).
-  // Estrelas: pequenas e esparsas, espalhadas por igual na capa inteira; algumas cintilam devagar. Ficam em
-  // 3 camadas que deslizam ao contrário do mouse (as mais próximas mais), dando profundidade.
-  // Para quando a capa sai da tela; quem pediu menos movimento vê as estrelas paradas.
-  type Star = { x: number; y: number; r: number; a: number; depth: number; tw: number; phase: number; c: string };
-  // Cor das estrelas: quase todas brancas; cerca de 1 em 20 lima e 1 em 30 azul, para amarrar a capa à paleta
-  const STAR_COLOR = '240, 240, 236';
-  const STAR_LIME = '200, 255, 58';
-  const STAR_BLUE = '74, 116, 240';
-  const PARALLAX = 18; // deslocamento máximo (px) da camada mais próxima
+<style>
+  /* Tektur no peso máximo e na largura mais estreita: um nome alto, apertado, de borda a borda.
+     O tamanho sai da largura do h1 (unidade cqi), sem script: medido na Tektur 900 estreita,
+     GABRIEL = 3,45em, NAVARRO = 3,894em e GERMANO = 3,79em.
+     - Computador, uma linha: 3,45 + 0,18 + 3,894 + 0,18 + 3,79 = 11,494em
+     - Celular, três linhas: a mais larga é NAVARRO, 3,894em; de propósito fica em ~85% da largura
+     Divisores um pouco maiores que a medida deixam uma folga para não encostar na borda. */
+  .hero-name {
+    container-type: inline-size;
+  }
 
+  .hero-name-text {
+    display: flex;
+    flex-direction: column;
+    width: max-content;
+    font-family: var(--font-display);
+    font-size: calc(100cqi / 4.6); /* celular: ~85% da largura, para o nome não ocupar a tela toda */
+    font-weight: 900;
+    font-stretch: 75%;
+    font-variation-settings: 'wdth' 75;
+    line-height: 0.8;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+  }
+
+  @media (min-width: 48rem) {
+    .hero-name-text {
+      flex-direction: row;
+      gap: 0.18em;
+      font-size: calc(100cqi / 11.55);
+    }
+  }
+
+  /* Foto em retrato: preto e branco, ganha cor e aproxima no hover; na abertura, sobe de baixo para cima */
+  .hero-photo {
+    overflow: hidden;
+    border-radius: 1rem;
+    clip-path: inset(0 0 0 0 round 1rem);
+    transition: clip-path 1.1s cubic-bezier(0.2, 0.75, 0.15, 1) 0.4s;
+  }
+
+  .hero-photo :global(img) {
+    filter: grayscale(1) contrast(1.05);
+    transform: scale(1.04);
+    transition:
+      filter 0.6s ease,
+      transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .hero-photo:hover :global(img) {
+    filter: grayscale(0);
+    transform: scale(1.1);
+  }
+
+  :global(html.intro-pending) .hero-photo {
+    clip-path: inset(100% 0 0 0 round 1rem);
+  }
+
+  /* Cada palavra sobe de trás de uma linha invisível quando a abertura termina */
+  .hero-name-line {
+    display: block;
+    overflow: hidden;
+    padding-block: 0.06em 0.02em;
+  }
+
+  .hero-name-word {
+    display: block;
+    transition: transform 1.1s cubic-bezier(0.2, 0.75, 0.15, 1) var(--delay, 0s);
+  }
+
+  .hero-fade {
+    transition: opacity 0.8s ease 0.35s, transform 0.8s ease 0.35s;
+  }
+
+  :global(html.intro-pending) .hero-name-word {
+    transform: translateY(105%);
+    animation: hero-failsafe 0s 5s forwards; /* se o script falhar, o nome aparece mesmo assim */
+  }
+
+  :global(html.intro-pending) .hero-fade {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: hero-failsafe 0s 5s forwards;
+  }
+
+  @keyframes hero-failsafe {
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Tela de carregamento */
+  .hero-loader {
+    display: none;
+  }
+
+  :global(html.show-loader) .hero-loader {
+    display: flex;
+    animation: loader-failsafe 0s 5s forwards;
+  }
+
+  :global(html.show-loader) body {
+    overflow: hidden;
+  }
+
+  .hero-loader.is-leaving {
+    transform: translateY(-100%);
+    transition: transform 0.9s cubic-bezier(0.75, 0, 0.2, 1);
+  }
+
+  @keyframes loader-failsafe {
+    to {
+      visibility: hidden;
+    }
+  }
+</style>
+
+<script>
+  // Abertura: conta de 0% a 100% (só números pares) e sobe a tela, revelando a capa.
+  // Lanterna: só a região debaixo do mouse muda de cor.
   let controller: AbortController | undefined;
+
+  const runIntro = () => {
+    const root = document.documentElement;
+    if (!root.classList.contains('show-loader')) return;
+    const loader = document.querySelector<HTMLElement>('[data-loader]');
+    const count = document.querySelector<HTMLElement>('[data-loader-count]');
+    const finish = () => {
+      root.classList.remove('show-loader', 'intro-pending');
+    };
+    if (!loader || !count) return finish();
+
+    const duration = 1600;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 2);
+      count.textContent = `${Math.round((eased * 100) / 2) * 2}%`;
+      if (t < 1) return requestAnimationFrame(tick);
+
+      // Sobe a tela e, logo depois, o nome entra
+      setTimeout(() => {
+        loader.classList.add('is-leaving');
+        setTimeout(() => root.classList.remove('intro-pending'), 350);
+        setTimeout(() => root.classList.remove('show-loader'), 950); // fim da subida (0,9 s)
+      }, 200);
+    };
+    requestAnimationFrame(tick);
+  };
 
   document.addEventListener('astro:page-load', () => {
     controller?.abort();
@@ -120,6 +298,8 @@ const focus = ['Excel', 'Power BI', 'ETL'];
 
     const hero = document.getElementById('inicio');
     if (!hero) return;
+
+    runIntro();
 
     hero.querySelectorAll<HTMLElement>('[data-fill]').forEach((el) => {
       el.addEventListener(
@@ -134,107 +314,6 @@ const focus = ['Excel', 'Power BI', 'ETL'];
         { signal },
       );
       el.addEventListener('pointerleave', () => el.classList.remove('is-lit'), { signal });
-    });
-
-    const canvas = hero.querySelector<HTMLCanvasElement>('canvas[data-stars]');
-    const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx) return;
-    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    let w = 0;
-    let h = 0;
-    let stars: Star[] = [];
-
-    // Estrelas espalhadas por igual na capa inteira (com uma folga nas bordas para o deslize das camadas)
-    const makeStars = () => {
-      const list: Star[] = [];
-      const count = Math.round((w * h) / 3600);
-      for (let i = 0; i < count; i++) {
-        const y = Math.random() * (h + PARALLAX) - PARALLAX / 2;
-        const depth = [0.3, 0.6, 1][Math.floor(Math.random() * 3)];
-        list.push({
-          x: Math.random() * (w + PARALLAX * 2) - PARALLAX,
-          y,
-          r: 0.4 + depth * 0.6 + Math.random() * 0.4,
-          a: 0.25 + Math.random() * 0.6,
-          depth,
-          tw: Math.random() < 0.15 ? 0.6 + Math.random() * 0.8 : 0,
-          c: ((r) => (r < 0.05 ? STAR_LIME : r < 0.083 ? STAR_BLUE : STAR_COLOR))(Math.random()),
-          phase: Math.random() * Math.PI * 2,
-        });
-      }
-      stars = list;
-    };
-
-    const draw = (now: number, ox: number, oy: number) => {
-      ctx.clearRect(0, 0, w, h);
-      for (const s of stars) {
-        const twinkle = s.tw ? 0.55 + 0.45 * Math.sin((now / 1000) * s.tw + s.phase) : 1;
-        ctx.fillStyle = `rgba(${s.c}, ${(s.a * twinkle).toFixed(3)})`;
-        ctx.beginPath();
-        ctx.arc(s.x + ox * s.depth, s.y + oy * s.depth, s.r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    };
-
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      w = hero.clientWidth;
-      h = hero.clientHeight;
-      canvas.width = Math.round(w * dpr);
-      canvas.height = Math.round(h * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      makeStars();
-      if (still) draw(0, 0, 0);
-    };
-    const ro = new ResizeObserver(resize);
-    ro.observe(hero);
-    signal.addEventListener('abort', () => ro.disconnect());
-
-    if (still) return;
-
-    let mouseX = hero.clientWidth / 2;
-    let mouseY = hero.clientHeight / 2;
-    let lastMove = -Infinity;
-    let px = 0; // deslocamento suavizado das estrelas
-    let py = 0;
-    let raf = 0;
-    let visible = true;
-
-    const frame = (now: number) => {
-      raf = 0;
-      const active = now - lastMove < 3000;
-
-      const tx = active ? -((mouseX / w) * 2 - 1) * PARALLAX : 0;
-      const ty = active ? -((mouseY / h) * 2 - 1) * PARALLAX * 0.5 : 0;
-      px += (tx - px) * 0.05;
-      py += (ty - py) * 0.05;
-      draw(now, px, py);
-
-      if (visible) raf = requestAnimationFrame(frame);
-    };
-
-    hero.addEventListener(
-      'pointermove',
-      (e) => {
-        if (e.pointerType !== 'mouse') return;
-        const r = hero.getBoundingClientRect();
-        mouseX = e.clientX - r.left;
-        mouseY = e.clientY - r.top;
-        lastMove = performance.now();
-      },
-      { signal },
-    );
-
-    const io = new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting;
-      if (visible && !raf) raf = requestAnimationFrame(frame);
-    });
-    io.observe(hero);
-
-    signal.addEventListener('abort', () => {
-      io.disconnect();
-      cancelAnimationFrame(raf);
     });
   });
 </script>

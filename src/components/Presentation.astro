@@ -1,9 +1,24 @@
 ---
-import CardToggle from './CardToggle.astro';
 import SectionTitle from './SectionTitle.astro';
 import BgWord from './BgWord.astro';
 
 const tools = ['Microsoft 365 Admin', 'Entra ID', 'SharePoint', 'Kanban'];
+
+// A história, em capítulos. As palavras em <b> ficam em destaque (brancas).
+const chapters = [
+  {
+    title: 'Origem',
+    text: 'Eu cresci em uma <b>família de empreendedores</b>, tanto meu pai quanto meu avô. Acompanhar esse processo de gestão de perto me fez querer entender o que poderia melhorar em um negócio.',
+  },
+  {
+    title: 'Números',
+    text: 'Sempre fui alguém com uma certa <b>facilidade com números</b>, só precisava descobrir onde poderia aplicá-los em uma empresa. Foi na faculdade que a <b>análise de dados</b> se mostrou um caminho para isso.',
+  },
+  {
+    title: 'Hoje',
+    text: 'Hoje sou <b>estagiário de TI</b> em uma indústria farmacêutica. Atendendo chamados e cuidando de acessos, busco entender de perto como cada área trabalha e do que ela precisa para seguir em frente.',
+  },
+];
 
 // Progresso do curso: atualize o semestre a cada período
 const semester = 2;
@@ -14,107 +29,152 @@ const totalSemesters = 8;
   <BgWord word="SOBRE" />
   <SectionTitle title="Prazer, Gabriel" />
 
-  <!-- Computador: o texto à esquerda e, ao lado, os cards de Formação e Experiência. Celular: tudo em uma coluna -->
-  <div class="mt-8 grid grid-cols-1 gap-6 sm:mt-10 lg:grid-cols-2 lg:gap-12">
-    <div>
-      <article>
-        <p class="leading-relaxed text-fg/85 sm:text-lg">
-          Eu cresci em uma família de empreendedores, tanto meu pai quanto meu avô. Acompanhar esse processo de gestão
-          de perto me fez querer entender o que poderia melhorar em um negócio. Sempre fui alguém com uma certa
-          facilidade com números, só precisava descobrir onde poderia aplicá-los em uma empresa. Foi na faculdade que a
-          análise de dados se mostrou um caminho para isso.
-        </p>
-        <p class="mt-4 leading-relaxed text-fg/85 sm:text-lg">
-          Hoje sou estagiário de TI em uma indústria farmacêutica. Atendendo chamados e cuidando de acessos, busco
-          entender de perto como cada área trabalha e do que ela precisa para seguir em frente. Foi ali que entendi que
-          um dado só faz sentido quando ajuda alguém a resolver algum problema.
-        </p>
-      </article>
-    </div>
-
-    <div>
-      <div class="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-6 lg:grid-cols-1">
-        <article data-collapse class="rounded-2xl border border-line p-5 transition-colors max-sm:data-open:border-heading/30 max-sm:data-open:bg-white/[0.03] sm:p-6">
-          <div class="relative max-sm:pr-8">
-            <p class="text-sm text-accent">Formação</p>
-            <h3 class="mt-2 text-xl font-semibold text-heading">Engenharia de Software</h3>
-            <p class="mt-1 text-muted">UniCesumar</p>
-            <CardToggle label="Formação: ver detalhes" target="formacao-detalhes" />
-          </div>
-          <div id="formacao-detalhes" data-collapse-body>
-            <div class="mt-4 flex items-center gap-3">
-              <div class="flex flex-1 gap-1" role="img" aria-label={`${semester}º de ${totalSemesters} semestres`}>
-                {
-                  Array.from({ length: totalSemesters }, (_, i) => (
-                    <span class:list={['h-1.5 flex-1 rounded-full', i < semester ? 'bg-accent' : 'bg-line']} />
-                  ))
-                }
-              </div>
-              <span class="flex-none text-sm text-muted">{semester}º de {totalSemesters} semestres</span>
+  <!-- Computador: a história à esquerda e, ao lado, a frase que resume o que aprendi, em destaque.
+       Celular: tudo em uma coluna -->
+  <div class="mt-8 grid grid-cols-1 gap-10 sm:mt-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-16">
+    <!-- A história em três capítulos curtos (o texto é o mesmo de antes, só dividido), no formato de linhas do site -->
+    <ol class="border-t border-line">
+      {
+        chapters.map((c, i) => (
+          <li class="chapter grid grid-cols-[3rem_minmax(0,1fr)] gap-x-4 border-b border-line py-6 sm:grid-cols-[4.5rem_minmax(0,1fr)]">
+            <span class="pt-1 font-mono text-xs text-muted">( 0{i + 1} )</span>
+            <div>
+              <h3 class="chapter-title font-display leading-none font-black text-heading uppercase">{c.title}</h3>
+              <p class="mt-3 leading-relaxed text-fg/75 sm:text-lg" set:html={c.text} />
             </div>
-            <p class="mt-4 leading-relaxed text-fg/85">
-              Base técnica em lógica, programação e banco de dados, aplicada desde já a projetos de análise.
-            </p>
+          </li>
+        ))
+      }
+    </ol>
+
+    <!-- Citação: a mesma serifa da frase da capa, com o final em lima e itálico -->
+    <figure class="lg:sticky lg:top-28 lg:self-start lg:pt-1">
+      <span class="block font-serif text-6xl leading-none text-accent" aria-hidden="true">“</span>
+      <blockquote class="-mt-4 font-serif text-[2rem] leading-[1.1] text-balance text-heading sm:text-[2.5rem]">
+        Um dado só faz sentido quando <em class="text-accent">ajuda alguém a resolver algum problema.</em>
+      </blockquote>
+      <figcaption class="mt-6 flex items-center gap-3 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">
+        <span class="h-px w-8 bg-line" aria-hidden="true"></span>
+        O que aprendi no estágio
+      </figcaption>
+    </figure>
+  </div>
+
+  <!-- Trajetória: formação e experiência como linhas de uma tabela, com número, título, lugar e detalhe.
+       No hover, o título acende em lima. Tudo visível também no celular. -->
+  <div class="mt-16 sm:mt-20">
+    <p class="flex items-center gap-4 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">
+      ( Trajetória ) <span class="h-px flex-1 bg-line" aria-hidden="true"></span>
+    </p>
+
+    <ul class="mt-2">
+      <li class="row group">
+        <span class="row-num">( 01 )</span>
+        <div>
+          <p class="row-kind">Formação</p>
+          <h3 class="row-title">Engenharia de Software</h3>
+        </div>
+        <div class="text-fg/80">
+          <p class="text-heading">UniCesumar</p>
+          <p class="mt-1 text-sm text-muted">Base técnica em lógica, programação e banco de dados, aplicada desde já a projetos de análise.</p>
+        </div>
+        <div class="flex items-center gap-3 md:w-44 md:flex-col md:items-end md:gap-2">
+          <div class="flex w-32 gap-1 md:w-full" role="img" aria-label={`${semester}º de ${totalSemesters} semestres`}>
+            {
+              Array.from({ length: totalSemesters }, (_, i) => (
+                <span class:list={['h-1.5 flex-1 rounded-full', i < semester ? 'bg-accent' : 'bg-line']} />
+              ))
+            }
           </div>
-        </article>
-    
-        <article data-collapse class="rounded-2xl border border-line p-5 transition-colors max-sm:data-open:border-heading/30 max-sm:data-open:bg-white/[0.03] sm:p-6">
-          <div class="relative max-sm:pr-8">
-            <p class="text-sm text-accent">Experiência atual</p>
-            <h3 class="mt-2 text-xl font-semibold text-heading">Estagiário de TI</h3>
-            <p class="mt-1 text-muted">Hebe's Life Science · Indústria farmacêutica</p>
-            <CardToggle label="Experiência atual: ver detalhes" target="experiencia-detalhes" />
-          </div>
-          <div id="experiencia-detalhes" data-collapse-body>
-            <a
-              href="/projetos/controle-de-notebooks/"
-              class="group mt-4 inline-flex items-center gap-1 text-sm font-medium text-link"
-            >
-              Ver o projeto de controle de notebooks
-              <span class="transition-transform group-hover:translate-x-1">→</span>
-            </a>
-            <ul class="mt-4 flex flex-wrap gap-2" aria-label="Ferramentas">
-              {
-                tools.map((t) => (
-                  <li class="rounded-md bg-white/[0.06] px-2.5 py-1 font-mono text-xs text-muted">{t}</li>
-                ))
-              }
-            </ul>
-          </div>
-        </article>
-      </div>
-    </div>
+          <span class="font-mono text-xs text-muted" aria-hidden="true">{semester}º / {totalSemesters} semestres</span>
+        </div>
+      </li>
+
+      <li class="row group">
+        <span class="row-num">( 02 )</span>
+        <div>
+          <p class="row-kind">Experiência atual</p>
+          <h3 class="row-title">Estagiário de TI</h3>
+        </div>
+        <div class="text-fg/80">
+          <p class="text-heading">Hebe's Life Science · Indústria farmacêutica</p>
+          <ul class="mt-1 flex flex-wrap gap-x-2 font-mono text-xs text-muted" aria-label="Ferramentas">
+            {tools.map((t, i) => <li>{t}{i < tools.length - 1 && <span aria-hidden="true"> ·</span>}</li>)}
+          </ul>
+        </div>
+        <a
+          href="/projetos/controle-de-notebooks/"
+          class="group/link inline-flex items-center gap-1 text-sm font-medium whitespace-nowrap text-link md:w-44 md:justify-end"
+        >
+          <span data-flip>Ver projeto</span>
+          <span class="transition-transform group-hover/link:translate-x-1" aria-hidden="true">→</span>
+        </a>
+      </li>
+    </ul>
   </div>
 </section>
 
 <style>
-  /* No celular, o conteúdo extra fica fechado até o toque; a partir de sm aparece sempre */
-  @media (width < 40rem) {
-    [data-collapse]:not([data-open]) [data-collapse-body] {
-      display: none;
-    }
+  /* Capítulos da história: título em Tektur estreita (acende em lima no hover) e as palavras-chave em branco */
+  .chapter-title {
+    font-size: clamp(1.6rem, 3vw, 2.1rem);
+    font-stretch: 75%;
+    font-variation-settings: 'wdth' 75;
+    transition: color 0.3s ease;
+  }
 
-    [data-collapse][data-open] [data-collapse-body] {
-      animation: collapse-fade 0.3s ease;
+  .chapter:hover .chapter-title {
+    color: var(--color-accent);
+  }
+
+  .chapter :global(b) {
+    font-weight: 500;
+    color: var(--color-heading);
+  }
+
+  /* Linha da trajetória: celular em pilha; a partir de md, quatro colunas alinhadas */
+  .row {
+    display: grid;
+    gap: 0.75rem;
+    padding-block: 1.75rem;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  @media (min-width: 48rem) {
+    .row {
+      grid-template-columns: 4.5rem minmax(0, 1.15fr) minmax(0, 1fr) auto;
+      align-items: center;
+      column-gap: 2rem;
     }
   }
 
-  @keyframes collapse-fade {
-    from {
-      opacity: 0;
-      transform: translateY(4px);
-    }
+  .row-num {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-muted);
+  }
+
+  .row-kind {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+  }
+
+  .row-title {
+    margin-top: 0.4rem;
+    font-size: clamp(1.6rem, 3.2vw, 2.25rem);
+    line-height: 1;
+    font-weight: 900;
+    font-stretch: 75%;
+    font-variation-settings: 'wdth' 75;
+    text-transform: uppercase;
+    color: var(--color-heading);
+    transition: color 0.3s ease;
+  }
+
+  .row:hover .row-title {
+    color: var(--color-accent);
   }
 </style>
-
-<script>
-  document.addEventListener('astro:page-load', () => {
-    document.querySelectorAll<HTMLButtonElement>('[data-collapse-toggle]').forEach((button) => {
-      const card = button.closest<HTMLElement>('[data-collapse]')!;
-      button.addEventListener('click', () => {
-        const open = card.toggleAttribute('data-open');
-        button.setAttribute('aria-expanded', String(open));
-      });
-    });
-  });
-</script>

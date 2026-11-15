@@ -1,73 +1,127 @@
 ---
 import { site } from '../data/site';
 import { temCurriculo } from '../lib/curriculo';
+import SectionTitle from './SectionTitle.astro';
+import BgWord from './BgWord.astro';
+
+// Canais de contato em linhas, como a Trajetória: número, nome grande, o endereço e uma seta.
+// O endereço mostrado sai do próprio link (sem o https://), então muda sozinho quando site.ts mudar.
+const semProtocolo = (url: string) => url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+
+const canais = [
+  { label: 'E-mail', detail: site.email, href: `mailto:${site.email}`, icon: '→', copy: true },
+  { label: 'LinkedIn', detail: semProtocolo(site.linkedin), href: site.linkedin, icon: '↗', external: true },
+  { label: 'GitHub', detail: semProtocolo(site.github), href: site.github, icon: '↗', external: true },
+  ...(temCurriculo ? [{ label: 'Currículo', detail: 'PDF · download', href: site.curriculo, icon: '↓', download: true }] : []),
+];
 ---
 
-<section id="contato" class="render-later mx-auto max-w-5xl px-6 pb-16 [contain-intrinsic-size:auto_550px] sm:pb-24">
-  <div
-    class="on-light relative mx-auto max-w-[44rem] overflow-hidden rounded-3xl bg-bg px-6 py-9 text-center sm:px-8"
-  >
-    <div class="relative">
-      <h2 class="mx-auto max-w-xl text-2xl font-semibold tracking-tight text-heading sm:text-3xl">
-        Vamos construir algo juntos?
-      </h2>
+<section id="contato" class="render-later relative isolate mx-auto max-w-5xl px-6 pb-16 [contain-intrinsic-size:auto_800px] sm:pb-24">
+  <BgWord word="CONTATO" />
+  <SectionTitle title="Vamos conversar?" subtitle="Escolha o canal que preferir." />
 
-      <div class="mt-6 flex flex-wrap justify-center gap-3">
-        <a
-          href={`mailto:${site.email}`}
-          class="group inline-flex items-center gap-2 rounded-full bg-heading px-5 py-3 font-medium text-bg transition hover:bg-link-strong hover:text-white"
-        >
-          Enviar e-mail
-          <span class="transition-transform group-hover:translate-x-1">→</span>
-        </a>
-        <button
-          id="copy-email"
-          data-email={site.email}
-          class="inline-flex cursor-pointer items-center rounded-full border border-line px-5 py-3 text-sm text-fg transition hover:border-heading/40 hover:text-heading"
-        >
-          {site.email}
-        </button>
-        {
-          temCurriculo && (
-            <a
-              href={site.curriculo}
-              download="Curriculo-Gabriel-Navarro-Germano.pdf"
-              class="inline-flex items-center gap-2 rounded-full border border-line px-5 py-3 text-sm text-fg transition hover:border-heading/40 hover:text-heading"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4" aria-hidden="true">
-                <path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-              Baixar currículo
-            </a>
-          )
-        }
-      </div>
+  <ol class="mt-12 border-t border-line">
+    {
+      canais.map((c, i) => (
+        <li class="ch-row group relative grid grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 border-b border-line py-5 sm:grid-cols-[4.5rem_minmax(0,1fr)_minmax(0,1fr)_9rem] sm:gap-x-8 sm:py-7">
+          <span class="ch-num font-mono text-xs text-muted transition-colors">( 0{i + 1} )</span>
 
-      <div class="mt-3 flex justify-center gap-6 text-sm">
-        <a href={site.linkedin} target="_blank" rel="noopener" class="py-3 text-muted transition hover:text-heading">
-          LinkedIn ↗
-        </a>
-        <a href={site.github} target="_blank" rel="noopener" class="py-3 text-muted transition hover:text-heading">
-          GitHub ↗
-        </a>
-      </div>
-    </div>
-  </div>
+          <!-- O link cobre a linha inteira (pelo ::after); o botão de copiar fica por cima dele -->
+          <a
+            href={c.href}
+            class="ch-link font-display leading-none font-black text-heading uppercase transition-colors"
+            {...(c.external ? { target: '_blank', rel: 'noopener' } : {})}
+            {...(c.download ? { download: 'Curriculo-Gabriel-Navarro-Germano.pdf' } : {})}
+          >
+            <span data-flip>{c.label}</span>
+          </a>
+
+          <span class="col-start-2 truncate font-mono text-xs text-muted sm:col-start-auto sm:text-sm">{c.detail}</span>
+
+          <span class="col-start-3 row-span-2 row-start-1 flex items-center justify-end gap-3 sm:col-start-auto sm:row-span-1 sm:row-start-auto">
+            {c.copy && (
+              <button
+                type="button"
+                data-copy={site.email}
+                class="relative z-10 hidden cursor-pointer rounded-full border border-line px-3 py-1.5 font-mono text-[11px] tracking-[0.15em] text-muted uppercase transition-colors hover:border-heading/40 hover:text-heading sm:inline-flex"
+              >
+                Copiar
+              </button>
+            )}
+            <span class="ch-icon pointer-events-none grid size-11 place-items-center rounded-full border border-line text-lg text-heading transition" aria-hidden="true">
+              {c.icon}
+            </span>
+          </span>
+        </li>
+      ))
+    }
+  </ol>
 </section>
 
+<style>
+  .ch-link {
+    font-size: clamp(2.25rem, 6vw, 4.25rem);
+    font-stretch: 75%;
+    font-variation-settings: 'wdth' 75;
+  }
+
+  /* Link esticado: a linha inteira é clicável */
+  .ch-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .ch-row {
+    transition: background-color 0.3s ease;
+  }
+
+  /* Hover (ou foco pelo teclado): a linha acende em lima e a seta anda */
+  .ch-row:hover,
+  .ch-row:focus-within {
+    background-color: rgb(255 255 255 / 0.025);
+  }
+
+  .ch-row:hover .ch-link,
+  .ch-row:focus-within .ch-link,
+  .ch-row:hover .ch-num,
+  .ch-row:focus-within .ch-num {
+    color: var(--color-accent);
+  }
+
+  /* A seta anda com transform, o que a colocaria por cima do link esticado: por isso ela é
+     pointer-events-none (o clique passa direto para o link da linha) */
+  .ch-row:hover .ch-icon,
+  .ch-row:focus-within .ch-icon {
+    border-color: var(--color-accent);
+    background-color: var(--color-accent);
+    color: var(--color-ink);
+    transform: translateX(4px);
+  }
+
+  .ch-link:focus-visible {
+    outline: none;
+  }
+
+  .ch-row:has(.ch-link:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
+  }
+</style>
+
 <script>
+  // Copiar o e-mail: o botão avisa por 2 segundos e volta ao normal
   document.addEventListener('astro:page-load', () => {
-    const btn = document.getElementById('copy-email');
-    if (!btn) return;
-    btn.addEventListener('click', async () => {
-      const email = btn.dataset.email ?? '';
-      try {
-        await navigator.clipboard.writeText(email);
-        btn.textContent = 'E-mail copiado ✓';
-      } catch {
-        btn.textContent = email;
-      }
-      setTimeout(() => (btn.textContent = email), 2000);
+    document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(btn.dataset.copy ?? '');
+          btn.textContent = 'Copiado ✓';
+        } catch {
+          btn.textContent = 'Não deu';
+        }
+        setTimeout(() => (btn.textContent = 'Copiar'), 2000);
+      });
     });
   });
 </script>
