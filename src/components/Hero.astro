@@ -5,9 +5,43 @@ import { site } from '../data/site';
 import { temCurriculo } from '../lib/curriculo';
 
 const focus = ['Excel', 'Power BI', 'ETL'];
+
+// Abertura: números soltos que viram um gráfico de pessoas por área. Cada barra tem seu número, que aparece
+// primeiro solto em (x, y) e depois voa para o topo dela; a barra Dados (alvo) é onde a imagem mergulha
+// (drill-down). Os `soltos` são números que não viram nada e somem.
+// Depois, a lista de pessoas (fictícias) que a consulta filtra: fase 1 = WHERE área = 'Dados';
+// fase 2 = AND foco = 'Power BI'. Sobra você.
+const barras = [
+  { area: 'RH', valor: 8, x: 22, y: 30 },
+  { area: 'TI', valor: 12, x: 250, y: 62 },
+  { area: 'Vendas', valor: 15, x: 70, y: 140 },
+  { area: 'Dados', valor: 21, x: 272, y: 150, alvo: true },
+  { area: 'Finanças', valor: 6, x: 150, y: 18 },
+];
+const soltos = [
+  { t: '3,2', x: 118, y: 92 },
+  { t: '47', x: 36, y: 96 },
+  { t: '0,8', x: 212, y: 24 },
+  { t: '112', x: 198, y: 112 },
+  { t: '28%', x: 100, y: 52 },
+  { t: '64', x: 288, y: 104 },
+  { t: '9', x: 160, y: 160 },
+];
+const acima = [
+  { nome: 'Ana Souza', area: 'RH', fase: 1 },
+  { nome: 'Lucas Prado', area: 'Dados', fase: 2 },
+  { nome: 'Marina Alves', area: 'Vendas', fase: 1 },
+  { nome: 'Bruno Lima', area: 'TI', fase: 1 },
+];
+const abaixo = [
+  { nome: 'Carla Dias', area: 'Dados', fase: 2 },
+  { nome: 'Rafael Melo', area: 'Logística', fase: 1 },
+  { nome: 'Júlia Nunes', area: 'Finanças', fase: 1 },
+  { nome: 'Thiago Rocha', area: 'Dados', fase: 2 },
+];
 ---
 
-<!-- Abertura: na primeira visita da sessão, antes de pintar a capa, liga a tela de carregamento.
+<!-- Abertura: na primeira visita da sessão, antes de pintar a capa, liga a animação de abertura.
      Quem pediu menos movimento (ou já viu nesta sessão) vai direto para o site. -->
 <script is:inline>
   (function () {
@@ -16,23 +50,114 @@ const focus = ['Excel', 'Power BI', 'ETL'];
       if (sessionStorage.getItem('intro-seen')) return;
       sessionStorage.setItem('intro-seen', '1');
       var root = document.documentElement;
-      root.classList.add('show-loader', 'intro-pending');
-      // Trava de segurança: se algo falhar, em 4,5 s o site aparece e a rolagem volta
+      root.classList.add('show-intro', 'intro-pending');
+      // Trava de segurança: se algo falhar, em 13 s o site aparece e a rolagem volta
       setTimeout(function () {
-        root.classList.remove('show-loader', 'intro-pending');
-      }, 4500);
+        root.classList.remove('show-intro', 'intro-pending');
+      }, 13000);
     } catch (e) {}
   })();
 </script>
 
-<!-- Tela de carregamento: contador de 0% a 100% e depois sobe, revelando a capa -->
-<div data-loader class="hero-loader on-black fixed inset-0 z-[100] flex-col items-center justify-center bg-bg" aria-hidden="true">
-  <p class="font-mono text-xs tracking-[0.2em] text-muted uppercase">( 20 26 )</p>
-  <p data-loader-count class="loader-count mt-4 font-display text-8xl leading-none font-black text-accent tabular-nums sm:text-9xl">0%</p>
-  <p class="mt-6 font-mono text-xs tracking-[0.2em] text-heading uppercase">Gabriel Navarro <span class="text-link">·</span> Portfólio</p>
+<!-- Abertura, automática (uns 8,5 segundos), no traço do site:
+     1. "Todo dado começa como um número solto": números aparecem espalhados e voam para o topo de barras que
+        crescem, formando um gráfico de pessoas por área; a barra Dados acende;
+     2. a imagem mergulha nessa barra (drill-down);
+     3. "Mas quem transforma dado em decisão?": a consulta é digitada e responde, riscando as pessoas até
+        sobrar o seu nome, selecionado;
+     4. a tela sobe como uma cortina e o nome entra na capa.
+     Qualquer clique, toque, rolagem ou tecla pula direto para a capa. -->
+<div data-intro class="intro on-black fixed inset-0 z-[100] items-center justify-center overflow-hidden bg-bg" aria-hidden="true">
+  <div class="intro-rack flex flex-col items-center">
+    <p class="intro-q intro-q1 mb-6 px-6 text-center font-serif text-[1.6rem] leading-tight text-heading sm:mb-8 sm:text-4xl">
+      Todo dado começa como um número <em class="text-accent">solto.</em>
+    </p>
+    <svg viewBox="0 0 300 200" class="intro-svg overflow-visible">
+      <g class="intro-zoom">
+        <path class="ic-grid" d="M14 128h278M14 86h278M14 44h278"></path>
+        <path class="ic-axis" d="M14 170h278" pathLength="1"></path>
+        {
+          barras.map((b, i) => {
+            const x = 28 + i * 52;
+            const h = b.valor * 6;
+            return (
+              <g class:list={['ic-bar', b.alvo && 'ic-target']} style={`--i: ${i}`}>
+                <rect class="ic-rect" x={x} y={170 - h} width="36" height={h}></rect>
+                {b.alvo && <rect class="ic-hl" x={x} y={170 - h} width="36" height={h}></rect>}
+                <text class="ic-area" x={x + 18} y="184" text-anchor="middle">{b.area}</text>
+              </g>
+            );
+          })
+        }
+        {
+          barras.map((b, i) => {
+            const fx = 28 + i * 52 + 18;
+            const fy = 170 - b.valor * 6 - 6;
+            return (
+              <text
+                class:list={['ic-num', b.alvo && 'ic-num-target']}
+                x={fx}
+                y={fy}
+                text-anchor="middle"
+                style={`--i: ${i}; --o: ${(i * 5) % 12}; --sx: ${b.x - fx}px; --sy: ${b.y - fy}px`}
+              >
+                {b.valor}
+              </text>
+            );
+          })
+        }
+        {
+          soltos.map((n, i) => (
+            <text class="ic-num ic-loose" x={n.x} y={n.y} text-anchor="middle" style={`--o: ${((i + 5) * 5) % 12}`}>
+              {n.t}
+            </text>
+          ))
+        }
+      </g>
+    </svg>
+    <p class="intro-cap mt-6 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">
+      ( Pessoas por área )
+    </p>
+  </div>
+
+  <div class="intro-data absolute w-[min(92vw,32rem)]">
+    <p class="intro-q intro-q2 mb-6 font-serif text-[1.6rem] leading-tight text-heading sm:text-4xl">
+      Mas quem transforma dado em <em class="text-accent">decisão?</em>
+    </p>
+    <p class="font-mono text-[11px] leading-[1.7] text-fg/80 sm:text-xs">
+      <span class="flex items-center"><span class="intro-type" style="--n: 23; --t: 0.45s; --d: 5.82s"><b>SELECT</b> nome <b>FROM</b> equipe</span></span>
+      <span class="flex items-center">
+        <span class="intro-type" style="--n: 43; --t: 0.78s; --d: 6.34s"><b>WHERE</b> área = <i>'Dados'</i> <b>AND</b> foco = <i>'Power BI'</i>;</span><span class="intro-caret"></span>
+      </span>
+    </p>
+    <ol class="mt-5 border-t border-line">
+      {
+        acima.map((r) => (
+          <li class="ir-row" style={`--d: ${r.fase === 1 ? 6.73 : 7.19}s`}>
+            <span class="ir-row-in"><span class="w-24 flex-none text-muted/70">{r.area}</span>{r.nome}</span>
+          </li>
+        ))
+      }
+      <li class="ir-me">
+        <span class="w-24 flex-none self-start pt-1 font-mono text-[11px] text-accent">Dados</span>
+        <span class="ir-me-name font-display font-black text-heading uppercase">Gabriel Navarro Germano</span>
+      </li>
+      {
+        abaixo.map((r) => (
+          <li class="ir-row" style={`--d: ${r.fase === 1 ? 6.79 : 7.25}s`}>
+            <span class="ir-row-in"><span class="w-24 flex-none text-muted/70">{r.area}</span>{r.nome}</span>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+
+  <p class="intro-skip absolute bottom-8 left-1/2 -translate-x-1/2 font-mono text-[10px] tracking-[0.15em] whitespace-nowrap text-muted/70 uppercase">
+    ( Toque ou role para pular )
+  </p>
 </div>
 
-<section id="inicio" class="hero-ice relative isolate flex min-h-svh flex-col pt-24 sm:pt-28">
+<section id="inicio" class="hero-ice relative isolate flex min-h-svh flex-col pt-20 sm:pt-28">
   <!-- Linha de rótulos no topo -->
   <div class="mx-auto w-full max-w-5xl px-6">
     <div class="hero-fade flex items-center justify-between gap-4 border-t border-line pt-3 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">
@@ -40,21 +165,21 @@ const focus = ['Excel', 'Power BI', 'ETL'];
         <span class="size-1.5 flex-none rounded-full bg-accent" aria-hidden="true"></span>
         Análise de Dados & BI
       </p>
-      <p>Portfólio <span class="text-heading">( 20 26 )</span></p>
+      <p><span class="max-sm:hidden">Portfólio </span><span class="text-heading">( 20 26 )</span></p>
     </div>
   </div>
 
   <!-- Centro, em três colunas: os focos, uma frase de apresentação e os botões -->
-  <div class="hero-fade mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-6 py-10">
-    <div class="grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,2.2fr)_auto] md:items-start md:gap-10">
+  <div class="hero-fade mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-6 py-6 sm:py-10">
+    <div class="grid gap-6 sm:gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,2.2fr)_auto] md:items-start md:gap-10">
       <!-- Frase em serifa (Instrument Serif): contrasta com a Tektur do nome; o destaque em lima vai em itálico -->
-      <p class="max-w-xl font-serif text-[2.1rem] leading-[1.08] text-balance text-heading sm:text-[2.6rem] md:order-2 lg:text-5xl">
+      <p class="max-w-xl font-serif text-[1.8rem] leading-[1.08] text-balance text-heading sm:text-[2.6rem] md:order-2 lg:text-5xl">
         Da infraestrutura à visualização de dados, <em class="text-accent">gerando insights corporativos.</em>
       </p>
 
       <!-- Foto em retrato (preto e branco, ganha cor no hover) e os focos logo abaixo; no celular, lado a lado -->
       <div class="flex items-end gap-5 md:order-1 md:flex-col md:items-start md:gap-5">
-        <div class="hero-photo w-28 flex-none sm:w-32 md:w-full md:max-w-44">
+        <div data-active="view" class="hero-photo w-24 flex-none sm:w-32 md:w-full md:max-w-44">
           <Image
             src={foto}
             alt="Foto de Gabriel Navarro Germano"
@@ -74,26 +199,26 @@ const focus = ['Excel', 'Power BI', 'ETL'];
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center gap-3 md:order-3 md:flex-col md:items-end">
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3 md:order-3 md:flex-col md:items-end">
         <a
           href="#contato"
-          class="group inline-flex items-center gap-2 rounded-full bg-heading px-6 py-3 font-medium whitespace-nowrap text-bg transition hover:bg-link-strong hover:text-white"
+          class="group inline-flex items-center gap-2 rounded-full bg-heading px-5 py-2 font-medium sm:px-6 sm:py-3 whitespace-nowrap text-bg transition hover:bg-link-strong hover:text-white"
         >
           <span data-flip>Entre em contato</span>
           <span class="transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
         </a>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 sm:gap-3">
           {
             temCurriculo && (
               <a
                 href={site.curriculo}
                 download="Curriculo-Gabriel-Navarro-Germano.pdf"
-                class="inline-flex items-center gap-2 rounded-full border border-line bg-bg px-5 py-3 font-medium text-heading transition hover:border-link hover:bg-link-strong/15"
+                class="inline-flex items-center justify-center gap-2 rounded-full border border-line bg-bg font-medium max-sm:size-10 sm:px-5 sm:py-3 text-heading transition hover:border-link hover:bg-link-strong/15"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4" aria-hidden="true">
                   <path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
-                <span data-flip>Currículo</span>
+                <span data-flip class="max-sm:sr-only">Currículo</span>
               </a>
             )
           }
@@ -102,7 +227,7 @@ const focus = ['Excel', 'Power BI', 'ETL'];
             target="_blank"
             rel="noopener"
             aria-label="LinkedIn"
-            class="inline-flex h-12 w-12 flex-none items-center justify-center rounded-full border border-line bg-bg text-muted transition hover:border-link hover:text-heading"
+            class="inline-flex size-10 flex-none sm:size-12 items-center justify-center rounded-full border border-line bg-bg text-muted transition hover:border-link hover:text-heading"
           >
             <svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
               <path
@@ -115,7 +240,7 @@ const focus = ['Excel', 'Power BI', 'ETL'];
             target="_blank"
             rel="noopener"
             aria-label="GitHub"
-            class="inline-flex h-12 w-12 flex-none items-center justify-center rounded-full border border-line bg-bg text-muted transition hover:border-link hover:text-heading"
+            class="inline-flex size-10 flex-none sm:size-12 items-center justify-center rounded-full border border-line bg-bg text-muted transition hover:border-link hover:text-heading"
           >
             <svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
               <path
@@ -156,7 +281,7 @@ const focus = ['Excel', 'Power BI', 'ETL'];
     flex-direction: column;
     width: max-content;
     font-family: var(--font-display);
-    font-size: calc(100cqi / 4.6); /* celular: ~85% da largura, para o nome não ocupar a tela toda */
+    font-size: calc(100cqi / 5.1); /* celular: ~77% da largura, para o nome caber na primeira tela junto com o resto da capa */
     font-weight: 900;
     font-stretch: 75%;
     font-variation-settings: 'wdth' 75;
@@ -192,6 +317,15 @@ const focus = ['Excel', 'Power BI', 'ETL'];
   .hero-photo:hover :global(img) {
     filter: grayscale(0);
     transform: scale(1.1);
+  }
+
+  /* No toque, sem hover: a foto ganha cor sozinha logo depois de aparecer (depois da abertura, se houver) */
+  @media (hover: none) {
+    :global(html:not(.intro-pending)) .hero-photo.is-active :global(img) {
+      filter: grayscale(0);
+      transform: scale(1.1);
+      transition-delay: 0.9s;
+    }
   }
 
   :global(html.intro-pending) .hero-photo {
@@ -232,63 +366,386 @@ const focus = ['Excel', 'Power BI', 'ETL'];
     }
   }
 
-  /* Tela de carregamento */
-  .hero-loader {
+  /* Abertura: só aparece com html.show-intro (o script inline liga na primeira visita da sessão) */
+  .intro {
     display: none;
   }
 
-  :global(html.show-loader) .hero-loader {
+  :global(html.show-intro) .intro {
     display: flex;
-    animation: loader-failsafe 0s 5s forwards;
+    animation: intro-failsafe 0s 13s forwards;
   }
 
-  :global(html.show-loader) body {
+  :global(html.show-intro) body {
     overflow: hidden;
   }
 
-  .hero-loader.is-leaving {
+  /* Ao sair, sobe como uma cortina */
+  .intro.is-leaving {
     transform: translateY(-100%);
     transition: transform 0.9s cubic-bezier(0.75, 0, 0.2, 1);
   }
 
-  @keyframes loader-failsafe {
+  @keyframes intro-failsafe {
     to {
       visibility: hidden;
+    }
+  }
+
+  /* As frases: sobem e aparecem */
+  .intro-q {
+    animation: intro-rise 1.17s cubic-bezier(0.2, 0.7, 0.2, 1) 0.26s both;
+  }
+
+  .intro-q1 {
+    animation:
+      intro-rise 1.17s cubic-bezier(0.2, 0.7, 0.2, 1) 0.26s both,
+      intro-out 0.52s ease 4.4s forwards;
+  }
+
+  .intro-q2 {
+    animation-delay: 5.37s;
+  }
+
+  .intro-cap {
+    animation:
+      intro-rise 1.04s ease 1.17s both,
+      intro-out 0.52s ease 4.4s forwards;
+  }
+
+  .intro-skip {
+    animation: intro-rise 1.04s ease 1.95s both;
+  }
+
+  @keyframes intro-rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+
+  @keyframes intro-out {
+    to {
+      opacity: 0;
+    }
+  }
+
+  /* 1. Números soltos que viram um gráfico */
+  .intro-svg {
+    width: min(86vw, 30rem);
+    height: auto;
+  }
+
+  .intro-rack {
+    animation: intro-out 0.45s ease 5.3s forwards;
+  }
+
+  /* Cada número aparece no seu canto (--sx, --sy) e depois voa para o topo da sua barra */
+  .ic-num {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    fill: var(--color-heading);
+    animation:
+      ic-appear 0.6s ease calc(0.65s + var(--o) * 0.11s) both,
+      ic-move 1.1s cubic-bezier(0.6, 0, 0.2, 1) calc(2.3s + var(--i) * 0.13s) both,
+      intro-out 0.35s ease 4.45s forwards;
+  }
+
+  .ic-num-target {
+    fill: var(--color-accent);
+  }
+
+  /* Os que não viram barra ficam apagados e somem quando o gráfico se forma */
+  .ic-loose {
+    fill: var(--color-muted);
+    animation:
+      ic-appear 0.6s ease calc(0.65s + var(--o) * 0.11s) both,
+      intro-out 0.5s ease 2.3s forwards;
+  }
+
+  @keyframes ic-appear {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes ic-move {
+    from {
+      transform: translate(var(--sx), var(--sy));
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  .ic-axis {
+    fill: none;
+    stroke: color-mix(in srgb, var(--color-heading) 45%, transparent);
+    stroke-width: 1;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    /* Desenha antes das barras e some no mergulho (no zoom, a linha ficaria grossa) */
+    animation:
+      ir-draw 0.9s cubic-bezier(0.6, 0, 0.2, 1) 2s forwards,
+      intro-out 0.4s ease 4.5s forwards;
+  }
+
+  .ic-grid {
+    fill: none;
+    stroke: color-mix(in srgb, var(--color-heading) 10%, transparent);
+    stroke-width: 1;
+    stroke-dasharray: 2 3;
+    vector-effect: non-scaling-stroke;
+    animation:
+      ic-appear 0.8s ease 2.2s both,
+      intro-out 0.4s ease 4.5s forwards;
+  }
+
+  @keyframes ir-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* As barras crescem de baixo para cima, uma depois da outra */
+  .ic-rect,
+  .ic-hl {
+    vector-effect: non-scaling-stroke;
+    stroke-width: 1;
+  }
+
+  .ic-rect {
+    fill: color-mix(in srgb, var(--color-heading) 7%, transparent);
+    stroke: color-mix(in srgb, var(--color-heading) 30%, transparent);
+    transform-box: fill-box;
+    transform-origin: bottom;
+    animation: ic-grow 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) calc(2.35s + var(--i) * 0.13s) both;
+  }
+
+  /* No mergulho, só a barra Dados fica: as outras se apagam */
+  .ic-bar:not(.ic-target) .ic-rect {
+    animation:
+      ic-grow 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) calc(2.35s + var(--i) * 0.13s) both,
+      intro-out 0.35s ease 4.45s forwards;
+  }
+
+  @keyframes ic-grow {
+    from {
+      transform: scaleY(0);
+    }
+  }
+
+  .ic-area {
+    font-family: var(--font-mono);
+    font-size: 7px;
+    fill: var(--color-muted);
+    animation:
+      ic-appear 0.6s ease calc(2.5s + var(--i) * 0.13s) both,
+      intro-out 0.4s ease 4.5s forwards;
+  }
+
+  /* A barra Dados acende antes do mergulho: uma moldura lima por cima, que aparece */
+  .ic-hl {
+    fill: color-mix(in srgb, var(--color-accent) 16%, transparent);
+    stroke: var(--color-accent);
+    stroke-width: 1.5;
+    opacity: 0;
+    animation: intro-select 0.5s ease 3.75s forwards;
+  }
+
+  .ic-target .ic-area {
+    fill: var(--color-accent);
+  }
+
+  /* 2. O mergulho (drill-down): a imagem cresce para dentro da barra Dados */
+  .intro-zoom {
+    transform-box: view-box;
+    transform-origin: 202px 107px;
+    animation: ir-zoom 1.3s cubic-bezier(0.7, 0, 0.25, 1) 4.5s forwards;
+  }
+
+  @keyframes ir-zoom {
+    to {
+      transform: scale(24);
+    }
+  }
+
+  @keyframes ir-led {
+    50% {
+      opacity: 0.2;
+    }
+  }
+
+  /* 3. Os dados, lá dentro */
+  .intro-data {
+    animation: intro-data 0.65s ease 5.3s both;
+  }
+
+  @keyframes intro-data {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
+
+  .intro-data :global(b) {
+    font-weight: 500;
+    color: var(--color-accent);
+  }
+
+  .intro-data :global(i) {
+    font-style: normal;
+    color: var(--color-heading);
+  }
+
+  /* Digitação: a largura vai de 0 a N caracteres, um por passo (fonte mono: 1ch = 1 caractere) */
+  .intro-type {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    vertical-align: bottom;
+    animation: intro-type var(--t) steps(var(--n)) var(--d) both;
+  }
+
+  @keyframes intro-type {
+    from {
+      width: 0;
+    }
+    to {
+      width: calc(var(--n) * 1ch);
+    }
+  }
+
+  .intro-caret {
+    display: inline-block;
+    width: 0.55em;
+    height: 1.1em;
+    margin-left: 1px;
+    background: var(--color-accent);
+    animation:
+      intro-caret-on 0s 6.34s both,
+      ir-led 0.9s steps(1) 6.34s infinite;
+  }
+
+  @keyframes intro-caret-on {
+    from {
+      visibility: hidden;
+    }
+    to {
+      visibility: visible;
+    }
+  }
+
+  /* Linhas dos outros: o filtro risca, apaga e recolhe */
+  .ir-row {
+    position: relative;
+    display: grid;
+    grid-template-rows: 1fr;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: color-mix(in srgb, var(--color-fg) 60%, transparent);
+    animation: ir-row-out 0.78s cubic-bezier(0.6, 0, 0.2, 1) var(--d) forwards;
+  }
+
+  .ir-row::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background: var(--color-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    animation: ir-strike 0.33s ease var(--d) forwards;
+  }
+
+  .ir-row-in {
+    display: flex;
+    min-height: 0;
+    overflow: hidden;
+    border-bottom: 1px solid var(--color-line);
+    padding-block: 0.4rem;
+  }
+
+  @keyframes ir-strike {
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  @keyframes ir-row-out {
+    0%,
+    35% {
+      opacity: 1;
+      grid-template-rows: 1fr;
+    }
+    100% {
+      opacity: 0;
+      grid-template-rows: 0fr;
+    }
+  }
+
+  /* A sua linha: o nome grande, que acende e fica selecionado quando sobra só ele */
+  .ir-me {
+    position: relative;
+    display: flex;
+    border-bottom: 1px solid var(--color-line);
+    padding-block: 0.6rem;
+  }
+
+  .ir-me::before {
+    content: '';
+    position: absolute;
+    inset: -1px -0.5rem;
+    border: 2px solid var(--color-accent);
+    opacity: 0;
+    animation: intro-select 0.52s ease 7.51s forwards;
+  }
+
+  .ir-me-name {
+    font-size: clamp(1.6rem, 6.5vw, 2.6rem);
+    line-height: 0.9;
+    font-stretch: 75%;
+    font-variation-settings: 'wdth' 75;
+    opacity: 0.55;
+    animation: intro-select 0.52s ease 7.51s forwards;
+  }
+
+  @keyframes intro-select {
+    to {
+      opacity: 1;
     }
   }
 </style>
 
 <script>
-  // Abertura: conta de 0% a 100% (só números pares) e sobe a tela, revelando a capa.
-  // Lanterna: só a região debaixo do mouse muda de cor.
+  // Abertura: depois de uns 8,5 segundos (ou no primeiro clique, toque, rolagem ou tecla) a tela sobe,
+  // revelando a capa, e o nome entra. Lanterna: só a região debaixo do mouse muda de cor.
   let controller: AbortController | undefined;
 
-  const runIntro = () => {
+  const runIntro = (signal: AbortSignal) => {
     const root = document.documentElement;
-    if (!root.classList.contains('show-loader')) return;
-    const loader = document.querySelector<HTMLElement>('[data-loader]');
-    const count = document.querySelector<HTMLElement>('[data-loader-count]');
-    const finish = () => {
-      root.classList.remove('show-loader', 'intro-pending');
-    };
-    if (!loader || !count) return finish();
+    if (!root.classList.contains('show-intro')) return;
+    const intro = document.querySelector<HTMLElement>('[data-intro]');
+    if (!intro) return root.classList.remove('show-intro', 'intro-pending');
 
-    const duration = 1600;
-    const start = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - t, 2);
-      count.textContent = `${Math.round((eased * 100) / 2) * 2}%`;
-      if (t < 1) return requestAnimationFrame(tick);
-
-      // Sobe a tela e, logo depois, o nome entra
-      setTimeout(() => {
-        loader.classList.add('is-leaving');
-        setTimeout(() => root.classList.remove('intro-pending'), 350);
-        setTimeout(() => root.classList.remove('show-loader'), 950); // fim da subida (0,9 s)
-      }, 200);
+    const skip = new AbortController();
+    let done = false;
+    const leave = () => {
+      if (done) return;
+      done = true;
+      skip.abort();
+      clearTimeout(timer);
+      intro.classList.add('is-leaving');
+      setTimeout(() => root.classList.remove('intro-pending'), 350);
+      setTimeout(() => root.classList.remove('show-intro'), 950); // fim da subida (0,9 s)
     };
-    requestAnimationFrame(tick);
+    const timer = setTimeout(leave, 8225);
+    signal.addEventListener('abort', leave);
+    for (const type of ['pointerdown', 'keydown', 'wheel', 'touchstart']) {
+      window.addEventListener(type, leave, { passive: true, signal: skip.signal });
+    }
   };
 
   document.addEventListener('astro:page-load', () => {
@@ -299,7 +756,7 @@ const focus = ['Excel', 'Power BI', 'ETL'];
     const hero = document.getElementById('inicio');
     if (!hero) return;
 
-    runIntro();
+    runIntro(signal);
 
     hero.querySelectorAll<HTMLElement>('[data-fill]').forEach((el) => {
       el.addEventListener(

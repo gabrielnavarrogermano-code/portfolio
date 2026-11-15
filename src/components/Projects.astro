@@ -11,7 +11,6 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
   <BgWord word="PROJETOS" />
   <SectionTitle
     title="Dados que viram decisão"
-    subtitle="Na empresa onde estou, o volume de dados ainda é pequeno. Achei que era a hora certa de organizar as informações, antes que isso virasse um problema."
   />
 
   <div class="mt-12 space-y-16">
@@ -22,7 +21,7 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
                página do dashboard -->
           <a
             href={`/projetos/${p.id}/`}
-           
+            data-active
             class="project-card group relative block overflow-hidden rounded-2xl border border-line bg-ink"
           >
             <div class="relative aspect-[4/5] sm:aspect-[16/10]">
@@ -69,14 +68,14 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
               { label: 'Ferramentas', value: p.data.tools.map((t) => t.replaceAll(' ', ' ')).join(' · ') },
               ...(p.data.result ? [{ label: 'Resultado', value: p.data.result }] : []),
             ].map((f) => (
-              <div class="border-b border-line py-5 md:border-r md:border-b-0 md:px-6 md:first:pl-0 md:last:border-r-0">
+              <div data-reveal class="border-b border-line py-5 md:border-r md:border-b-0 md:px-6 md:first:pl-0 md:last:border-r-0">
                 <dt class="font-mono text-[11px] tracking-[0.15em] text-muted uppercase">( {f.label} )</dt>
                 <dd class="mt-2 leading-relaxed text-fg/85">{f.value}</dd>
               </div>
             ))}
           </dl>
 
-          <div class="pc-next group relative flex items-center gap-4 border-b border-line md:border-t py-6 sm:gap-8 sm:py-7 md:mt-6">
+          <div data-reveal data-active class="pc-next group relative flex items-center gap-4 border-b border-line md:border-t py-6 sm:gap-8 sm:py-7 md:mt-6">
             <a href={`/projetos/${p.id}/`} class="pc-next-link flex-1 font-display leading-none font-black text-heading uppercase transition-colors">
               <span data-flip>Ler estudo de caso</span>
             </a>
@@ -112,12 +111,14 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
   }
 
   .pc-next:hover .pc-next-link,
-  .pc-next:focus-within .pc-next-link {
+  .pc-next:focus-within .pc-next-link,
+  .pc-next.is-active .pc-next-link {
     color: var(--color-accent);
   }
 
   .pc-next:hover .pc-next-icon,
-  .pc-next:focus-within .pc-next-icon {
+  .pc-next:focus-within .pc-next-icon,
+  .pc-next.is-active .pc-next-icon {
     border-color: var(--color-accent);
     background-color: var(--color-accent);
     color: var(--color-ink);
@@ -185,6 +186,22 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
 
     /* O degradê clareia para as cores do painel aparecerem; o título continua legível embaixo */
     .project-card:hover .pc-shade {
+      opacity: 0.7;
+    }
+  }
+
+  /* No toque: quando o card passa pelo meio da tela, troca para a outra página do dashboard */
+  @media (hover: none) {
+    .project-card.is-active .pc-img {
+      transform: scale(1.04);
+    }
+
+    .project-card.is-active .pc-img-hover {
+      opacity: 1;
+      transform: scale(1.02);
+    }
+
+    .project-card.is-active .pc-shade {
       opacity: 0.7;
     }
   }

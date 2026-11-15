@@ -23,7 +23,7 @@ const canais = [
   <ol class="mt-12 border-t border-line">
     {
       canais.map((c, i) => (
-        <li class="ch-row group relative grid grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 border-b border-line py-4 sm:grid-cols-[4.5rem_minmax(0,1fr)_minmax(0,1fr)_9rem] sm:gap-x-8 sm:py-5">
+        <li data-reveal data-active class="ch-row group relative grid grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 border-b border-line py-4 sm:grid-cols-[4.5rem_minmax(0,1fr)_minmax(0,1fr)_9rem] sm:gap-x-8 sm:py-5">
           <span class="ch-num font-mono text-xs text-muted transition-colors">( 0{i + 1} )</span>
 
           <!-- O link cobre a linha inteira (pelo ::after); o botão de copiar fica por cima dele -->
@@ -84,15 +84,18 @@ const canais = [
 
   .ch-row:hover .ch-link,
   .ch-row:focus-within .ch-link,
+  .ch-row.is-active .ch-link,
   .ch-row:hover .ch-num,
-  .ch-row:focus-within .ch-num {
+  .ch-row:focus-within .ch-num,
+  .ch-row.is-active .ch-num {
     color: var(--color-accent);
   }
 
   /* A seta anda com transform, o que a colocaria por cima do link esticado: por isso ela é
      pointer-events-none (o clique passa direto para o link da linha) */
   .ch-row:hover .ch-icon,
-  .ch-row:focus-within .ch-icon {
+  .ch-row:focus-within .ch-icon,
+  .ch-row.is-active .ch-icon {
     border-color: var(--color-accent);
     background-color: var(--color-accent);
     color: var(--color-ink);

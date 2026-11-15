@@ -34,9 +34,8 @@ const studying = [
           Levar o dado da fonte <em class="text-accent">até a decisão.</em>
         </p>
         <p class="mt-6 max-w-xl leading-relaxed text-fg/85">
-          Quero conduzir o caminho completo da análise: montar o fluxo de ETL de ponta a ponta, aplicar os cálculos e
-          as regras de negócio para que eles cheguem corretos ao BI, e transformar tudo em dashboards que ajudem pessoas
-          não técnicas a decidir com base em informações confiáveis.
+          Montar o ETL de ponta a ponta, aplicar as regras de negócio e entregar dashboards que ajudem quem não é
+          técnico a decidir.
         </p>
       </div>
 
@@ -45,7 +44,7 @@ const studying = [
         <ol class="mt-5 border-t border-line">
           {
             studying.map((s, i) => (
-              <li class="study-row grid grid-cols-[3rem_minmax(0,1fr)] gap-x-4 border-b border-line py-5">
+              <li data-reveal data-active class="study-row grid grid-cols-[3rem_minmax(0,1fr)] gap-x-4 border-b border-line py-5">
                 <span class="pt-1.5 font-mono text-xs text-muted">( 0{i + 1} )</span>
                 <div>
                   <p class="study-name font-display text-2xl leading-none font-black text-heading uppercase">{s.name}</p>
@@ -68,7 +67,8 @@ const studying = [
     transition: color 0.3s ease;
   }
 
-  .study-row:hover .study-name {
+  .study-row:hover .study-name,
+  .study-row.is-active .study-name {
     color: var(--color-accent);
   }
 </style>

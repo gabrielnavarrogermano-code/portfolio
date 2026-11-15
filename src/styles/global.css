@@ -179,6 +179,27 @@ body {
   overflow-x: clip;
 }
 
+/* Linhas que entram ao rolar (o script em lib/reveal.ts liga as classes). Animação, e não transição,
+   para não brigar com as transições de hover de cada componente. */
+[data-reveal].is-hidden {
+  opacity: 0;
+}
+
+[data-reveal].is-in {
+  animation: reveal-in 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) var(--rd, 0s) both;
+}
+
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Seções fora da tela ficam para depois da abertura; o Layout as libera quando o navegador está ocioso */
 .render-later {
   content-visibility: auto;

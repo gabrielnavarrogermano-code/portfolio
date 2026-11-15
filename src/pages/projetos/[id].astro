@@ -101,7 +101,7 @@ const proximos = [
             {p.data.stats.map((s) => (
               <div class="flex flex-col-reverse justify-end border-b border-line py-6 pr-4 md:border-b-0">
                 <dt class="mt-3 font-mono text-[11px] tracking-[0.15em] text-muted uppercase">{s.label}</dt>
-                <dd class="pj-stat font-display leading-[0.85] font-black text-heading">{s.value}</dd>
+                <dd data-count class="pj-stat font-display tabular-nums leading-[0.85] font-black text-heading">{s.value}</dd>
               </div>
             ))}
           </dl>

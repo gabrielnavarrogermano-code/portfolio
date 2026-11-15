@@ -1,6 +1,6 @@
 // Rolagem suave (Lenis): a página desliza em vez de pular a cada giro da roda do mouse.
 // - Criada uma vez só: com o ClientRouter, a janela é a mesma entre as páginas.
-// - Fica parada enquanto a tela de carregamento ou o menu estão abertos.
+// - Fica parada enquanto a abertura ou o menu estão na tela.
 // - No toque (celular) a rolagem continua a nativa; quem pediu menos movimento não recebe a suavização.
 // - Links para uma seção da mesma página (#contato, /#projetos) deslizam até ela.
 import Lenis from 'lenis';
@@ -14,7 +14,7 @@ declare global {
 
 const locked = () => {
   const c = document.documentElement.classList;
-  return c.contains('show-loader') || c.contains('menu-open');
+  return c.contains('show-intro') || c.contains('menu-open');
 };
 
 if (!window.lenis && !matchMedia('(prefers-reduced-motion: reduce)').matches) {

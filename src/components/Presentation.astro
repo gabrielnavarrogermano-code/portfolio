@@ -36,7 +36,7 @@ const totalSemesters = 8;
     <ol class="border-t border-line">
       {
         chapters.map((c, i) => (
-          <li class="chapter grid grid-cols-[3rem_minmax(0,1fr)] gap-x-4 border-b border-line py-6 sm:grid-cols-[4.5rem_minmax(0,1fr)]">
+          <li data-reveal data-active class="chapter grid grid-cols-[3rem_minmax(0,1fr)] gap-x-4 border-b border-line py-6 sm:grid-cols-[4.5rem_minmax(0,1fr)]">
             <span class="pt-1 font-mono text-xs text-muted">( 0{i + 1} )</span>
             <div>
               <h3 class="chapter-title font-display leading-none font-black text-heading uppercase">{c.title}</h3>
@@ -48,7 +48,7 @@ const totalSemesters = 8;
     </ol>
 
     <!-- Citação: a mesma serifa da frase da capa, com o final em lima e itálico -->
-    <figure class="lg:sticky lg:top-28 lg:self-start lg:pt-1">
+    <figure data-reveal class="lg:sticky lg:top-28 lg:self-start lg:pt-1">
       <span class="block font-serif text-6xl leading-none text-accent" aria-hidden="true">“</span>
       <blockquote class="-mt-4 font-serif text-[2rem] leading-[1.1] text-balance text-heading sm:text-[2.5rem]">
         Um dado só faz sentido quando <em class="text-accent">ajuda alguém a resolver algum problema.</em>
@@ -68,7 +68,7 @@ const totalSemesters = 8;
     </p>
 
     <ul class="mt-2">
-      <li class="row group">
+      <li data-reveal data-active class="row group">
         <span class="row-num">( 01 )</span>
         <div>
           <p class="row-kind">Formação</p>
@@ -90,7 +90,7 @@ const totalSemesters = 8;
         </div>
       </li>
 
-      <li class="row group">
+      <li data-reveal data-active class="row group">
         <span class="row-num">( 02 )</span>
         <div>
           <p class="row-kind">Experiência atual</p>
@@ -123,7 +123,8 @@ const totalSemesters = 8;
     transition: color 0.3s ease;
   }
 
-  .chapter:hover .chapter-title {
+  .chapter:hover .chapter-title,
+  .chapter.is-active .chapter-title {
     color: var(--color-accent);
   }
 
@@ -174,7 +175,8 @@ const totalSemesters = 8;
     transition: color 0.3s ease;
   }
 
-  .row:hover .row-title {
+  .row:hover .row-title,
+  .row.is-active .row-title {
     color: var(--color-accent);
   }
 </style>
