@@ -44,7 +44,7 @@ const studying = [
         <ol class="mt-5 border-t border-line">
           {
             studying.map((s, i) => (
-              <li data-reveal data-active class="study-row grid grid-cols-[3rem_minmax(0,1fr)] gap-x-4 border-b border-line py-5">
+              <li data-reveal class="study-row grid grid-cols-[3rem_minmax(0,1fr)] gap-x-4 border-b border-line py-5">
                 <span class="pt-1.5 font-mono text-xs text-muted">( 0{i + 1} )</span>
                 <div>
                   <p class="study-name font-display text-2xl leading-none font-black text-heading uppercase">{s.name}</p>
@@ -65,10 +65,5 @@ const studying = [
     font-stretch: 75%;
     font-variation-settings: 'wdth' 75;
     transition: color 0.3s ease;
-  }
-
-  .study-row:hover .study-name,
-  .study-row.is-active .study-name {
-    color: var(--color-accent);
   }
 </style>

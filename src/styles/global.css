@@ -7,7 +7,8 @@
   --font-serif: "Instrument Serif", ui-serif, Georgia, serif; /* segunda voz: só a frase de apresentação da capa */
 
   /* Base em tons quentes: preto-café e off-white de papel, com duas cores de papéis bem separados:
-     - accent (lima neon): o que deve chamar atenção (focos, números, traços, progresso, foco do teclado);
+     - accent (lima): só o que importa: o destaque das frases, números de resultado, o que está selecionado
+       ou ativo e o foco do teclado. Hover e detalhes decorativos usam o off-white ou o cinza;
      - link (azul-escuro): só o que é clicável (texto de links); link-strong é o fundo azul do hover dos botões.
      Na capa, o nome gigante. */
   --color-bg: #121110;
@@ -17,7 +18,7 @@
   --color-fg: #e8e6e1;
   --color-muted: #a3a097;
   --color-card: #f8f7f3; /* cartão claro dentro da folha "Como eu trabalho" */
-  --color-accent: #c8ff3a;
+  --color-accent: #bde34a;
   --color-link: #4a74f0;
   --color-link-strong: #2f5bdb;
   --color-ice: #f0eee8; /* branco da capa e do botão Contato: um off-white quente, menos duro que o puro */
@@ -64,7 +65,7 @@
   --color-heading: #f4f2ed;
   --color-fg: #e8e6e1;
   --color-muted: #a3a097;
-  --color-accent: #c8ff3a;
+  --color-accent: #bde34a;
   --color-link: #4a74f0;
   --color-link-strong: #2f5bdb;
   --color-bg: #121110;
@@ -149,8 +150,8 @@ h3 {
 }
 
 .hero-focus-items[data-fill] {
-  --base: var(--color-accent);
-  --paint: var(--color-heading);
+  --base: var(--color-heading);
+  --paint: var(--color-accent);
   --spot: 40px;
 }
 
@@ -251,7 +252,7 @@ body {
   font-size: 0.75rem;
   font-weight: 400;
   letter-spacing: 0.15em;
-  color: var(--color-accent);
+  color: var(--color-muted);
 }
 
 /* O primeiro título vem logo depois da nota: sem linha nem espaço grande em cima */
@@ -285,7 +286,7 @@ body {
 }
 
 .prose-case li::marker {
-  color: var(--color-accent);
+  color: var(--color-muted);
 }
 
 .prose-case strong {
@@ -302,7 +303,7 @@ body {
 .prose-case blockquote {
   margin: 1.5rem 0;
   padding: 0.25rem 0 0.25rem 1rem;
-  border-left: 2px solid var(--color-accent);
+  border-left: 2px solid color-mix(in srgb, var(--color-muted) 50%, transparent);
   font-family: var(--font-mono);
   font-size: 0.8125rem;
   line-height: 1.7;

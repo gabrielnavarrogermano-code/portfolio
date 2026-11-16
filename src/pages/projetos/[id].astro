@@ -43,7 +43,7 @@ const proximos = [
       </a>
 
       <p class="mt-10 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">
-        <span class="text-accent">( {num} )</span>
+        <span class="text-heading">( {num} )</span>
         <span>{p.data.kind}</span>
         <span aria-hidden="true">·</span>
         <span>{minutes} min de leitura</span>
@@ -68,12 +68,12 @@ const proximos = [
         (p.data.dashboard || p.data.repo) && (
           <div class="mt-6 flex flex-wrap gap-5 font-mono text-[11px] tracking-[0.15em] uppercase">
             {p.data.dashboard && (
-              <a href={p.data.dashboard} target="_blank" rel="noopener" class="text-link hover:text-accent">
+              <a href={p.data.dashboard} target="_blank" rel="noopener" class="text-link hover:text-heading">
                 <span data-flip>Ver dashboard</span> ↗
               </a>
             )}
             {p.data.repo && (
-              <a href={p.data.repo} target="_blank" rel="noopener" class="text-link hover:text-accent">
+              <a href={p.data.repo} target="_blank" rel="noopener" class="text-link hover:text-heading">
                 <span data-flip>Código</span> ↗
               </a>
             )}
@@ -188,7 +188,7 @@ const proximos = [
     color: var(--color-accent);
   }
 
-  /* Fechamento: linhas grandes, a linha inteira é clicável e acende em lima */
+  /* Fechamento: linhas grandes, a linha inteira é clicável e acende em azul */
   .nx-link {
     font-size: clamp(2rem, 6vw, 4.25rem);
     font-stretch: 75%;
@@ -212,13 +212,13 @@ const proximos = [
 
   .nx-row:hover .nx-link,
   .nx-row:focus-within .nx-link {
-    color: var(--color-accent);
+    color: var(--color-link);
   }
 
   .nx-row:hover .nx-icon,
   .nx-row:focus-within .nx-icon {
-    border-color: var(--color-accent);
-    background-color: var(--color-accent);
+    border-color: var(--color-heading);
+    background-color: var(--color-heading);
     color: var(--color-ink);
   }
 
