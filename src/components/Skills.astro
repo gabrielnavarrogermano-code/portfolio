@@ -1,66 +1,17 @@
 ---
 import SectionTitle from './SectionTitle.astro';
 import Principles from './Principles.astro';
-
-// O que estou estudando agora e para quê
-const studying = [
-  { name: 'SQL', why: 'Para consultar os dados e montar tabelas direto na fonte.' },
-  { name: 'DAX no Power BI', why: 'Para aplicar as regras de negócio dentro do Power BI, começando pelo básico.' },
-  { name: 'Data storytelling', why: 'Para contar uma história com comparações nos dashboards.' },
-];
 ---
 
 <!-- Sem palavra de fundo: a folha clara já separa a seção; o espaço acima do título vem do padding -->
-<section id="habilidades" class="on-paper render-later relative isolate mx-2 overflow-clip rounded-[2rem] bg-bg pt-14 pb-16 sm:mx-4 sm:rounded-[3rem] sm:pt-20 [contain-intrinsic-size:auto_1500px] sm:pb-24 md:[contain-intrinsic-size:auto_1100px] lg:pt-24">
+<section id="habilidades" class="on-paper render-later relative isolate mx-2 overflow-clip rounded-[2rem] bg-bg pt-14 pb-16 sm:mx-4 sm:rounded-[3rem] sm:pt-20 [contain-intrinsic-size:auto_1100px] sm:pb-24 md:[contain-intrinsic-size:auto_800px] lg:pt-24">
   <div class="mx-auto max-w-5xl px-6">
     <SectionTitle
       title="Como eu trabalho"
-      subtitle="Meu ponto mais forte é entender o contexto e as regras de onde eu trabalho."
+      subtitle="Quatro coisas que faço em todo projeto, mostradas com os dados do controle de notebooks."
     />
 
-    <!-- No dia a dia: os princípios que já aplico no estágio, cada um com uma demonstração feita com dados reais -->
-    <div class="mt-12 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
-      <p class="font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">( No dia a dia do estágio )</p>
-      <p class="text-sm text-muted">Quatro princípios, com exemplos reais do controle de notebooks.</p>
-    </div>
+    <!-- Os princípios que já aplico no estágio, cada um com uma demonstração feita com dados reais -->
     <Principles />
-
-    <!-- Onde pretendo chegar: o objetivo em destaque (serifa, como na capa e no Sobre) e o que estou estudando -->
-    <div class="mt-20 grid gap-10 md:mt-28 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-16">
-      <div>
-        <p class="font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">( Onde pretendo chegar )</p>
-        <p class="mt-5 font-serif text-[2.25rem] leading-[1.05] text-balance text-heading sm:text-5xl">
-          Fazer o caminho inteiro, <em class="text-accent">da extração ao dashboard.</em>
-        </p>
-        <p class="mt-6 max-w-xl leading-relaxed text-fg/85">
-          Montar o ETL de ponta a ponta, aplicar as regras de negócio e entregar painéis que quem não é técnico
-          consiga usar sozinho.
-        </p>
-      </div>
-
-      <div>
-        <p class="font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">( Agora estou estudando )</p>
-        <ol class="mt-5 border-t border-line">
-          {
-            studying.map((s, i) => (
-              <li data-reveal class="study-row grid grid-cols-[3rem_minmax(0,1fr)] gap-x-4 border-b border-line py-5">
-                <span class="pt-1.5 font-mono text-xs text-muted">( 0{i + 1} )</span>
-                <div>
-                  <p class="study-name text-lg leading-snug font-semibold text-heading sm:text-xl">{s.name}</p>
-                  <p class="mt-2 text-sm leading-relaxed text-fg/75">{s.why}</p>
-                </div>
-              </li>
-            ))
-          }
-        </ol>
-        <p class="mt-5 text-sm text-muted">O objetivo é que esse caminho vire parte da minha rotina.</p>
-      </div>
-    </div>
   </div>
 </section>
-
-<style>
-  .study-name {
-    transition: color 0.3s ease;
-  }
-</style>

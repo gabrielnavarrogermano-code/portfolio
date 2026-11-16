@@ -4,15 +4,18 @@ import { site } from '../data/site';
 
 const tools = ['Microsoft 365 Admin', 'Entra ID', 'SharePoint', 'Kanban'];
 
+// O que estou estudando agora (terceira linha da Trajetória)
+const studying = ['SQL', 'DAX no Power BI', 'Data storytelling'];
+
 // A história, em capítulos. As palavras em <b> ficam em destaque (brancas).
 const chapters = [
   {
     title: 'Origem',
-    text: 'Eu cresci em uma <b>família de empreendedores</b>, tanto meu pai quanto meu avô. Acompanhar esse processo de gestão de perto me fez querer entender o que poderia melhorar em um negócio.',
+    text: 'Cresci em uma <b>família de empreendedores</b>, com meu pai e meu avô. Acompanhar a gestão de perto me fez querer entender o que poderia melhorar em um negócio.',
   },
   {
     title: 'Números',
-    text: 'Sempre fui alguém com uma certa <b>facilidade com números</b>, só precisava descobrir onde poderia aplicá-los em uma empresa. Foi na faculdade que a <b>análise de dados</b> se mostrou um caminho para isso.',
+    text: 'Sempre tive <b>facilidade com números</b>, só precisava descobrir onde aplicá-los em uma empresa. Foi na faculdade que a <b>análise de dados</b> se mostrou um caminho para isso.',
   },
   {
     title: 'Hoje',
@@ -50,7 +53,7 @@ const { semestre: semester, total: totalSemesters } = site.curso;
     <figure data-reveal class="lg:sticky lg:top-28 lg:self-start lg:pt-1">
       <span class="block font-serif text-6xl leading-none text-muted/60" aria-hidden="true">“</span>
       <blockquote class="-mt-4 font-serif text-[2rem] leading-[1.1] text-balance text-heading sm:text-[2.5rem]">
-        Um dado só faz sentido quando <em class="text-accent">ajuda alguém a resolver algum problema.</em>
+        Um dashboard só funciona se <em class="text-accent">quem não é técnico consegue usar sozinho.</em>
       </blockquote>
       <figcaption class="mt-6 flex items-center gap-3 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">
         <span class="h-px w-8 bg-line" aria-hidden="true"></span>
@@ -102,6 +105,20 @@ const { semestre: semester, total: totalSemesters } = site.curso;
           </ul>
         </div>
       </li>
+
+      <li data-reveal class="row group">
+        <span class="row-num">( 03 )</span>
+        <div>
+          <p class="row-kind">Em andamento</p>
+          <h3 class="row-title">Estudando agora</h3>
+        </div>
+        <div class="text-fg/80">
+          <ul class="flex flex-wrap gap-x-2 text-heading" aria-label="Estudos">
+            {studying.map((t, i) => <li>{t}{i < studying.length - 1 && <span class="text-muted" aria-hidden="true"> ·</span>}</li>)}
+          </ul>
+          <p class="mt-1 text-sm text-muted">Para fazer o caminho inteiro, da extração ao dashboard.</p>
+        </div>
+      </li>
     </ul>
   </div>
 </section>
@@ -126,9 +143,11 @@ const { semestre: semester, total: totalSemesters } = site.curso;
     border-bottom: 1px solid var(--color-line);
   }
 
+  /* A última coluna (barra de semestres) tem largura fixa: a linha que não tem barra deixa o espaço vazio,
+     e as colunas do meio ficam alinhadas entre as linhas */
   @media (min-width: 48rem) {
     .row {
-      grid-template-columns: 4.5rem minmax(0, 1.15fr) minmax(0, 1fr) auto;
+      grid-template-columns: 4.5rem minmax(0, 1.15fr) minmax(0, 1fr) 11rem;
       align-items: center;
       column-gap: 2rem;
     }

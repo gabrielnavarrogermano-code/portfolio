@@ -15,14 +15,19 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
     {
       projetos.map((p, i) => (
         <article>
-          <!-- Card: uma faixa escura no topo com o número e o tipo; abaixo, o print do dashboard em cores; no hover aproxima e troca para a
-               outra página do dashboard -->
+          <!-- Título do projeto acima do card: primeiro o nome, depois o trabalho -->
+          <h3 class="pc-title mb-6 max-w-4xl font-display leading-[0.95] font-black text-heading uppercase">
+            {p.data.title}
+          </h3>
+
+          <!-- Card: uma faixa escura no topo com o número e o tipo; abaixo, o print do dashboard em cores, limpo (o título fica
+               fora, acima do card, para não cobrir o trabalho); no hover aproxima e troca para a outra página do dashboard -->
           <a
             href={`/projetos/${p.id}/`}
             data-active
             class="project-card group relative block overflow-hidden rounded-2xl border border-line bg-ink"
           >
-            <div class="relative aspect-[4/5] sm:aspect-[16/10]">
+            <div class="relative aspect-[4/3] sm:aspect-[16/10]">
               {p.data.cover && (
                 <Image
                   src={p.data.cover}
@@ -43,17 +48,9 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
                   class="pc-img-hover absolute inset-x-0 top-16 bottom-0 h-[calc(100%-4rem)] w-full object-cover object-left-top sm:top-20 sm:h-[calc(100%-5rem)]"
                 />
               )}
-              <div class="pc-shade pointer-events-none absolute inset-0 bg-gradient-to-t from-ink via-ink/60 to-ink/10" aria-hidden="true" />
-
               <div class="absolute inset-x-0 top-0 flex items-center justify-between gap-4 p-5 font-mono text-[11px] tracking-[0.15em] text-heading uppercase sm:p-7 sm:text-xs">
                 <span class="rounded-full border border-heading/30 bg-ink/60 px-3 py-1 backdrop-blur-sm">( 0{i + 1} )</span>
                 <span class="rounded-full border border-heading/30 bg-ink/60 px-3 py-1 backdrop-blur-sm">{p.data.kind}</span>
-              </div>
-
-              <div class="absolute inset-x-0 bottom-0 p-5 sm:p-8">
-                <h3 class="pc-title max-w-3xl font-display leading-[0.9] font-black text-heading uppercase">
-                  {p.data.title}
-                </h3>
               </div>
             </div>
           </a>
@@ -131,7 +128,7 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
   }
 
   .pc-title {
-    font-size: clamp(2rem, 6.5vw, 4.75rem);
+    font-size: clamp(1.6rem, 3.6vw, 2.75rem);
     font-stretch: 75%;
     font-variation-settings: 'wdth' 75;
     text-wrap: balance;
@@ -140,20 +137,11 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
   .pc-img,
   .pc-img-hover {
     transition:
-      filter 0.7s ease,
       opacity 0.7s ease,
       transform 1.4s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
-  /* O print aparece em cores desde o início: é o trabalho em si, não um fundo */
-  .pc-img {
-    filter: brightness(0.9);
-  }
-
-  .pc-shade {
-    transition: opacity 0.7s ease;
-  }
-
+  /* O print aparece em cores e sem degradê por cima: é o trabalho em si, não um fundo */
   .pc-img-hover {
     opacity: 0;
   }
@@ -176,11 +164,6 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
       opacity: 1;
       transform: scale(1.05);
     }
-
-    /* O degradê clareia para as cores do painel aparecerem; o título continua legível embaixo */
-    .project-card:hover .pc-shade {
-      opacity: 0.7;
-    }
   }
 
   /* No toque: quando o card passa pelo meio da tela, troca para a outra página do dashboard */
@@ -192,10 +175,6 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
     .project-card.is-active .pc-img-hover {
       opacity: 1;
       transform: scale(1.02);
-    }
-
-    .project-card.is-active .pc-shade {
-      opacity: 0.7;
     }
   }
 
