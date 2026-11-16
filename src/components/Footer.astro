@@ -30,7 +30,7 @@ const links = [
     </div>
 
     <div class="flex flex-col gap-4 border-t border-line py-6 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:flex-row sm:items-center sm:justify-between">
-      <p>© {new Date().getFullYear()} {site.name}</p>
+      <p>© {site.ano} {site.name}</p>
       <ul class="flex gap-5">
         {
           links.map((l) => (
@@ -55,7 +55,7 @@ const links = [
   // Voltar ao topo: desliza com a rolagem suave (Lenis) quando ela está ligada
   document.addEventListener('astro:page-load', () => {
     document.querySelector('[data-to-top]')?.addEventListener('click', () => {
-      if (window.lenis) window.lenis.scrollTo(0);
+      if (window.smoothScroll) window.smoothScroll.scrollTo(0);
       else window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     });
   });

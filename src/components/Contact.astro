@@ -31,7 +31,7 @@ const canais = [
             href={c.href}
             class="ch-link font-display leading-none font-black text-heading uppercase transition-colors"
             {...(c.external ? { target: '_blank', rel: 'noopener' } : {})}
-            {...(c.download ? { download: 'Curriculo-Gabriel-Navarro-Germano.pdf' } : {})}
+            {...(c.download ? { download: site.curriculoNome } : {})}
           >
             <span data-flip>{c.label}</span>
           </a>

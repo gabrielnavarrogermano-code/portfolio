@@ -1,0 +1,9 @@
+# Fim de linha LF em tudo, no Windows e em qualquer outro sistema (acaba com o aviso "LF will be replaced by CRLF")
+* text=auto eol=lf
+
+# Arquivos binários: o git não mexe
+*.png binary
+*.jpg binary
+*.webp binary
+*.ico binary
+*.pdf binary

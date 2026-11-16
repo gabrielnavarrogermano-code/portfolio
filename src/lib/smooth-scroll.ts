@@ -6,9 +6,10 @@
 import Lenis from 'lenis';
 import 'lenis/dist/lenis.css';
 
+// A biblioteca já declara (e preenche) a própria window.lenis, com outro formato: por isso o nosso nome é outro
 declare global {
   interface Window {
-    lenis?: Lenis;
+    smoothScroll?: Lenis;
   }
 }
 
@@ -17,14 +18,14 @@ const locked = () => {
   return c.contains('show-intro') || c.contains('menu-open');
 };
 
-if (!window.lenis && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+if (!window.smoothScroll && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
   const lenis = new Lenis({
     autoRaf: true,
     duration: 1.15,
     allowNestedScroll: true, // tabelas e áreas com rolagem própria continuam rolando por dentro
     virtualScroll: () => !locked(),
   });
-  window.lenis = lenis;
+  window.smoothScroll = lenis;
 
   // Depois de trocar de página, a altura muda: o Lenis precisa medir de novo.
   // A troca também copia os atributos do <html> da página nova, apagando a classe que o Lenis pôs lá.
@@ -47,6 +48,6 @@ document.addEventListener('click', (e) => {
 
   e.preventDefault();
   history.pushState(null, '', url.hash);
-  if (window.lenis) window.lenis.scrollTo(target, { offset: 0 });
+  if (window.smoothScroll) window.smoothScroll.scrollTo(target, { offset: 0 });
   else target.scrollIntoView({ behavior: 'smooth' });
 }, true);

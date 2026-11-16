@@ -1,6 +1,7 @@
 ---
 import SectionTitle from './SectionTitle.astro';
 import BgWord from './BgWord.astro';
+import { site } from '../data/site';
 
 const tools = ['Microsoft 365 Admin', 'Entra ID', 'SharePoint', 'Kanban'];
 
@@ -20,9 +21,8 @@ const chapters = [
   },
 ];
 
-// Progresso do curso: atualize o semestre a cada período
-const semester = 2;
-const totalSemesters = 8;
+// Progresso do curso (o semestre é atualizado em data/site.ts)
+const { semestre: semester, total: totalSemesters } = site.curso;
 ---
 
 <section id="apresentacao" class="relative isolate mx-auto max-w-5xl px-6 pb-16 sm:pb-24">

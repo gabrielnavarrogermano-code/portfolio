@@ -165,7 +165,7 @@ const abaixo = [
         <span class="size-1.5 flex-none rounded-full bg-accent" aria-hidden="true"></span>
         Análise de Dados & BI
       </p>
-      <p><span class="max-sm:hidden">Portfólio </span><span class="text-heading">( 20 26 )</span></p>
+      <p><span class="max-sm:hidden">Portfólio </span><span class="text-heading">( {site.anoEmDois} )</span></p>
     </div>
   </div>
 
@@ -212,7 +212,7 @@ const abaixo = [
             temCurriculo && (
               <a
                 href={site.curriculo}
-                download="Curriculo-Gabriel-Navarro-Germano.pdf"
+                download={site.curriculoNome}
                 class="inline-flex items-center justify-center gap-2 rounded-full border border-line bg-bg font-medium max-sm:size-10 sm:px-5 sm:py-3 text-heading transition hover:border-link hover:bg-link-strong/15"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4" aria-hidden="true">

@@ -732,7 +732,7 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
 </style>
 
 <script>
-  import { records, compute, initial, donutDash, applyFilters } from '../lib/notebooks';
+  import { records, compute, donutDash, applyFilters } from '../lib/notebooks';
 
   let timer: number | undefined;
 
@@ -861,7 +861,7 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
       openBtn.setAttribute('aria-expanded', String(open));
       (open ? selects[0] : openBtn).focus();
     };
-    openBtn.addEventListener('click', () => setPanel(panel.hidden));
+    openBtn.addEventListener('click', () => setPanel(Boolean(panel.hidden)));
     closeBtns.forEach((b) => b.addEventListener('click', () => setPanel(false)));
     panel.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') setPanel(false);
