@@ -9,9 +9,7 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
 
 <section id="projetos" class="render-later relative isolate mx-auto max-w-5xl px-6 pb-16 [contain-intrinsic-size:auto_1100px] sm:pb-24">
   <BgWord word="PROJETOS" />
-  <SectionTitle
-    title="Dados que viram decisão"
-  />
+  <SectionTitle title="Na prática" />
 
   <div class="mt-12 space-y-16">
     {
@@ -76,7 +74,7 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
           </dl>
 
           <div data-reveal data-active class="pc-next group relative flex items-center gap-4 border-b border-line md:border-t py-6 sm:gap-8 sm:py-7 md:mt-6">
-            <a href={`/projetos/${p.id}/`} class="pc-next-link flex-1 font-display leading-none font-black text-heading uppercase transition-colors">
+            <a href={`/projetos/${p.id}/`} class="pc-next-link flex-1 font-sans leading-tight font-semibold text-heading transition-colors">
               <span data-flip>Ler estudo de caso</span>
             </a>
             <span class="pc-next-icon pointer-events-none grid size-12 flex-none place-items-center rounded-full border border-line text-lg text-heading transition" aria-hidden="true">→</span>
@@ -89,10 +87,9 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
 
 <style>
   /* Linha "Ler estudo de caso": a linha inteira é clicável e acende em lima, como no contato */
+  /* Tamanho médio (Geist): o título do projeto, logo acima, é que fica grande */
   .pc-next-link {
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    font-stretch: 75%;
-    font-variation-settings: 'wdth' 75;
+    font-size: clamp(1.35rem, 2.8vw, 2rem);
   }
 
   .pc-next-link::after {

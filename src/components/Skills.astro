@@ -1,6 +1,5 @@
 ---
 import SectionTitle from './SectionTitle.astro';
-import BgWord from './BgWord.astro';
 import Principles from './Principles.astro';
 
 // O que estou estudando agora e para quê
@@ -11,8 +10,8 @@ const studying = [
 ];
 ---
 
-<section id="habilidades" class="on-paper render-later relative isolate mx-2 overflow-clip rounded-[2rem] bg-bg pb-16 sm:mx-4 sm:rounded-[3rem] [contain-intrinsic-size:auto_1500px] sm:pb-24 md:[contain-intrinsic-size:auto_1100px]">
-  <BgWord word="MÉTODO" />
+<!-- Sem palavra de fundo: a folha clara já separa a seção; o espaço acima do título vem do padding -->
+<section id="habilidades" class="on-paper render-later relative isolate mx-2 overflow-clip rounded-[2rem] bg-bg pt-14 pb-16 sm:mx-4 sm:rounded-[3rem] sm:pt-20 [contain-intrinsic-size:auto_1500px] sm:pb-24 md:[contain-intrinsic-size:auto_1100px] lg:pt-24">
   <div class="mx-auto max-w-5xl px-6">
     <SectionTitle
       title="Como eu trabalho"
@@ -31,11 +30,11 @@ const studying = [
       <div>
         <p class="font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">( Onde pretendo chegar )</p>
         <p class="mt-5 font-serif text-[2.25rem] leading-[1.05] text-balance text-heading sm:text-5xl">
-          Levar o dado da fonte <em class="text-accent">até a decisão.</em>
+          Fazer o caminho inteiro, <em class="text-accent">da extração ao dashboard.</em>
         </p>
         <p class="mt-6 max-w-xl leading-relaxed text-fg/85">
-          Montar o ETL de ponta a ponta, aplicar as regras de negócio e entregar dashboards que ajudem quem não é
-          técnico a decidir.
+          Montar o ETL de ponta a ponta, aplicar as regras de negócio e entregar painéis que quem não é técnico
+          consiga usar sozinho.
         </p>
       </div>
 
@@ -47,7 +46,7 @@ const studying = [
               <li data-reveal class="study-row grid grid-cols-[3rem_minmax(0,1fr)] gap-x-4 border-b border-line py-5">
                 <span class="pt-1.5 font-mono text-xs text-muted">( 0{i + 1} )</span>
                 <div>
-                  <p class="study-name font-display text-2xl leading-none font-black text-heading uppercase">{s.name}</p>
+                  <p class="study-name text-lg leading-snug font-semibold text-heading sm:text-xl">{s.name}</p>
                   <p class="mt-2 text-sm leading-relaxed text-fg/75">{s.why}</p>
                 </div>
               </li>
@@ -62,8 +61,6 @@ const studying = [
 
 <style>
   .study-name {
-    font-stretch: 75%;
-    font-variation-settings: 'wdth' 75;
     transition: color 0.3s ease;
   }
 </style>

@@ -39,9 +39,9 @@ const cols = [
 ];
 
 // Demonstração 2: as outras regras definidas no projeto
+// ("Sem antivírus é crítico" é o exemplo da demonstração 4, por isso não se repete aqui)
 const otherRules = [
   'Windows Home conta como pendência de segurança',
-  'Sem antivírus é crítico',
   'Toda conta sem notebook tem um motivo registrado',
 ];
 
@@ -68,7 +68,7 @@ const fixes = [
               class="pr-head group flex w-full cursor-pointer items-center gap-4 py-5 text-left sm:gap-8 sm:py-6"
             >
               <span class="w-12 flex-none font-mono text-xs text-muted sm:w-16">( 0{i + 1} )</span>
-              <span class="pr-title flex-1 font-display leading-[0.95] font-black text-heading uppercase">{p.title}</span>
+              <span class="pr-title flex-1 font-sans leading-tight font-semibold text-heading">{p.title}</span>
               <span class="pr-icon relative size-4 flex-none text-heading" aria-hidden="true">
                 <span class="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-current"></span>
                 <span class="pr-icon-v absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-current"></span>
@@ -181,7 +181,7 @@ const fixes = [
                     <div class="d-pop border-white/10 sm:border-l sm:pl-5" style="--d: 1.9s">
                       <p class="d-tag">( Eu · a regra )</p>
                       <p class="mt-4 font-serif text-2xl leading-[1.1] text-heading text-balance">
-                        Notebook compartilhado conta <em class="text-accent">uma vez só.</em>
+                        Notebook sem antivírus conta como <em class="text-accent">crítico.</em>
                       </p>
                       <p class="mt-5 font-mono text-[11px] tracking-[0.15em] text-accent uppercase">Decisão que a IA não toma</p>
                     </div>
@@ -202,10 +202,9 @@ const fixes = [
 
 <style>
   /* ---------- Linhas ---------- */
+  /* Título médio em Geist: a Tektur grande fica para o nome, os títulos de seção e o projeto */
   .pr-title {
-    font-size: clamp(1.6rem, 3.4vw, 2.6rem);
-    font-stretch: 75%;
-    font-variation-settings: 'wdth' 75;
+    font-size: clamp(1.25rem, 2.4vw, 1.75rem);
     text-wrap: balance;
     transition: color 0.3s ease;
   }
@@ -229,7 +228,7 @@ const fixes = [
     }
 
     .pr-layout.is-side .pr-title {
-      font-size: clamp(1.5rem, 2.3vw, 2rem);
+      font-size: clamp(1.2rem, 1.7vw, 1.5rem);
     }
 
     /* As linhas não abrem: o conteúdo vai para o painel, e o + vira uma seta que aponta para ele */

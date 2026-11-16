@@ -1,6 +1,5 @@
 ---
 import SectionTitle from './SectionTitle.astro';
-import BgWord from './BgWord.astro';
 import { site } from '../data/site';
 
 const tools = ['Microsoft 365 Admin', 'Entra ID', 'SharePoint', 'Kanban'];
@@ -25,8 +24,8 @@ const chapters = [
 const { semestre: semester, total: totalSemesters } = site.curso;
 ---
 
-<section id="apresentacao" class="relative isolate mx-auto max-w-5xl px-6 pb-16 sm:pb-24">
-  <BgWord word="SOBRE" />
+<!-- Sem palavra de fundo (ela fica só em Projetos e Contato): o espaço acima do título vem do padding -->
+<section id="apresentacao" class="relative isolate mx-auto max-w-5xl px-6 pt-16 pb-16 sm:pt-24 sm:pb-24 lg:pt-32">
   <SectionTitle title="Prazer, Gabriel" />
 
   <!-- Computador: a história à esquerda e, ao lado, a frase que resume o que aprendi, em destaque.
@@ -39,7 +38,7 @@ const { semestre: semester, total: totalSemesters } = site.curso;
           <li data-reveal class="chapter grid grid-cols-[3rem_minmax(0,1fr)] gap-x-4 border-b border-line py-6 sm:grid-cols-[4.5rem_minmax(0,1fr)]">
             <span class="pt-1 font-mono text-xs text-muted">( 0{i + 1} )</span>
             <div>
-              <h3 class="chapter-title font-display leading-none font-black text-heading uppercase">{c.title}</h3>
+              <h3 class="chapter-title font-sans text-xl leading-snug font-semibold text-heading sm:text-2xl">{c.title}</h3>
               <p class="mt-3 leading-relaxed text-fg/75 sm:text-lg" set:html={c.text} />
             </div>
           </li>
@@ -102,24 +101,15 @@ const { semestre: semester, total: totalSemesters } = site.curso;
             {tools.map((t, i) => <li>{t}{i < tools.length - 1 && <span aria-hidden="true"> ·</span>}</li>)}
           </ul>
         </div>
-        <a
-          href="/projetos/controle-de-notebooks/"
-          class="group/link inline-flex items-center gap-1 text-sm font-medium whitespace-nowrap text-link md:w-44 md:justify-end"
-        >
-          <span data-flip>Ver projeto</span>
-          <span class="transition-transform group-hover/link:translate-x-1" aria-hidden="true">→</span>
-        </a>
       </li>
     </ul>
   </div>
 </section>
 
 <style>
-  /* Capítulos da história: título em Tektur estreita (acende em lima no hover) e as palavras-chave em branco */
+  /* Capítulos da história: título médio, em Geist (a Tektur grande fica para o nome, os títulos de seção e o
+     projeto), e as palavras-chave em branco */
   .chapter-title {
-    font-size: clamp(1.6rem, 3vw, 2.1rem);
-    font-stretch: 75%;
-    font-variation-settings: 'wdth' 75;
     transition: color 0.3s ease;
   }
 
@@ -160,12 +150,10 @@ const { semestre: semester, total: totalSemesters } = site.curso;
 
   .row-title {
     margin-top: 0.4rem;
-    font-size: clamp(1.6rem, 3.2vw, 2.25rem);
-    line-height: 1;
-    font-weight: 900;
-    font-stretch: 75%;
-    font-variation-settings: 'wdth' 75;
-    text-transform: uppercase;
+    font-family: var(--font-sans);
+    font-size: clamp(1.25rem, 2.2vw, 1.5rem);
+    line-height: 1.2;
+    font-weight: 600;
     color: var(--color-heading);
     transition: color 0.3s ease;
   }

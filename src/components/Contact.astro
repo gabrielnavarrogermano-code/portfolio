@@ -29,7 +29,7 @@ const canais = [
           <!-- O link cobre a linha inteira (pelo ::after); o botão de copiar fica por cima dele -->
           <a
             href={c.href}
-            class="ch-link font-display leading-none font-black text-heading uppercase transition-colors"
+            class="ch-link font-sans leading-tight font-semibold text-heading transition-colors"
             {...(c.external ? { target: '_blank', rel: 'noopener' } : {})}
             {...(c.download ? { download: site.curriculoNome } : {})}
           >
@@ -59,10 +59,9 @@ const canais = [
 </section>
 
 <style>
+  /* Nome do canal em tamanho médio (Geist): a Tektur grande fica para o nome, os títulos de seção e o projeto */
   .ch-link {
-    font-size: clamp(1.75rem, 5vw, 3.25rem);
-    font-stretch: 75%;
-    font-variation-settings: 'wdth' 75;
+    font-size: clamp(1.35rem, 2.8vw, 2rem);
   }
 
   /* Link esticado: a linha inteira é clicável */

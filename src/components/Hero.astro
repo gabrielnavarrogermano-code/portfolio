@@ -161,9 +161,10 @@ const abaixo = [
   <!-- Linha de rótulos no topo -->
   <div class="mx-auto w-full max-w-5xl px-6">
     <div class="hero-fade flex items-center justify-between gap-4 border-t border-line pt-3 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">
+      <!-- O que procuro: a bolinha lima funciona como um status, "disponível" -->
       <p class="flex items-center gap-2">
         <span class="size-1.5 flex-none rounded-full bg-accent" aria-hidden="true"></span>
-        Análise de Dados & BI
+        Buscando oportunidades em Dados & BI
       </p>
       <p><span class="max-sm:hidden">Portfólio </span><span class="text-heading">( {site.anoEmDois} )</span></p>
     </div>
@@ -173,9 +174,15 @@ const abaixo = [
   <div class="hero-fade mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-6 py-6 sm:py-10">
     <div class="grid gap-6 sm:gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,2.2fr)_auto] md:items-start md:gap-10">
       <!-- Frase em serifa (Instrument Serif): contrasta com a Tektur do nome; o destaque em lima vai em itálico -->
-      <p class="max-w-xl font-serif text-[1.8rem] leading-[1.08] text-balance text-heading sm:text-[2.6rem] md:order-2 lg:text-5xl">
-        Da infraestrutura à visualização de dados, <em class="text-accent">gerando insights corporativos.</em>
-      </p>
+      <!-- Abaixo da frase, quem sou hoje em uma linha (o que procuro está no rótulo do topo) -->
+      <div class="md:order-2">
+        <p class="max-w-xl font-serif text-[1.8rem] leading-[1.08] text-balance text-heading sm:text-[2.6rem] lg:text-5xl">
+          Da infraestrutura à visualização de dados, <em class="text-accent">gerando insights corporativos.</em>
+        </p>
+        <p class="mt-4 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:mt-5 sm:text-xs">
+          Estagiário de TI <span aria-hidden="true">·</span> Engenharia de Software
+        </p>
+      </div>
 
       <!-- Foto em retrato (preto e branco, ganha cor no hover) e os focos logo abaixo; no celular, lado a lado -->
       <div class="flex items-end gap-5 md:order-1 md:flex-col md:items-start md:gap-5">
