@@ -54,7 +54,7 @@
   --color-fg: #2b2925;
   --color-muted: #5f5b53;
   --color-line: #d5d2ca;
-  --color-accent: #4d7c0f;
+  --color-accent: #2f5bdb; /* destaque em azul nesta seção (o lima some no fundo claro) */
   --color-link: #2445c4;
   --color-link-strong: #2445c4;
   --bg-word-stroke: rgb(18 17 16 / 0.1); /* um pouco mais que os 7,5% do preto: no claro o contorno aparece menos */
@@ -104,7 +104,7 @@ h3 {
 
 .hero-title[data-fill] {
   --base: var(--color-heading);
-  --paint: var(--color-accent);
+  --paint: var(--color-link); /* a lanterna do nome acende em azul */
   --spot: 160px;
 }
 
