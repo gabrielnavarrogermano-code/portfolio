@@ -52,11 +52,10 @@ const links = [
 </footer>
 
 <script>
-  // Voltar ao topo: desliza com a rolagem suave (Lenis) quando ela está ligada
+  // Voltar ao topo: desliza (o scroll-behavior: smooth do global.css já respeita quem pediu menos movimento)
   document.addEventListener('astro:page-load', () => {
     document.querySelector('[data-to-top]')?.addEventListener('click', () => {
-      if (window.smoothScroll) window.smoothScroll.scrollTo(0);
-      else window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+      window.scrollTo({ top: 0 });
     });
   });
 </script>

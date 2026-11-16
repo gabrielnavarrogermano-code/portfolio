@@ -1,10 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Tektur", "Geist", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
-  --font-serif: "Instrument Serif", ui-serif, Georgia, serif; /* segunda voz: só a frase de apresentação da capa */
+  /* As --ff-* vêm do <Font> do Layout (fontes configuradas em astro.config.mjs, servidas pelo próprio site) */
+  --font-sans: var(--ff-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--ff-tektur), var(--ff-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--ff-geist-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-serif: var(--ff-serif), ui-serif, Georgia, serif; /* segunda voz: as frases em destaque */
 
   /* Base em tons quentes: preto-café e off-white de papel, com duas cores de papéis bem separados:
      - accent (lima): só o que importa: o destaque das frases, números de resultado, o que está selecionado
@@ -163,11 +164,6 @@ h3 {
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 6rem;
-}
-
-/* Com a rolagem suave (Lenis) ligada, quem anima é ela: a suavização do navegador brigaria com a dela */
-html.lenis {
-  scroll-behavior: auto;
 }
 
 ::selection {

@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { ClientRouter } from 'astro:transitions';
+import { Font } from 'astro:assets';
 import Analytics from '@vercel/analytics/astro';
 import { site } from '../data/site';
 
@@ -38,17 +39,12 @@ const image = new URL('/og.png', Astro.site);
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={image} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Fontes sem bloquear a primeira pintura: o texto aparece logo e troca de fonte quando ela chega -->
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Tektur:wdth,wght@75..100,400..900&family=Instrument+Serif:ital@0;1&family=Geist:wght@400..700&family=Geist+Mono:wght@400;500&display=swap" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Tektur:wdth,wght@75..100,400..900&family=Instrument+Serif:ital@0;1&family=Geist:wght@400..700&family=Geist+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-      media="print"
-      onload="this.media='all'"
-    />
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Tektur:wdth,wght@75..100,400..900&family=Instrument+Serif:ital@0;1&family=Geist:wght@400..700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" /></noscript>
+    <!-- Fontes servidas pelo próprio site (configuradas em astro.config.mjs). As da capa vêm com preload,
+         para o nome e a frase já aparecerem na fonte certa. -->
+    <Font cssVariable="--ff-tektur" preload />
+    <Font cssVariable="--ff-serif" preload />
+    <Font cssVariable="--ff-geist" preload />
+    <Font cssVariable="--ff-geist-mono" />
     <title>{title}</title>
     <ClientRouter />
     <!-- Web Analytics da Vercel: conta visitas sem cookies; só funciona no site publicado, com o Analytics ativado no painel -->

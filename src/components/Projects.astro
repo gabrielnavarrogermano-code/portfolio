@@ -17,8 +17,8 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
     {
       projetos.map((p, i) => (
         <article>
-          <!-- Card: uma faixa escura no topo com o número e o tipo; abaixo, a imagem começa em preto e branco; no hover ganha cor, aproxima e troca para a outra
-               página do dashboard -->
+          <!-- Card: uma faixa escura no topo com o número e o tipo; abaixo, o print do dashboard em cores; no hover aproxima e troca para a
+               outra página do dashboard -->
           <a
             href={`/projetos/${p.id}/`}
             data-active
@@ -148,8 +148,9 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
       transform 1.4s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
+  /* O print aparece em cores desde o início: é o trabalho em si, não um fundo */
   .pc-img {
-    filter: brightness(0.8);
+    filter: brightness(0.9);
   }
 
   .pc-shade {
@@ -160,28 +161,23 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
     opacity: 0;
   }
 
-  /* Só em quem tem mouse: o preto e branco e a troca de imagem */
+  /* Só em quem tem mouse: a troca para a outra página do dashboard, com uma leve aproximação */
   @media (hover: hover) and (pointer: fine) {
     .pc-img {
-      filter: grayscale(1) brightness(0.6);
       transform: scale(1.02);
     }
 
     .pc-img-hover {
-      filter: blur(14px);
-      transform: scale(1.08);
+      transform: scale(1.02);
     }
 
     .project-card:hover .pc-img {
-      filter: grayscale(0) brightness(0.85) blur(6px);
-      transform: scale(1.08);
+      transform: scale(1.05);
     }
 
     .project-card:hover .pc-img-hover {
       opacity: 1;
-      filter: blur(0);
-      transform: scale(1.04);
-      transition-delay: 0.15s;
+      transform: scale(1.05);
     }
 
     /* O degradê clareia para as cores do painel aparecerem; o título continua legível embaixo */

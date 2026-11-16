@@ -1,41 +1,6 @@
-// Rolagem suave (Lenis): a página desliza em vez de pular a cada giro da roda do mouse.
-// - Criada uma vez só: com o ClientRouter, a janela é a mesma entre as páginas.
-// - Fica parada enquanto a abertura ou o menu estão na tela.
-// - No toque (celular) a rolagem continua a nativa; quem pediu menos movimento não recebe a suavização.
-// - Links para uma seção da mesma página (#contato, /#projetos) deslizam até ela.
-import Lenis from 'lenis';
-import 'lenis/dist/lenis.css';
-
-// A biblioteca já declara (e preenche) a própria window.lenis, com outro formato: por isso o nosso nome é outro
-declare global {
-  interface Window {
-    smoothScroll?: Lenis;
-  }
-}
-
-const locked = () => {
-  const c = document.documentElement.classList;
-  return c.contains('show-intro') || c.contains('menu-open');
-};
-
-if (!window.smoothScroll && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  const lenis = new Lenis({
-    autoRaf: true,
-    duration: 1.15,
-    allowNestedScroll: true, // tabelas e áreas com rolagem própria continuam rolando por dentro
-    virtualScroll: () => !locked(),
-  });
-  window.smoothScroll = lenis;
-
-  // Depois de trocar de página, a altura muda: o Lenis precisa medir de novo.
-  // A troca também copia os atributos do <html> da página nova, apagando a classe que o Lenis pôs lá.
-  document.addEventListener('astro:after-swap', () => {
-    document.documentElement.classList.add('lenis');
-    lenis.resize();
-  });
-}
-
-// Clique em link para uma seção desta mesma página: desliza até ela (com ou sem Lenis).
+// Links para uma seção da mesma página (#contato, /#projetos): a página desliza até ela.
+// A rolagem em si é a nativa do navegador (a roda do mouse e o trackpad respondem como o usuário espera);
+// o deslize vem do scroll-behavior: smooth do global.css, que respeita quem pediu menos movimento.
 // Na fase de captura, para agir antes do ClientRouter (que ignora cliques já tratados).
 document.addEventListener('click', (e) => {
   if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -48,6 +13,5 @@ document.addEventListener('click', (e) => {
 
   e.preventDefault();
   history.pushState(null, '', url.hash);
-  if (window.smoothScroll) window.smoothScroll.scrollTo(target, { offset: 0 });
-  else target.scrollIntoView({ behavior: 'smooth' });
+  target.scrollIntoView();
 }, true);
