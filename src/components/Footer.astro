@@ -21,7 +21,7 @@ const links = [
         data-to-top
         class="group inline-flex cursor-pointer items-center gap-3 font-mono text-[11px] tracking-[0.15em] text-heading uppercase"
       >
-        <span data-flip>Voltar ao topo</span>
+        Voltar ao topo
         <span
           class="grid size-9 place-items-center rounded-full border border-line text-sm transition group-hover:-translate-y-0.5 group-hover:border-heading group-hover:bg-heading group-hover:text-ink"
           aria-hidden="true">↑</span
@@ -40,7 +40,7 @@ const links = [
                 class="transition-colors hover:text-heading"
                 {...(l.external ? { target: '_blank', rel: 'noopener' } : {})}
               >
-                <span data-flip>{l.label}</span> ↗
+                {l.label} ↗
               </a>
             </li>
           ))

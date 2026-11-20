@@ -33,7 +33,7 @@ const canais = [
             {...(c.external ? { target: '_blank', rel: 'noopener' } : {})}
             {...(c.download ? { download: site.curriculoNome } : {})}
           >
-            <span data-flip>{c.label}</span>
+            {c.label}
           </a>
 
           <span class="col-start-2 truncate font-mono text-xs text-muted sm:col-start-auto sm:text-sm">{c.detail}</span>

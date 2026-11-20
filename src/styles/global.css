@@ -82,62 +82,6 @@ h3 {
   letter-spacing: 0.005em;
 }
 
-/* Lanterna de cor: só a região debaixo do mouse muda de cor; ao sair, a luz se apaga.
-   Título: branco, acende em azul. Focos: o inverso, azuis, acendem em branco.
-   O script do Hero atualiza a posição (--fx, --fy) e liga a classe .is-lit. */
-@property --spot-r {
-  syntax: "<length>";
-  inherits: false;
-  initial-value: 0px;
-}
-
-[data-fill] {
-  background: radial-gradient(circle var(--spot-r) at var(--fx, 50%) var(--fy, 50%), var(--paint) 45%, var(--base) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  transition: --spot-r 0.25s ease-out;
-}
-
-[data-fill].is-lit {
-  --spot-r: var(--spot);
-}
-
-.hero-title[data-fill] {
-  --base: var(--color-heading);
-  --paint: var(--color-link); /* a lanterna do nome acende em azul */
-  --spot: 160px;
-}
-
-/* Hover com letras girando: cada letra tomba para trás e volta pela frente, uma depois da outra (placar).
-   O script do Layout quebra o texto de cada [data-flip] em letras e liga .is-flipping no hover. */
-.flip-char {
-  display: inline-block;
-  white-space: pre;
-  backface-visibility: hidden;
-}
-
-[data-flip].is-flipping .flip-char {
-  animation: char-flip 0.5s calc(var(--i) * 22ms) both;
-}
-
-@keyframes char-flip {
-  0% {
-    transform: perspective(12em) rotateX(0deg);
-    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
-  }
-  45% {
-    transform: perspective(12em) rotateX(90deg);
-  }
-  45.01% {
-    transform: perspective(12em) rotateX(-90deg);
-    animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1);
-  }
-  100% {
-    transform: perspective(12em) rotateX(0deg);
-  }
-}
-
 .sr-only {
   position: absolute;
   width: 1px;
@@ -148,12 +92,6 @@ h3 {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-.hero-focus-items[data-fill] {
-  --base: var(--color-heading);
-  --paint: var(--color-accent);
-  --spot: 40px;
 }
 
 :focus-visible {

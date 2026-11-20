@@ -68,26 +68,6 @@ const image = new URL('/og.png', Astro.site);
           if (later.length) idle(next);
         };
         idle(next);
-
-        // Hover com letras girando: quebra o texto de cada [data-flip] em letras (o texto inteiro continua
-        // disponível para leitores de tela) e gira quando o mouse entra no link ou botão em volta
-        if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        document.querySelectorAll<HTMLElement>('[data-flip]:not([data-flip-ready])').forEach((el) => {
-          el.dataset.flipReady = '';
-          const text = el.textContent?.trim() ?? '';
-          const chars = [...text]
-            .map((c, i) => `<span class="flip-char" style="--i:${i}">${c.replace('&', '&amp;').replace('<', '&lt;')}</span>`)
-            .join('');
-          el.innerHTML = `<span class="sr-only">${text.replace('&', '&amp;').replace('<', '&lt;')}</span><span aria-hidden="true">${chars}</span>`;
-
-          const host = el.closest<HTMLElement>('a, button') ?? el;
-          host.addEventListener('pointerenter', (e) => {
-            if (e.pointerType !== 'mouse' || el.classList.contains('is-flipping')) return;
-            el.classList.add('is-flipping');
-            const last = el.querySelector<HTMLElement>('.flip-char:last-child');
-            last?.addEventListener('animationend', () => el.classList.remove('is-flipping'), { once: true });
-          });
-        });
       });
     </script>
   </body>

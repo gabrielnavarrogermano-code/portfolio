@@ -39,7 +39,7 @@ const proximos = [
     <header class="mx-auto max-w-5xl px-6 xl:max-w-6xl">
       <a href="/#projetos" class="group inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.15em] text-muted uppercase transition hover:text-heading">
         <span class="transition-transform group-hover:-translate-x-1" aria-hidden="true">←</span>
-        <span data-flip>Voltar aos projetos</span>
+        Voltar aos projetos
       </a>
 
       <p class="mt-10 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">
@@ -69,12 +69,12 @@ const proximos = [
           <div class="mt-6 flex flex-wrap gap-5 font-mono text-[11px] tracking-[0.15em] uppercase">
             {p.data.dashboard && (
               <a href={p.data.dashboard} target="_blank" rel="noopener" class="text-link hover:text-heading">
-                <span data-flip>Ver dashboard</span> ↗
+                Ver dashboard ↗
               </a>
             )}
             {p.data.repo && (
               <a href={p.data.repo} target="_blank" rel="noopener" class="text-link hover:text-heading">
-                <span data-flip>Código</span> ↗
+                Código ↗
               </a>
             )}
           </div>
@@ -145,7 +145,7 @@ const proximos = [
           proximos.map((n) => (
             <li class="nx-row group relative flex items-center gap-4 border-b border-line py-6 sm:gap-8 sm:py-8">
               <a href={n.href} class="nx-link flex-1 font-display leading-none font-black text-heading uppercase transition-colors">
-                <span data-flip>{n.label}</span>
+                {n.label}
               </a>
               <span class="nx-icon pointer-events-none grid size-12 flex-none place-items-center rounded-full border border-line text-lg text-heading transition" aria-hidden="true">
                 {n.icon}

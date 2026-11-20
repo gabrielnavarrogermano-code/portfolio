@@ -205,8 +205,7 @@ const abaixo = [
         </div>
         <div>
           <p class="hero-load font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs" style="--k: 2">( Foco )</p>
-          <!-- A lista inteira enche de uma vez: a lanterna pinta o texto pela <ul>, então os itens não se escondem sozinhos -->
-          <ul data-fill class="hero-load hero-focus-items mt-3 font-mono text-sm leading-relaxed sm:text-base" style="--k: 2.5">
+          <ul class="hero-load hero-focus-items text-heading mt-3 font-mono text-sm leading-relaxed sm:text-base" style="--k: 2.5">
             {focus.map((f) => <li>{f}</li>)}
           </ul>
         </div>
@@ -217,7 +216,7 @@ const abaixo = [
           href="#contato"
           class="group inline-flex items-center gap-2 rounded-full bg-heading px-5 py-2 font-medium sm:px-6 sm:py-3 whitespace-nowrap text-bg transition hover:bg-link-strong hover:text-white"
         >
-          <span data-flip>Entre em contato</span>
+          Entre em contato
           <span class="transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
         </a>
         <div class="flex items-center gap-2 sm:gap-3">
@@ -231,7 +230,7 @@ const abaixo = [
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4" aria-hidden="true">
                   <path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
-                <span data-flip class="max-sm:sr-only">Currículo</span>
+                <span class="max-sm:sr-only">Currículo</span>
               </a>
             )
           }
@@ -266,14 +265,13 @@ const abaixo = [
     </div>
   </div>
 
-  <!-- Nome gigante: ocupa a largura da tela (uma linha no computador, três no celular).
-       As palavras acendem em lima debaixo do mouse. -->
+  <!-- Nome gigante: ocupa a largura da tela (uma linha no computador, três no celular). -->
   <h1 class="hero-name px-3 pb-3 sm:px-4 sm:pb-4">
     <span class="sr-only">{site.name}, Análise de Dados & BI</span>
     <span class="hero-name-text" aria-hidden="true">
-      <span class="hero-name-line"><span data-fill class="hero-title hero-name-word">Gabriel</span></span>
-      <span class="hero-name-line"><span data-fill class="hero-title hero-name-word" style="--delay: 0.08s">Navarro</span></span>
-      <span class="hero-name-line"><span data-fill class="hero-title hero-name-word" style="--delay: 0.16s">Germano</span></span>
+      <span class="hero-name-line"><span class="hero-title hero-name-word">Gabriel</span></span>
+      <span class="hero-name-line"><span class="hero-title hero-name-word" style="--delay: 0.08s">Navarro</span></span>
+      <span class="hero-name-line"><span class="hero-title hero-name-word" style="--delay: 0.16s">Germano</span></span>
     </span>
   </h1>
 </section>
@@ -294,6 +292,7 @@ const abaixo = [
     flex-direction: column;
     width: max-content;
     font-family: var(--font-display);
+    color: var(--color-heading);
     font-size: calc(100cqi / 5.1); /* celular: ~77% da largura, para o nome caber na primeira tela junto com o resto da capa */
     font-weight: 900;
     font-stretch: 75%;
@@ -816,7 +815,7 @@ const abaixo = [
 
 <script>
   // Abertura: depois de uns 5 segundos (ou no primeiro clique, toque, rolagem ou tecla) a tela sobe,
-  // revelando a capa, e o nome entra. Lanterna: só a região debaixo do mouse muda de cor.
+  // revelando a capa, e o nome entra.
   let controller: AbortController | undefined;
 
   // A capa carrega: tira o intro-pending (os blocos enchem pelo CSS) e o ano conta até o atual, como um KPI
@@ -920,20 +919,5 @@ const abaixo = [
     if (!hero) return;
 
     runIntro(signal);
-
-    hero.querySelectorAll<HTMLElement>('[data-fill]').forEach((el) => {
-      el.addEventListener(
-        'pointermove',
-        (e) => {
-          if (e.pointerType !== 'mouse') return;
-          const r = el.getBoundingClientRect();
-          el.style.setProperty('--fx', `${e.clientX - r.left}px`);
-          el.style.setProperty('--fy', `${e.clientY - r.top}px`);
-          el.classList.add('is-lit');
-        },
-        { signal },
-      );
-      el.addEventListener('pointerleave', () => el.classList.remove('is-lit'), { signal });
-    });
   });
 </script>

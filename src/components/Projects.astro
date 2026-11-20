@@ -4,7 +4,20 @@ import { Image } from 'astro:assets';
 import SectionTitle from './SectionTitle.astro';
 import BgWord from './BgWord.astro';
 
+import { records, compute } from '../lib/notebooks';
+
 const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order - b.data.order);
+
+// KPIs do dashboard de notebooks, calculados com as mesmas 100 linhas da simulação do estudo de caso.
+// No card, os números contam e as barras enchem até a meta quando o painel chega na tela.
+const { t, w } = compute(records);
+const kpis: Record<string, { label: string; value: string; sub: string; pct?: number; st: string }[]> = {
+  notebooks: [
+    { label: '% LAPS', value: t.laps, sub: t['laps:sub'], pct: w.laps, st: t['laps:st'] },
+    { label: '% Antivírus', value: t.av, sub: t['av:sub'], pct: w.av, st: t['av:st'] },
+    { label: 'Pendências', value: t.seg, sub: t['seg:sub'], st: t['seg:st'] },
+  ],
+};
 ---
 
 <section id="projetos" class="render-later relative isolate mx-auto max-w-5xl px-6 pb-16 [contain-intrinsic-size:auto_1100px] sm:pb-24">
@@ -52,6 +65,30 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
                 <span class="rounded-full border border-heading/30 bg-ink/60 px-3 py-1 backdrop-blur-sm">( 0{i + 1} )</span>
                 <span class="rounded-full border border-heading/30 bg-ink/60 px-3 py-1 backdrop-blur-sm">{p.data.kind}</span>
               </div>
+
+              <!-- Um pedaço vivo do dashboard por cima do print: os KPIs de segurança contam e as barras enchem até a meta -->
+              {p.data.demo && kpis[p.data.demo] && (
+                <div data-reveal class="pc-kpis absolute inset-x-3 bottom-3 rounded-xl border border-heading/15 bg-ink/85 p-3 backdrop-blur-md sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[25rem] sm:p-5">
+                  <p class="flex items-center gap-2 font-mono text-[10px] tracking-[0.15em] text-muted uppercase">
+                    <span class="pc-live size-1.5 flex-none rounded-full bg-accent" aria-hidden="true" />
+                    Segurança · dados fictícios
+                  </p>
+                  <dl class="mt-2 grid grid-cols-3 gap-3 sm:mt-3 sm:gap-4">
+                    {kpis[p.data.demo].map((k) => (
+                      <div>
+                        <dt class="font-mono text-[10px] tracking-[0.1em] text-muted uppercase">{k.label}</dt>
+                        <dd data-count class="mt-1 font-display text-xl leading-none font-black tabular-nums text-heading sm:text-3xl">{k.value}</dd>
+                        <dd class="mt-1.5 text-[11px] leading-tight text-muted max-sm:hidden">{k.sub}</dd>
+                        {k.pct !== undefined && (
+                          <dd class="relative mt-2 h-1 rounded-full bg-white/10" aria-hidden="true">
+                            <span class:list={['pc-bar absolute inset-y-0 left-0 rounded-full', `st-${k.st}`]} style={`width: ${k.pct}%`} />
+                          </dd>
+                        )}
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              )}
             </div>
           </a>
 
@@ -72,7 +109,7 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
 
           <div data-reveal data-active class="pc-next group relative flex items-center gap-4 border-b border-line md:border-t py-6 sm:gap-8 sm:py-7 md:mt-6">
             <a href={`/projetos/${p.id}/`} class="pc-next-link flex-1 font-sans leading-tight font-semibold text-heading transition-colors">
-              <span data-flip>Ler estudo de caso</span>
+              Ler estudo de caso
             </a>
             <span class="pc-next-icon pointer-events-none grid size-12 flex-none place-items-center rounded-full border border-line text-lg text-heading transition" aria-hidden="true">→</span>
           </div>
@@ -132,6 +169,45 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
     font-stretch: 75%;
     font-variation-settings: 'wdth' 75;
     text-wrap: balance;
+  }
+
+  /* Painel de KPIs: a barra enche até o valor quando o painel aparece (depois que o número começa a contar) */
+  .pc-bar {
+    transform-origin: left;
+    transition: transform 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) 0.35s;
+  }
+
+  .pc-kpis.is-hidden .pc-bar {
+    transform: scaleX(0);
+  }
+
+  .st-good {
+    background: var(--color-good);
+  }
+
+  .st-warn {
+    background: var(--color-warn);
+  }
+
+  .st-crit {
+    background: var(--color-crit);
+  }
+
+  /* O "ao vivo": a bolinha pulsa devagar */
+  .pc-live {
+    animation: pc-live 2.4s ease-in-out infinite;
+  }
+
+  @keyframes pc-live {
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pc-live {
+      animation: none;
+    }
   }
 
   .pc-img,
