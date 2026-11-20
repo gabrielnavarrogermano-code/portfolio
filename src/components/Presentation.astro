@@ -4,7 +4,7 @@ import { site } from '../data/site';
 
 const tools = ['Microsoft 365 Admin', 'Entra ID', 'SharePoint', 'Kanban'];
 
-// O que estou estudando agora (terceira linha da Trajetória)
+// O que estou estudando agora (terceira coluna da Trajetória)
 const studying = ['SQL', 'DAX no Power BI', 'Data storytelling'];
 
 // A história, em capítulos. As palavras em <b> ficam em destaque (brancas).
@@ -33,24 +33,25 @@ const { semestre: semester, total: totalSemesters } = site.curso;
 
   <!-- Computador: a história à esquerda e, ao lado, a frase que resume o que aprendi, em destaque.
        Celular: tudo em uma coluna -->
-  <div class="mt-8 grid grid-cols-1 gap-10 sm:mt-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-16">
-    <!-- A história em três capítulos curtos (o texto é o mesmo de antes, só dividido), no formato de linhas do site -->
+  <div class="mt-8 grid grid-cols-1 gap-10 sm:mt-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:gap-16">
+    <!-- A história em três capítulos: número e título numa coluna estreita, o texto ao lado.
+         Cada linha tem só a altura do próprio texto -->
     <ol class="border-t border-line">
       {
         chapters.map((c, i) => (
-          <li data-reveal class="chapter grid grid-cols-[3rem_minmax(0,1fr)] gap-x-4 border-b border-line py-6 sm:grid-cols-[4.5rem_minmax(0,1fr)]">
-            <span class="pt-1 font-mono text-xs text-muted">( 0{i + 1} )</span>
-            <div>
-              <h3 class="chapter-title font-sans text-xl leading-snug font-semibold text-heading sm:text-2xl">{c.title}</h3>
-              <p class="mt-3 leading-relaxed text-fg/75 sm:text-lg" set:html={c.text} />
+          <li data-reveal class="chapter grid grid-cols-[5.5rem_minmax(0,1fr)] gap-x-5 border-b border-line py-5 sm:grid-cols-[7rem_minmax(0,1fr)] sm:gap-x-6">
+            <div class="pt-0.5">
+              <span class="block font-mono text-[11px] text-muted">( 0{i + 1} )</span>
+              <h3 class="mt-1.5 font-sans text-lg leading-snug font-semibold text-heading sm:text-xl">{c.title}</h3>
             </div>
+            <p class="leading-relaxed text-fg/75 sm:text-[1.05rem]" set:html={c.text} />
           </li>
         ))
       }
     </ol>
 
     <!-- Citação: a mesma serifa da frase da capa, com o final em lima e itálico -->
-    <figure data-reveal class="lg:sticky lg:top-28 lg:self-start lg:pt-1">
+    <figure data-reveal class="lg:self-center">
       <span class="block font-serif text-6xl leading-none text-muted/60" aria-hidden="true">“</span>
       <blockquote class="-mt-4 font-serif text-[2rem] leading-[1.1] text-balance text-heading sm:text-[2.5rem]">
         Um dashboard só funciona se <em class="text-accent">quem não é técnico consegue usar sozinho.</em>
@@ -62,101 +63,87 @@ const { semestre: semester, total: totalSemesters } = site.curso;
     </figure>
   </div>
 
-  <!-- Trajetória: formação e experiência como linhas de uma tabela, com número, título, lugar e detalhe.
-       No hover, o título acende em lima. Tudo visível também no celular. -->
-  <div class="mt-16 sm:mt-20">
+  <!-- Trajetória: formação, experiência e estudos lado a lado, como a ficha do projeto (no celular, uma embaixo da outra) -->
+  <div class="mt-14 sm:mt-16">
     <p class="flex items-center gap-4 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">
       ( Trajetória ) <span class="h-px flex-1 bg-line" aria-hidden="true"></span>
     </p>
 
-    <ul class="mt-2">
-      <li data-reveal class="row group">
-        <span class="row-num">( 01 )</span>
-        <div>
-          <p class="row-kind">Formação</p>
-          <h3 class="row-title">Engenharia de Software</h3>
-        </div>
-        <div class="text-fg/80">
-          <p class="text-heading">UniCesumar</p>
-          <p class="mt-1 text-sm text-muted">Base técnica em lógica, programação e banco de dados, aplicada desde já a projetos de análise.</p>
-        </div>
-        <div class="flex items-center gap-3 md:w-44 md:flex-col md:items-end md:gap-2">
-          <div class="flex w-32 gap-1 md:w-full" role="img" aria-label={`${semester}º de ${totalSemesters} semestres`}>
-            {
-              Array.from({ length: totalSemesters }, (_, i) => (
-                <span class:list={['h-1.5 flex-1 rounded-full', i < semester ? 'bg-accent' : 'bg-line']} />
-              ))
-            }
+    <dl class="mt-2 grid md:grid-cols-3">
+      <div data-reveal class="col">
+        <dt class="row-kind">( 01 ) Formação</dt>
+        <dd>
+          <p class="row-title">Engenharia de Software</p>
+          <p class="mt-1 text-heading">UniCesumar</p>
+          <p class="mt-2 text-sm leading-relaxed text-muted">Base técnica em lógica, programação e banco de dados, aplicada desde já a projetos de análise.</p>
+          <div class="mt-4 flex items-center gap-3">
+            <div class="flex w-32 gap-1" role="img" aria-label={`${semester}º de ${totalSemesters} semestres`}>
+              {
+                Array.from({ length: totalSemesters }, (_, i) => (
+                  <span class:list={['h-1.5 flex-1 rounded-full', i < semester ? 'bg-accent' : 'bg-line']} />
+                ))
+              }
+            </div>
+            <span class="font-mono text-xs text-muted" aria-hidden="true">{semester}º / {totalSemesters} semestres</span>
           </div>
-          <span class="font-mono text-xs text-muted" aria-hidden="true">{semester}º / {totalSemesters} semestres</span>
-        </div>
-      </li>
+        </dd>
+      </div>
 
-      <li data-reveal class="row group">
-        <span class="row-num">( 02 )</span>
-        <div>
-          <p class="row-kind">Experiência atual</p>
-          <h3 class="row-title">Estagiário de TI</h3>
-        </div>
-        <div class="text-fg/80">
-          <p class="text-heading">Hebe's Life Science · Indústria farmacêutica</p>
-          <ul class="mt-1 flex flex-wrap gap-x-2 font-mono text-xs text-muted" aria-label="Ferramentas">
+      <div data-reveal class="col">
+        <dt class="row-kind">( 02 ) Experiência atual</dt>
+        <dd>
+          <p class="row-title">Estagiário de TI</p>
+          <p class="mt-1 text-heading">Hebe's Life Science</p>
+          <p class="text-sm text-muted">Indústria farmacêutica</p>
+          <ul class="mt-3 flex flex-wrap gap-x-2 font-mono text-xs leading-relaxed text-muted" aria-label="Ferramentas">
             {tools.map((t, i) => <li>{t}{i < tools.length - 1 && <span aria-hidden="true"> ·</span>}</li>)}
           </ul>
-        </div>
-      </li>
+        </dd>
+      </div>
 
-      <li data-reveal class="row group">
-        <span class="row-num">( 03 )</span>
-        <div>
-          <p class="row-kind">Em andamento</p>
-          <h3 class="row-title">Estudando agora</h3>
-        </div>
-        <div class="text-fg/80">
-          <ul class="flex flex-wrap gap-x-2 text-heading" aria-label="Estudos">
+      <div data-reveal class="col">
+        <dt class="row-kind">( 03 ) Em andamento</dt>
+        <dd>
+          <p class="row-title">Estudando agora</p>
+          <ul class="mt-1 flex flex-wrap gap-x-2 text-heading" aria-label="Estudos">
             {studying.map((t, i) => <li>{t}{i < studying.length - 1 && <span class="text-muted" aria-hidden="true"> ·</span>}</li>)}
           </ul>
-          <p class="mt-1 text-sm text-muted">Para fazer o caminho inteiro, da extração ao dashboard.</p>
-        </div>
-      </li>
-    </ul>
+          <p class="mt-2 text-sm leading-relaxed text-muted">Para fazer o caminho inteiro, da extração ao dashboard.</p>
+        </dd>
+      </div>
+    </dl>
   </div>
 </section>
 
 <style>
-  /* Capítulos da história: título médio, em Geist (a Tektur grande fica para o nome, os títulos de seção e o
-     projeto), e as palavras-chave em branco */
-  .chapter-title {
-    transition: color 0.3s ease;
-  }
-
+  /* Capítulos da história: as palavras-chave em branco */
   .chapter :global(b) {
     font-weight: 500;
     color: var(--color-heading);
   }
 
-  /* Linha da trajetória: celular em pilha; a partir de md, quatro colunas alinhadas */
-  .row {
-    display: grid;
-    gap: 0.75rem;
-    padding-block: 1.75rem;
+  /* Colunas da trajetória: celular em pilha, separadas por linhas; a partir de md, lado a lado,
+     separadas por uma linha vertical (como a ficha do projeto) */
+  .col {
+    padding-block: 1.5rem;
     border-bottom: 1px solid var(--color-line);
   }
 
-  /* A última coluna (barra de semestres) tem largura fixa: a linha que não tem barra deixa o espaço vazio,
-     e as colunas do meio ficam alinhadas entre as linhas */
   @media (min-width: 48rem) {
-    .row {
-      grid-template-columns: 4.5rem minmax(0, 1.15fr) minmax(0, 1fr) 11rem;
-      align-items: center;
-      column-gap: 2rem;
+    .col {
+      padding-inline: 1.5rem;
+      border-bottom: 0;
+      border-right: 1px solid var(--color-line);
     }
-  }
 
-  .row-num {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    color: var(--color-muted);
+    .col:first-child {
+      padding-left: 0;
+    }
+
+    .col:last-child {
+      padding-right: 0;
+      border-right: 0;
+    }
   }
 
   .row-kind {
@@ -168,12 +155,11 @@ const { semestre: semester, total: totalSemesters } = site.curso;
   }
 
   .row-title {
-    margin-top: 0.4rem;
+    margin-top: 0.75rem;
     font-family: var(--font-sans);
-    font-size: clamp(1.25rem, 2.2vw, 1.5rem);
+    font-size: clamp(1.2rem, 2vw, 1.4rem);
     line-height: 1.2;
     font-weight: 600;
     color: var(--color-heading);
-    transition: color 0.3s ease;
   }
 </style>
