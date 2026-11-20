@@ -6,26 +6,27 @@ import { temCurriculo } from '../lib/curriculo';
 
 const focus = ['Excel', 'Power BI', 'ETL'];
 
-// Abertura: números soltos que viram um gráfico de pessoas por área. Cada barra tem seu número, que aparece
-// primeiro solto em (x, y) e depois voa para o topo dela; a barra Dados (alvo) é onde a imagem mergulha
-// (drill-down). Os `soltos` são números que não viram nada e somem.
+// Abertura, primeiro ato: números soltos espalhados pela tela (x, y em % da tela). O tamanho (s) dá a
+// profundidade: 1 = pequeno e longe, 3 = grande e perto (perde mais o foco). Quando a frase entra em foco,
+// eles desfocam e somem, como uma câmera mudando o foco do fundo para a frente.
 // Depois, a lista de pessoas (fictícias) que a consulta filtra: fase 1 = WHERE área = 'Dados';
 // fase 2 = AND foco = 'Power BI'. Sobra você.
-const barras = [
-  { area: 'RH', valor: 8, x: 22, y: 30 },
-  { area: 'TI', valor: 12, x: 250, y: 62 },
-  { area: 'Vendas', valor: 15, x: 70, y: 140 },
-  { area: 'Dados', valor: 21, x: 272, y: 150, alvo: true },
-  { area: 'Finanças', valor: 6, x: 150, y: 18 },
-];
 const soltos = [
-  { t: '3,2', x: 118, y: 92 },
-  { t: '47', x: 36, y: 96 },
-  { t: '0,8', x: 212, y: 24 },
-  { t: '112', x: 198, y: 112 },
-  { t: '28%', x: 100, y: 52 },
-  { t: '64', x: 288, y: 104 },
-  { t: '9', x: 160, y: 160 },
+  { t: '3,2', x: 12, y: 18, s: 2 },
+  { t: '47', x: 28, y: 9, s: 1 },
+  { t: '0,8', x: 71, y: 13, s: 3 },
+  { t: '112', x: 89, y: 27, s: 1 },
+  { t: '28%', x: 9, y: 45, s: 3 },
+  { t: '64', x: 92, y: 53, s: 2 },
+  { t: '9', x: 19, y: 73, s: 1 },
+  { t: '1.024', x: 79, y: 79, s: 3 },
+  { t: '15', x: 47, y: 89, s: 2 },
+  { t: '0,31', x: 63, y: 67, s: 1 },
+  { t: '21', x: 36, y: 29, s: 1 },
+  { t: '73%', x: 56, y: 22, s: 2 },
+  { t: '6', x: 31, y: 64, s: 3 },
+  { t: '2,5', x: 85, y: 93, s: 1 },
+  { t: '340', x: 7, y: 88, s: 2 },
 ];
 const acima = [
   { nome: 'Ana Souza', area: 'RH', fase: 1 },
@@ -57,71 +58,25 @@ const abaixo = [
 </script>
 
 <!-- Abertura, automática (uns 5 segundos), no traço do site:
-     1. "Números soltos não dizem nada": números aparecem espalhados e voam para o topo de barras que
-        crescem, formando um gráfico de pessoas por área;
-     2. um cursor clica na barra Dados: ela acende e as outras apagam (filtro cruzado, como no Power BI);
-     3. "Procurando alguém para cuidar dos seus dados?": com o filtro aplicado (a busca do recrutador), a lista risca as pessoas até sobrar
+     1. "Números soltos não dizem nada": números espalhados flutuam pela tela; a frase entra em foco no
+        centro enquanto eles desfocam e somem (como uma câmera mudando o foco);
+     2. "Procurando alguém para cuidar dos seus dados?": com o filtro aplicado (a busca do recrutador), a lista risca as pessoas até sobrar
         o seu nome, selecionado;
-     4. o fundo some e cada palavra do nome sai da lista e voa até o seu lugar na capa; a capa carrega
+     3. o fundo some e cada palavra do nome sai da lista e voa até o seu lugar na capa; a capa carrega
         como um dashboard (blocos enchendo como barras, o ano contando). Se a pessoa pular antes de a lista
         aparecer, a tela sobe como uma cortina.
      Qualquer clique, toque, rolagem ou tecla pula direto para a capa. -->
 <div data-intro class="intro on-black fixed inset-0 z-[100] items-center justify-center overflow-hidden bg-bg" aria-hidden="true">
-  <div class="intro-rack flex flex-col items-center">
-    <p class="intro-q intro-q1 mb-6 px-6 text-center font-serif text-[1.6rem] leading-tight text-heading sm:mb-8 sm:text-4xl">
-      Números soltos não <em class="text-accent">dizem nada.</em>
-    </p>
-    <svg viewBox="0 0 300 200" class="intro-svg overflow-visible">
-      <g>
-        <path class="ic-grid" d="M14 128h278M14 86h278M14 44h278"></path>
-        <path class="ic-axis" d="M14 170h278" pathLength="1"></path>
-        {
-          barras.map((b, i) => {
-            const x = 28 + i * 52;
-            const h = b.valor * 6;
-            return (
-              <g class:list={['ic-bar', b.alvo && 'ic-target']} style={`--i: ${i}`}>
-                <rect class="ic-rect" x={x} y={170 - h} width="36" height={h}></rect>
-                {b.alvo && <rect class="ic-hl" x={x} y={170 - h} width="36" height={h}></rect>}
-                <text class="ic-area" x={x + 18} y="184" text-anchor="middle">{b.area}</text>
-              </g>
-            );
-          })
-        }
-        {
-          barras.map((b, i) => {
-            const fx = 28 + i * 52 + 18;
-            const fy = 170 - b.valor * 6 - 6;
-            return (
-              <text
-                class:list={['ic-num', b.alvo && 'ic-num-target']}
-                x={fx}
-                y={fy}
-                text-anchor="middle"
-                style={`--i: ${i}; --o: ${(i * 5) % 12}; --sx: ${b.x - fx}px; --sy: ${b.y - fy}px`}
-              >
-                {b.valor}
-              </text>
-            );
-          })
-        }
-        {
-          soltos.map((n, i) => (
-            <text class="ic-num ic-loose" x={n.x} y={n.y} text-anchor="middle" style={`--o: ${((i + 5) * 5) % 12}`}>
-              {n.t}
-            </text>
-          ))
-        }
-        <!-- O clique na barra Dados (filtro cruzado, como no Power BI): o cursor entra pela direita,
-             clica no meio da barra e solta uma onda; as outras barras apagam -->
-        <circle class="ic-click" cx="202" cy="107" r="9"></circle>
-        <g transform="translate(202 107)">
-          <path class="ic-cursor" d="M0 0V15l4-3.6 3 6.8 2.8-1.2-3-6.6h5.3z"></path>
-        </g>
-      </g>
-    </svg>
-    <p class="intro-cap mt-6 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">
-      ( Pessoas por área )
+  <div class="intro-act1 absolute inset-0">
+    {
+      soltos.map((n, i) => (
+        <span class={`il-num il-s${n.s}`} style={`left: ${n.x}%; top: ${n.y}%; --d: ${((i * 7) % 10) * 0.04}s; --dx: ${((i * 37) % 21) - 10}px; --dy: ${((i * 23) % 17) - 8}px`}>
+          {n.t}
+        </span>
+      ))
+    }
+    <p class="intro-focus absolute inset-x-0 top-1/2 -translate-y-1/2 px-6 text-center font-serif text-[1.9rem] leading-tight text-balance text-heading sm:text-5xl">
+      Números soltos não <em class="whitespace-nowrap">dizem nada.</em>
     </p>
   </div>
 
@@ -492,20 +447,12 @@ const abaixo = [
     }
   }
 
-  /* Ritmo (~5 s): o gráfico se forma até ~2 s, o cursor clica na barra Dados em ~2,3 s (as outras
-     apagam, como no filtro cruzado do Power BI), a lista entra em ~3 s e filtra até sobrar o seu nome. */
+  /* Ritmo (~5 s): os números flutuam, a frase entra em foco até ~1,8 s e eles desfocam; o primeiro ato sai
+     em ~2,8 s, a lista entra em ~3 s e filtra até sobrar o seu nome. */
 
-  /* As frases: sobem e aparecem */
+  /* A frase da lista sobe e aparece */
   .intro-q {
-    animation: intro-rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) 0.1s both;
-  }
-
-  .intro-q2 {
-    animation-delay: 2.95s;
-  }
-
-  .intro-cap {
-    animation: intro-rise 0.7s ease 0.5s both;
+    animation: intro-rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) 2.95s both;
   }
 
   .intro-skip {
@@ -525,182 +472,93 @@ const abaixo = [
     }
   }
 
-  /* 1. Números soltos que viram um gráfico (o primeiro ato inteiro some junto, pelo .intro-rack) */
-  .intro-svg {
-    width: min(86vw, 30rem);
-    height: auto;
-  }
-
-  .intro-rack {
+  /* 1. Foco: o primeiro ato inteiro (números e frase) sai junto */
+  .intro-act1 {
     animation: intro-out 0.35s ease 2.75s forwards;
   }
 
-  /* Cada número aparece no seu canto (--sx, --sy) e depois voa para o topo da sua barra */
-  .ic-num {
+  /* Os números: aparecem, flutuam devagar (--dx, --dy) e, quando a frase ganha foco, perdem o foco e apagam.
+     Os grandes (perto) já começam um pouco desfocados e desfocam mais; os pequenos (longe), menos. */
+  .il-num {
+    position: absolute;
     font-family: var(--font-mono);
-    font-size: 9px;
-    fill: var(--color-heading);
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--color-heading);
+    translate: -50% -50%;
     animation:
-      ic-appear 0.4s ease calc(0.25s + var(--o) * 0.05s) both,
-      ic-move 0.7s cubic-bezier(0.6, 0, 0.2, 1) calc(1s + var(--i) * 0.07s) both;
+      il-drift 3s linear both,
+      il-blur 2.6s cubic-bezier(0.4, 0, 0.2, 1) var(--d) both;
   }
 
-  .ic-num-target {
-    fill: var(--color-accent);
+  .il-s1 {
+    --o: 0.55;
+    --b0: 0px;
+    --b1: 6px;
+    font-size: 13px;
   }
 
-  /* Os que não viram barra ficam apagados e somem quando o gráfico se forma */
-  .ic-loose {
-    fill: var(--color-muted);
-    animation:
-      ic-appear 0.4s ease calc(0.25s + var(--o) * 0.05s) both,
-      intro-out 0.35s ease 0.95s forwards;
+  .il-s2 {
+    --o: 0.45;
+    --b0: 1px;
+    --b1: 10px;
+    font-size: clamp(18px, 2.2vw, 26px);
   }
 
-  @keyframes ic-appear {
+  .il-s3 {
+    --o: 0.3;
+    --b0: 3px;
+    --b1: 16px;
+    font-size: clamp(34px, 5vw, 64px);
+  }
+
+  @keyframes il-drift {
+    from {
+      transform: translate(calc(var(--dx) * -1), calc(var(--dy) * -1));
+    }
+    to {
+      transform: translate(var(--dx), var(--dy));
+    }
+  }
+
+  @keyframes il-blur {
+    0% {
+      opacity: 0;
+      filter: blur(var(--b0));
+    }
+    15%,
+    28% {
+      opacity: var(--o);
+      filter: blur(var(--b0));
+    }
+    72%,
+    100% {
+      opacity: 0.08;
+      filter: blur(var(--b1));
+    }
+  }
+
+  /* A frase: começa grande e fora de foco e assenta nítida; "dizem nada" acende em lima logo depois */
+  .intro-focus {
+    animation: il-sharp 1.3s cubic-bezier(0.2, 0.7, 0.2, 1) 0.55s both;
+  }
+
+  @keyframes il-sharp {
     from {
       opacity: 0;
+      filter: blur(18px);
+      scale: 1.06;
     }
   }
 
-  @keyframes ic-move {
-    from {
-      transform: translate(var(--sx), var(--sy));
-    }
+  .intro-focus em {
+    color: var(--color-heading);
+    animation: il-accent 0.6s ease 1.75s forwards;
+  }
+
+  @keyframes il-accent {
     to {
-      transform: none;
-    }
-  }
-
-  .ic-axis {
-    fill: none;
-    stroke: color-mix(in srgb, var(--color-heading) 45%, transparent);
-    stroke-width: 1;
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    animation: ir-draw 0.5s cubic-bezier(0.6, 0, 0.2, 1) 0.85s forwards;
-  }
-
-  .ic-grid {
-    fill: none;
-    stroke: color-mix(in srgb, var(--color-heading) 10%, transparent);
-    stroke-width: 1;
-    stroke-dasharray: 2 3;
-    vector-effect: non-scaling-stroke;
-    animation: ic-appear 0.5s ease 0.95s both;
-  }
-
-  @keyframes ir-draw {
-    to {
-      stroke-dashoffset: 0;
-    }
-  }
-
-  /* As barras crescem de baixo para cima, uma depois da outra */
-  .ic-rect,
-  .ic-hl {
-    vector-effect: non-scaling-stroke;
-    stroke-width: 1;
-  }
-
-  .ic-rect {
-    fill: color-mix(in srgb, var(--color-heading) 7%, transparent);
-    stroke: color-mix(in srgb, var(--color-heading) 30%, transparent);
-    transform-box: fill-box;
-    transform-origin: bottom;
-    animation: ic-grow 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) calc(1.05s + var(--i) * 0.07s) both;
-  }
-
-  @keyframes ic-grow {
-    from {
-      transform: scaleY(0);
-    }
-  }
-
-  .ic-area {
-    font-family: var(--font-mono);
-    font-size: 7px;
-    fill: var(--color-muted);
-    animation: ic-appear 0.4s ease calc(1.15s + var(--i) * 0.07s) both;
-  }
-
-  /* 2. O clique: as barras que não são Dados (com número e rótulo) apagam, como no filtro cruzado */
-  .ic-bar:not(.ic-target) {
-    animation: ic-dim 0.3s ease 2.3s forwards;
-  }
-
-  .ic-num:not(.ic-num-target, .ic-loose) {
-    animation:
-      ic-appear 0.4s ease calc(0.25s + var(--o) * 0.05s) both,
-      ic-move 0.7s cubic-bezier(0.6, 0, 0.2, 1) calc(1s + var(--i) * 0.07s) both,
-      ic-dim 0.3s ease 2.3s forwards;
-  }
-
-  @keyframes ic-dim {
-    to {
-      opacity: 0.2;
-    }
-  }
-
-  /* A barra Dados acende no clique: uma moldura lima por cima, que aparece */
-  .ic-hl {
-    fill: color-mix(in srgb, var(--color-accent) 16%, transparent);
-    stroke: var(--color-accent);
-    stroke-width: 1.5;
-    opacity: 0;
-    animation: intro-select 0.3s ease 2.3s forwards;
-  }
-
-  .ic-target .ic-area {
-    fill: var(--color-accent);
-  }
-
-  /* O cursor entra pela direita e embaixo, chega ao meio da barra, aperta e solta */
-  .ic-cursor {
-    fill: var(--color-heading);
-    stroke: var(--color-bg);
-    stroke-width: 1;
-    stroke-linejoin: round;
-    transform-box: fill-box;
-    transform-origin: 0 0;
-    animation:
-      ic-appear 0.25s ease 1.7s both,
-      ic-cursor-in 0.5s cubic-bezier(0.3, 0, 0.2, 1) 1.7s both,
-      ic-press 0.18s ease 2.22s;
-  }
-
-  @keyframes ic-cursor-in {
-    from {
-      transform: translate(70px, 55px);
-    }
-  }
-
-  @keyframes ic-press {
-    50% {
-      transform: scale(0.82);
-    }
-  }
-
-  /* A onda do clique: um anel lima que abre e some */
-  .ic-click {
-    fill: none;
-    stroke: var(--color-accent);
-    stroke-width: 1.5;
-    vector-effect: non-scaling-stroke;
-    transform-box: fill-box;
-    transform-origin: center;
-    opacity: 0;
-    animation: ic-ripple 0.55s ease-out 2.3s;
-  }
-
-  @keyframes ic-ripple {
-    from {
-      opacity: 1;
-      transform: scale(0.3);
-    }
-    to {
-      opacity: 0;
-      transform: scale(2);
+      color: var(--color-accent);
     }
   }
 
