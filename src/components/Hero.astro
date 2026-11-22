@@ -185,8 +185,9 @@ const abaixo = [
     </div>
   </div>
 
-  <!-- Nome gigante: ocupa a largura da tela (uma linha no computador, três no celular). -->
-  <h1 class="hero-name px-3 pb-3 sm:px-4 sm:pb-4">
+  <!-- Nome grande: ocupa a largura da coluna de conteúdo, alinhado com o resto da capa
+       (uma linha no computador, três no celular). -->
+  <h1 class="hero-name mx-auto w-full max-w-5xl px-6 pb-6 sm:pb-8">
     <span class="sr-only">{site.name}, Análise de Dados & BI</span>
     <span class="hero-name-text" aria-hidden="true">
       <span class="hero-name-line"><span class="hero-title hero-name-word">Gabriel</span></span>
@@ -197,11 +198,11 @@ const abaixo = [
 </section>
 
 <style>
-  /* Tektur no peso máximo e na largura mais estreita: um nome alto, apertado, de borda a borda.
-     O tamanho sai da largura do h1 (unidade cqi), sem script: medido na Tektur 900 estreita,
-     GABRIEL = 3,45em, NAVARRO = 3,894em e GERMANO = 3,79em.
-     - Computador, uma linha: 3,45 + 0,18 + 3,894 + 0,18 + 3,79 = 11,494em
-     - Celular, três linhas: a mais larga é NAVARRO, 3,894em; de propósito fica em ~85% da largura
+  /* Tektur no peso máximo e na largura mais estreita: um nome alto e apertado, da largura da coluna de conteúdo.
+     O tamanho sai da largura do h1 (unidade cqi, que já desconta o padding), sem script: medido na Tektur 900
+     estreita, GABRIEL = 3,45em, NAVARRO = 3,894em e GERMANO = 3,79em.
+     - Computador, uma linha: 3,45 + 0,18 + 3,894 + 0,18 + 3,79 = 11,494em (ocupa a coluna inteira)
+     - Celular, três linhas: a mais larga é NAVARRO, 3,894em; de propósito fica em ~63% da largura
      Divisores um pouco maiores que a medida deixam uma folga para não encostar na borda. */
   .hero-name {
     container-type: inline-size;
@@ -213,7 +214,7 @@ const abaixo = [
     width: max-content;
     font-family: var(--font-display);
     color: var(--color-heading);
-    font-size: calc(100cqi / 5.1); /* celular: ~77% da largura, para o nome caber na primeira tela junto com o resto da capa */
+    font-size: calc(100cqi / 6.2); /* celular: ~63% da largura, para o nome não pesar mais que a frase da capa */
     font-weight: 900;
     font-stretch: 75%;
     font-variation-settings: 'wdth' 75;
