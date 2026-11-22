@@ -1,28 +1,32 @@
 ---
-// "Como eu trabalho": 4 princípios em linhas. Cada linha tem número e título; aberta, mostra a frase e o
-// resultado no projeto. Cada princípio tem uma demonstração animada com dados do controle de notebooks:
-// - Computador (mouse, tela larga): os títulos ficam numa coluna à esquerda e, ao lado, um painel fixo mostra
-//   o princípio ativo (frase, resultado e demonstração). Passar o mouse (ou clicar, ou o teclado) troca o painel.
-// - Celular e telas menores: a linha abre no toque e mostra tudo. A primeira começa aberta.
-// - Sem JS, todas ficam abertas. Com movimento reduzido, as demonstrações já aparecem no estado final.
+// "Como eu trabalho": os 4 princípios como etapas de um pipeline (Pergunta → Regra → Dashboard → IA).
+// Em cima, a linha com os 4 nós; a linha enche até a etapa ativa, como dados passando pelo fluxo.
+// Embaixo, o painel da etapa ativa: título, frase, resultado no projeto e uma demonstração animada com dados do
+// controle de notebooks. Clicar, tocar, passar o mouse ou usar as setas do teclado troca a etapa.
+// - Na primeira vez que a seção aparece, o fluxo passa sozinho por 01 → 04 e volta ao 01 (para quando a pessoa interage).
+// - Sem JS, todos os painéis aparecem um embaixo do outro. Com movimento reduzido, as demonstrações já aparecem no estado final.
 // result: o resultado concreto de cada princípio no projeto (os mesmos números das demonstrações).
 const principles = [
   {
+    short: 'Pergunta',
     title: 'Começo pela pergunta, não pela planilha',
     text: 'É a decisão que o número vai apoiar que define quais dados entram na base.',
     result: '2 colunas novas na base',
   },
   {
+    short: 'Regra',
     title: 'Toda regra fica escrita',
     text: 'Duas pessoas olhando a mesma base precisam chegar no mesmo número.',
     result: '1 notebook, não 2',
   },
   {
+    short: 'Dashboard',
     title: 'O dashboard mostra o que precisa de ação',
     text: 'Um total sozinho não diz se está bom ou ruim. Meta e status dizem.',
     result: '84% da meta, faltam 12',
   },
   {
+    short: 'IA',
     title: 'A IA acelera, eu decido',
     text: 'A IA cuida do repetitivo. A regra e o significado de cada número são comigo.',
     result: '3 setores padronizados, 1 regra definida por mim',
@@ -53,253 +57,259 @@ const fixes = [
 ];
 ---
 
-<div data-principles class="pr-layout mt-8">
-  <ol class="border-t border-line">
+<div data-principles class="mt-10 sm:mt-12">
+  <!-- O pipeline: 4 nós ligados por uma linha que enche até a etapa ativa -->
+  <div role="tablist" aria-label="Etapas" class="pp-flow relative grid grid-cols-4">
+    <span class="pp-track" aria-hidden="true"><span class="pp-fill"></span></span>
     {
       principles.map((p, i) => (
-        <li data-row class:list={['pr-row border-b border-line', i === 0 && 'is-open']}>
-          <h3>
-            <button
-              type="button"
-              data-row-head
-              id={`pr-head-${i}`}
-              aria-controls={`pr-body-${i}`}
-              aria-expanded={i === 0 ? 'true' : 'false'}
-              class="pr-head group flex w-full cursor-pointer items-center gap-4 py-5 text-left sm:gap-8 sm:py-6"
-            >
-              <span class="w-12 flex-none font-mono text-xs text-muted sm:w-16">( 0{i + 1} )</span>
-              <span class="pr-title flex-1 font-sans leading-tight font-semibold text-heading">{p.title}</span>
-              <span class="pr-icon relative size-4 flex-none text-heading" aria-hidden="true">
-                <span class="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-current"></span>
-                <span class="pr-icon-v absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-current"></span>
-              </span>
-            </button>
-          </h3>
-
-          <div id={`pr-body-${i}`} role="region" aria-labelledby={`pr-head-${i}`} class="pr-body">
-            <div class="pr-body-clip">
-              <div data-body-content class="pr-body-grid grid gap-6 pb-8 sm:pl-24 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10">
-                <div class="flex flex-col">
-                  <p class="text-lg leading-relaxed text-fg/85">{p.text}</p>
-                  <p data-result class="mt-6 flex items-start gap-3 font-display text-lg leading-snug font-bold text-heading md:mt-auto">
-                    <span class="mt-1.5 h-4 w-1 flex-none rounded-full bg-accent" aria-hidden="true"></span>
-                    {p.result}
-                  </p>
-                </div>
-
-                <!-- Demonstração: bloco escuro, com as cores do resto do site -->
-                <div class="pr-demo on-black rounded-2xl border border-white/10 bg-ink p-6 sm:p-7" aria-hidden="true">
-                {i === 0 && (
-                  <div>
-                    <p class="d-tag">( A pergunta da equipe )</p>
-                    <p class="d-pop mt-3 font-serif text-[1.75rem] leading-[1.1] text-heading text-balance">
-                      “Quais notebooks estão <em class="text-accent">prontos para uso?</em>”
-                    </p>
-                    <p class="d-pop d-tag mt-7 flex items-center gap-3" style="--d: 0.6s">
-                      ( Colunas da base ) <span class="h-px flex-1 bg-white/10" />
-                    </p>
-                    <ul class="mt-4 flex flex-wrap gap-x-5 gap-y-2 font-mono text-sm">
-                      {cols.map((c, ci) => (
-                        <li class:list={['d-pop', c.isNew ? 'd-new text-accent' : 'text-fg/55']} style={`--d: ${0.8 + ci * 0.22}s`}>
-                          {c.isNew && '+ '}{c.name}
-                        </li>
-                      ))}
-                    </ul>
-                    <p class="d-pop mt-6 font-mono text-[11px] tracking-[0.15em] text-muted uppercase" style="--d: 2.2s">
-                      <span class="text-accent">LAPS e antivírus</span> entraram por decisão da equipe
-                    </p>
-                  </div>
-                )}
-
-                {i === 1 && (
-                  <div>
-                    <p class="d-tag">( Regra 01 · escrita na base )</p>
-                    <p class="d-pop mt-3 font-serif text-[1.75rem] leading-[1.1] text-heading text-balance">
-                      Notebook compartilhado conta <em class="text-accent">uma vez só.</em>
-                    </p>
-                    <div class="mt-6 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-6 border-t border-white/10 pt-5">
-                      <ul class="space-y-2.5 font-mono text-xs">
-                        <li class="flex justify-between gap-3">
-                          <span class="truncate text-fg/85">Ana Souza</span><span class="d-shared">NTB-007</span>
-                        </li>
-                        <li class="d-merge flex justify-between gap-3">
-                          <span class="truncate">Bruno Lima</span><span>NTB-007</span>
-                        </li>
-                      </ul>
-                      <div class="text-right">
-                        <p class="d-tag">Notebooks</p>
-                        <p class="d-swap mt-1 font-display text-6xl leading-[0.85] font-black">
-                          <span class="d-before text-fg/50">2</span><span class="d-after text-accent">1</span>
-                        </p>
-                      </div>
-                    </div>
-                    <ol class="mt-6 space-y-2 border-t border-white/10 pt-5 font-mono text-[11px] text-muted">
-                      {otherRules.map((r, ri) => (
-                        <li class="d-pop flex gap-3" style={`--d: ${2.5 + ri * 0.25}s`}>
-                          <span class="text-fg/35">0{ri + 2}</span>
-                          {r}
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                )}
-
-                {i === 2 && (
-                  <div class="grid grid-cols-2">
-                    <div class="pr-5">
-                      <p class="d-tag">( Antes )</p>
-                      <p class="mt-4 font-display text-6xl leading-[0.85] font-black text-fg/45">63</p>
-                      <p class="mt-3 text-xs text-muted">notebooks com LAPS</p>
-                      <p class="mt-6 font-serif text-xl leading-tight text-fg/70 italic">Está bom ou ruim?</p>
-                    </div>
-                    <div class="d-pop border-l border-white/10 pl-5" style="--d: 0.9s">
-                      <p class="d-tag text-accent">( Depois )</p>
-                      <p class="mt-4 font-display text-6xl leading-[0.85] font-black text-heading">84,0<span class="text-3xl">%</span></p>
-                      <p class="mt-3 text-xs text-muted">LAPS · meta 100%</p>
-                      <div class="relative mt-6 h-1.5 rounded-full bg-white/10">
-                        <span class="d-bar absolute inset-y-0 left-0 w-[84%] rounded-full bg-crit" />
-                        <span class="absolute -top-1 right-0 h-3.5 w-px bg-heading" />
-                      </div>
-                      <p class="mt-3 text-xs"><span class="text-crit">✕ Crítico</span> <span class="text-muted">· faltam 12</span></p>
-                    </div>
-                  </div>
-                )}
-
-                {i === 3 && (
-                  <div class="grid gap-7 sm:grid-cols-2 sm:gap-0">
-                    <div class="sm:pr-5">
-                      <p class="d-tag">( IA · o repetitivo )</p>
-                      <ul class="mt-4 space-y-3.5 font-mono text-xs">
-                        {fixes.map(([raw, ok], fi) => (
-                          <li class="d-pop" style={`--d: ${0.4 + fi * 0.4}s`}>
-                            <span class="d-raw block text-fg/40 line-through">{raw}</span>
-                            <span class="mt-1 block text-heading"><span class="text-accent">→</span> {ok}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div class="d-pop border-white/10 sm:border-l sm:pl-5" style="--d: 1.9s">
-                      <p class="d-tag">( Eu · a regra )</p>
-                      <p class="mt-4 font-serif text-2xl leading-[1.1] text-heading text-balance">
-                        Notebook sem antivírus conta como <em class="text-accent">crítico.</em>
-                      </p>
-                      <p class="mt-5 font-mono text-[11px] tracking-[0.15em] text-accent uppercase">Decisão que a IA não toma</p>
-                    </div>
-                  </div>
-                )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </li>
+        <button
+          type="button"
+          role="tab"
+          data-tab
+          id={`pp-tab-${i}`}
+          aria-controls={`pp-panel-${i}`}
+          aria-selected={i === 0 ? 'true' : 'false'}
+          tabindex={i === 0 ? 0 : -1}
+          class:list={['pp-tab group relative flex cursor-pointer flex-col items-center text-center', i === 0 && 'is-active is-passed']}
+        >
+          <span class="pp-num h-4 font-mono text-[10px] leading-4 text-muted sm:text-[11px]">0{i + 1}</span>
+          <span class="pp-node mt-2" aria-hidden="true"></span>
+          <span class="pp-label mt-3 font-sans text-sm leading-tight font-semibold text-muted sm:text-base">{p.short}</span>
+        </button>
       ))
     }
-  </ol>
+  </div>
 
-  <!-- Painel ao lado (computador): o script copia para cá o conteúdo de cada linha e mostra o da linha ativa -->
-  <div data-panel class="pr-panel-box" aria-live="polite"></div>
+  <!-- Painéis: com JS, empilhados no mesmo lugar (a altura não pula ao trocar) e só o ativo aparece -->
+  <div class="pp-panels mt-8 border-t border-line pt-8 sm:mt-10 sm:pt-10">
+    {
+      principles.map((p, i) => (
+        <div
+          role="tabpanel"
+          data-panel
+          id={`pp-panel-${i}`}
+          aria-labelledby={`pp-tab-${i}`}
+          class:list={['pp-panel grid gap-6 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10', i === 0 && 'is-active']}
+        >
+          <div class="flex flex-col">
+            <!-- Título médio em Geist (o span vence a Tektur que o global.css dá a todo h3) -->
+            <h3><span class="pp-title block font-sans leading-tight font-semibold text-heading">{p.title}</span></h3>
+            <p class="mt-4 text-lg leading-relaxed text-fg/85">{p.text}</p>
+            <p class="mt-6 flex items-start gap-3 font-display text-lg leading-snug font-bold text-heading md:mt-auto">
+              <span class="mt-1.5 h-4 w-1 flex-none rounded-full bg-accent" aria-hidden="true"></span>
+              {p.result}
+            </p>
+          </div>
+
+          <!-- Demonstração: bloco escuro, com as cores do resto do site -->
+          <div class="pr-demo on-black rounded-2xl border border-white/10 bg-ink p-6 sm:p-7" aria-hidden="true">
+            {i === 0 && (
+              <div>
+                <p class="d-tag">( A pergunta da equipe )</p>
+                <p class="d-pop mt-3 font-serif text-[1.75rem] leading-[1.1] text-heading text-balance">
+                  “Quais notebooks estão <em class="text-accent">prontos para uso?</em>”
+                </p>
+                <p class="d-pop d-tag mt-7 flex items-center gap-3" style="--d: 0.6s">
+                  ( Colunas da base ) <span class="h-px flex-1 bg-white/10" />
+                </p>
+                <ul class="mt-4 flex flex-wrap gap-x-5 gap-y-2 font-mono text-sm">
+                  {cols.map((c, ci) => (
+                    <li class:list={['d-pop', c.isNew ? 'd-new text-accent' : 'text-fg/55']} style={`--d: ${0.8 + ci * 0.22}s`}>
+                      {c.isNew && '+ '}{c.name}
+                    </li>
+                  ))}
+                </ul>
+                <p class="d-pop mt-6 font-mono text-[11px] tracking-[0.15em] text-muted uppercase" style="--d: 2.2s">
+                  <span class="text-accent">LAPS e antivírus</span> entraram por decisão da equipe
+                </p>
+              </div>
+            )}
+
+            {i === 1 && (
+              <div>
+                <p class="d-tag">( Regra 01 · escrita na base )</p>
+                <p class="d-pop mt-3 font-serif text-[1.75rem] leading-[1.1] text-heading text-balance">
+                  Notebook compartilhado conta <em class="text-accent">uma vez só.</em>
+                </p>
+                <div class="mt-6 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-6 border-t border-white/10 pt-5">
+                  <ul class="space-y-2.5 font-mono text-xs">
+                    <li class="flex justify-between gap-3">
+                      <span class="truncate text-fg/85">Ana Souza</span><span class="d-shared">NTB-007</span>
+                    </li>
+                    <li class="d-merge flex justify-between gap-3">
+                      <span class="truncate">Bruno Lima</span><span>NTB-007</span>
+                    </li>
+                  </ul>
+                  <div class="text-right">
+                    <p class="d-tag">Notebooks</p>
+                    <p class="d-swap mt-1 font-display text-6xl leading-[0.85] font-black">
+                      <span class="d-before text-fg/50">2</span><span class="d-after text-accent">1</span>
+                    </p>
+                  </div>
+                </div>
+                <ol class="mt-6 space-y-2 border-t border-white/10 pt-5 font-mono text-[11px] text-muted">
+                  {otherRules.map((r, ri) => (
+                    <li class="d-pop flex gap-3" style={`--d: ${2.5 + ri * 0.25}s`}>
+                      <span class="text-fg/35">0{ri + 2}</span>
+                      {r}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            {i === 2 && (
+              <div class="grid grid-cols-2">
+                <div class="pr-5">
+                  <p class="d-tag">( Antes )</p>
+                  <p class="mt-4 font-display text-6xl leading-[0.85] font-black text-fg/45">63</p>
+                  <p class="mt-3 text-xs text-muted">notebooks com LAPS</p>
+                  <p class="mt-6 font-serif text-xl leading-tight text-fg/70 italic">Está bom ou ruim?</p>
+                </div>
+                <div class="d-pop border-l border-white/10 pl-5" style="--d: 0.9s">
+                  <p class="d-tag text-accent">( Depois )</p>
+                  <p class="mt-4 font-display text-6xl leading-[0.85] font-black text-heading">84,0<span class="text-3xl">%</span></p>
+                  <p class="mt-3 text-xs text-muted">LAPS · meta 100%</p>
+                  <div class="relative mt-6 h-1.5 rounded-full bg-white/10">
+                    <span class="d-bar absolute inset-y-0 left-0 w-[84%] rounded-full bg-crit" />
+                    <span class="absolute -top-1 right-0 h-3.5 w-px bg-heading" />
+                  </div>
+                  <p class="mt-3 text-xs"><span class="text-crit">✕ Crítico</span> <span class="text-muted">· faltam 12</span></p>
+                </div>
+              </div>
+            )}
+
+            {i === 3 && (
+              <div class="grid gap-7 sm:grid-cols-2 sm:gap-0">
+                <div class="sm:pr-5">
+                  <p class="d-tag">( IA · o repetitivo )</p>
+                  <ul class="mt-4 space-y-3.5 font-mono text-xs">
+                    {fixes.map(([raw, ok], fi) => (
+                      <li class="d-pop" style={`--d: ${0.4 + fi * 0.4}s`}>
+                        <span class="d-raw block text-fg/40 line-through">{raw}</span>
+                        <span class="mt-1 block text-heading"><span class="text-accent">→</span> {ok}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div class="d-pop border-white/10 sm:border-l sm:pl-5" style="--d: 1.9s">
+                  <p class="d-tag">( Eu · a regra )</p>
+                  <p class="mt-4 font-serif text-2xl leading-[1.1] text-heading text-balance">
+                    Notebook sem antivírus conta como <em class="text-accent">crítico.</em>
+                  </p>
+                  <p class="mt-5 font-mono text-[11px] tracking-[0.15em] text-accent uppercase">Decisão que a IA não toma</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      ))
+    }
+  </div>
 </div>
 
 <style>
-  /* ---------- Linhas ---------- */
-  /* Título médio em Geist: a Tektur grande fica para o nome, os títulos de seção e o projeto */
-  .pr-title {
-    font-size: clamp(1.25rem, 2.4vw, 1.75rem);
-    text-wrap: balance;
+  /* ---------- Pipeline ---------- */
+  /* A linha vai do centro do primeiro nó ao centro do último (cada coluna tem 25%: 12,5% de cada lado).
+     Altura do centro do nó: número (1rem) + espaço (0,5rem) + metade do nó (0,4375rem). */
+  .pp-track {
+    position: absolute;
+    left: 12.5%;
+    right: 12.5%;
+    top: calc(1.5rem + 0.4375rem - 1px);
+    height: 2px;
+    background: var(--color-line);
+  }
+
+  /* --p: quanto da linha está cheia (0 a 1), ligado pelo script conforme a etapa ativa */
+  .pp-fill {
+    position: absolute;
+    inset: 0;
+    background: var(--color-accent);
+    transform: scaleX(var(--p, 0));
+    transform-origin: left;
+    transition: transform 0.7s cubic-bezier(0.65, 0, 0.2, 1);
+  }
+
+  .pp-node {
+    position: relative;
+    z-index: 1;
+    width: 0.875rem;
+    height: 0.875rem;
+    border: 2px solid var(--color-line);
+    border-radius: 9999px;
+    background: var(--color-bg);
+    transition:
+      background-color 0.3s ease 0.2s,
+      border-color 0.3s ease 0.2s,
+      transform 0.3s ease;
+  }
+
+  /* Etapas por onde o fluxo já passou: o nó fica cheio */
+  .pp-tab.is-passed .pp-node {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+  }
+
+  /* A etapa ativa: o nó cresce e ganha um anel; o nome fica escuro */
+  .pp-tab.is-active .pp-node {
+    transform: scale(1.25);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-accent) 22%, transparent);
+  }
+
+  .pp-label,
+  .pp-num {
     transition: color 0.3s ease;
   }
 
-  .pr-row.is-open .pr-title {
+  .pp-tab.is-active .pp-label,
+  .pp-tab:hover .pp-label {
+    color: var(--color-heading);
+  }
+
+  .pp-tab.is-active .pp-num {
     color: var(--color-accent);
   }
 
-  /* ---------- Computador: lista à esquerda, painel fixo à direita ----------
-     Só com mouse e tela larga (e com JS, que monta o painel). Sem isso, as linhas abrem no lugar. */
-  .pr-panel-box {
-    display: none;
+  .pp-tab:focus-visible {
+    outline-offset: 6px;
+    border-radius: 0.5rem;
   }
 
-  @media (hover: hover) and (pointer: fine) and (min-width: 64rem) {
-    .pr-layout.is-side {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-      gap: 3.5rem;
-      align-items: start;
-    }
-
-    .pr-layout.is-side .pr-title {
-      font-size: clamp(1.2rem, 1.7vw, 1.5rem);
-    }
-
-    /* As linhas não abrem: o conteúdo vai para o painel, e o + vira uma seta que aponta para ele */
-    .pr-layout.is-side .pr-body {
-      display: none;
-    }
-
-    .pr-layout.is-side .pr-icon {
-      transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
-    }
-
-    .pr-layout.is-side .pr-row.is-active .pr-icon {
-      transform: translateX(6px);
-    }
-
-    .pr-layout.is-side .pr-row.is-active .pr-icon-v {
-      transform: translateX(-50%) rotate(90deg);
-    }
-
-    .pr-layout.is-side .pr-panel-box {
-      display: block;
-      position: sticky;
-      top: 7rem;
-    }
-
-    .pr-panel-box > :global(.pr-side) {
-      display: none;
-    }
-
-    .pr-panel-box > :global(.pr-side.is-active) {
-      display: block;
-      animation: pr-side-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-    }
-
-    /* No painel, o conteúdo fica em uma coluna: frase e resultado em cima, demonstração embaixo */
-    .pr-panel-box :global(.pr-body-grid) {
-      grid-template-columns: minmax(0, 1fr);
-      padding: 0;
-    }
-
-    .pr-panel-box :global([data-result]) {
-      margin-top: 1rem;
-    }
+  /* ---------- Painéis ---------- */
+  .pp-title {
+    font-size: clamp(1.4rem, 2.6vw, 1.9rem);
+    text-wrap: balance;
   }
 
-  @keyframes pr-side-in {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-  }
-
-  /* Abre e fecha animando a altura (0fr <-> 1fr). Só com JS: sem ele, todas ficam abertas */
-  .pr-body {
+  .pp-panels {
     display: grid;
-    grid-template-rows: 1fr;
-    transition: grid-template-rows 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+    gap: 3rem;
   }
 
-  .pr-body-clip {
-    min-height: 0;
-    overflow: hidden;
+  [data-principles].is-js .pp-panels {
+    gap: 0;
   }
 
-  [data-principles].is-js .pr-row:not(.is-open) .pr-body {
-    grid-template-rows: 0fr;
-  }
-
-  [data-principles].is-js .pr-row:not(.is-open) .pr-body-clip {
+  [data-principles].is-js .pp-panel {
+    grid-area: 1 / 1;
     visibility: hidden;
-    transition: visibility 0s 0.6s;
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+      opacity 0.35s ease,
+      transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1),
+      visibility 0s 0.35s;
+  }
+
+  [data-principles].is-js .pp-panel.is-active {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.35s ease 0.1s,
+      transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) 0.1s;
   }
 
   /* ---------- Demonstrações ----------
@@ -442,18 +452,17 @@ const fixes = [
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .pr-body,
-    .pr-icon-v {
+    .pp-fill,
+    .pp-node {
       transition: none;
     }
   }
 </style>
 
 <script>
-  // Celular e telas menores: uma linha aberta por vez, no toque (a primeira começa aberta).
-  // Computador (mouse, tela larga): o painel ao lado mostra a linha ativa; o mouse sobre o título troca o painel.
-  const HOVER_WAIT_MS = 120; // espera curta antes de trocar, para não piscar quando o mouse só atravessa a lista
-  const AUTO_STEP_MS = 3500; // tempo em cada princípio na passagem automática (dá para ver a demonstração)
+  // Pipeline: uma etapa ativa por vez. Clique, toque, teclado (setas, Home, End) ou mouse (computador) trocam a etapa.
+  const HOVER_WAIT_MS = 120; // espera curta antes de trocar, para não piscar quando o mouse só atravessa o fluxo
+  const AUTO_STEP_MS = 3500; // tempo em cada etapa na passagem automática (dá para ver a demonstração)
   let cleanup: (() => void) | undefined;
 
   document.addEventListener('astro:page-load', () => {
@@ -462,10 +471,10 @@ const fixes = [
     if (!root) return;
     root.classList.add('is-js');
 
-    const rows = [...root.querySelectorAll<HTMLElement>('[data-row]')];
-    const box = root.querySelector<HTMLElement>('[data-panel]');
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+    const panels = [...root.querySelectorAll<HTMLElement>('[data-panel]')];
+    const flow = root.querySelector<HTMLElement>('.pp-flow');
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const side = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 64rem)');
     const controller = new AbortController();
     const { signal } = controller;
 
@@ -477,64 +486,26 @@ const fixes = [
       el.classList.add('is-play');
     };
 
-    // ----- Painel ao lado: uma cópia do conteúdo de cada linha -----
-    const panels = rows.map((row, i) => {
-      const panel = document.createElement('div');
-      panel.className = 'pr-side';
-      const content = row.querySelector('[data-body-content]');
-      if (content) panel.append(content.cloneNode(true));
-      panel.setAttribute('aria-label', `Princípio ${i + 1}`);
-      box?.append(panel);
-      return panel;
-    });
-
     let active = -1;
-    const setActive = (i: number) => {
+    const setActive = (i: number, focus = false) => {
       if (i === active) return;
       active = i;
-      rows.forEach((r, k) => {
-        r.classList.toggle('is-active', k === i);
-        r.querySelector('[data-row-head]')?.setAttribute('aria-expanded', String(k === i));
+      tabs.forEach((t, k) => {
+        t.classList.toggle('is-active', k === i);
+        t.classList.toggle('is-passed', k <= i);
+        t.setAttribute('aria-selected', String(k === i));
+        t.tabIndex = k === i ? 0 : -1;
       });
       panels.forEach((p, k) => p.classList.toggle('is-active', k === i));
+      flow?.style.setProperty('--p', String(i / (tabs.length - 1)));
+      if (focus) tabs[i].focus();
       play(panels[i]);
     };
+    setActive(0);
 
-    // ----- Linhas que abrem (celular) -----
-    const toggle = (row: HTMLElement) => {
-      const willOpen = !row.classList.contains('is-open');
-      rows.forEach((r) => {
-        const on = r === row && willOpen;
-        r.classList.toggle('is-open', on);
-        r.querySelector('[data-row-head]')?.setAttribute('aria-expanded', String(on));
-      });
-      if (willOpen) play(row);
-    };
-
-    const isSide = () => root.classList.contains('is-side');
-
-    // Liga ou desliga o modo lado a lado conforme a tela (ex.: janela redimensionada)
-    const applyMode = () => {
-      const on = side.matches && !!box;
-      root.classList.toggle('is-side', on);
-      if (on) {
-        rows.forEach((r) => r.classList.remove('is-open'));
-        active = -1;
-        setActive(0);
-      } else {
-        rows.forEach((r, k) => {
-          r.classList.remove('is-active');
-          r.classList.toggle('is-open', k === 0);
-          r.querySelector('[data-row-head]')?.setAttribute('aria-expanded', String(k === 0));
-        });
-      }
-    };
-    applyMode();
-    side.addEventListener('change', applyMode, { signal });
-
-    // ----- Passagem automática (computador, só na primeira vez) -----
-    // Quando a lista aparece, o painel passa sozinho por 01 → 02 → 03 → 04 e volta ao 01, onde para.
-    // Para de vez quando a pessoa mexe o mouse sobre a seção, clica ou usa o teclado; pausa fora da tela.
+    // ----- Passagem automática (só na primeira vez que a seção aparece) -----
+    // O fluxo passa sozinho por 01 → 02 → 03 → 04 e volta ao 01, onde para.
+    // Para de vez quando a pessoa mexe o mouse sobre a seção, toca, clica ou usa o teclado; pausa fora da tela.
     let auto = !reduced;
     let autoTimer = 0;
     let visible = false;
@@ -547,9 +518,9 @@ const fixes = [
 
     const scheduleAuto = () => {
       clearTimeout(autoTimer);
-      if (!auto || !visible || !isSide()) return;
+      if (!auto || !visible) return;
       autoTimer = window.setTimeout(() => {
-        const next = (active + 1) % rows.length;
+        const next = (active + 1) % tabs.length;
         setActive(next);
         if (next === 0) stopAuto();
         else scheduleAuto();
@@ -562,9 +533,6 @@ const fixes = [
       (e) => {
         if (!auto || (e.movementX === 0 && e.movementY === 0)) return;
         stopAuto();
-        // Assume na hora a linha que está debaixo do mouse
-        const row = (e.target as Element).closest<HTMLElement>('[data-row-head]')?.closest<HTMLElement>('[data-row]');
-        if (row && isSide()) setActive(rows.indexOf(row));
       },
       { signal },
     );
@@ -572,36 +540,46 @@ const fixes = [
     root.addEventListener('focusin', stopAuto, { signal });
 
     let hoverTimer = 0;
-    rows.forEach((row, i) => {
-      const head = row.querySelector<HTMLElement>('[data-row-head]');
-      if (!head) return;
-      head.addEventListener('click', () => (isSide() ? setActive(i) : toggle(row)), { signal });
-      head.addEventListener('focus', () => isSide() && setActive(i), { signal });
-      head.addEventListener(
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => setActive(i), { signal });
+      tab.addEventListener(
         'pointerenter',
         (e) => {
-          if (!isSide() || e.pointerType !== 'mouse') return;
+          if (e.pointerType !== 'mouse') return;
           clearTimeout(hoverTimer);
-          // Durante a passagem automática, quem troca o painel é ela (até a pessoa mexer o mouse)
+          // Durante a passagem automática, quem troca é ela (até a pessoa mexer o mouse)
           hoverTimer = window.setTimeout(() => !auto && setActive(i), HOVER_WAIT_MS);
         },
         { signal },
       );
-      head.addEventListener('pointerleave', () => clearTimeout(hoverTimer), { signal });
+      tab.addEventListener('pointerleave', () => clearTimeout(hoverTimer), { signal });
+      // Teclado: setas andam pelas etapas, Home e End vão para a primeira e a última
+      tab.addEventListener(
+        'keydown',
+        (e) => {
+          const last = tabs.length - 1;
+          const to =
+            e.key === 'ArrowRight' ? Math.min(i + 1, last)
+            : e.key === 'ArrowLeft' ? Math.max(i - 1, 0)
+            : e.key === 'Home' ? 0
+            : e.key === 'End' ? last
+            : -1;
+          if (to < 0) return;
+          e.preventDefault();
+          setActive(to, true);
+        },
+        { signal },
+      );
     });
 
-    // Quando a lista aparece: roda a demonstração aberta e começa a passagem automática (no computador)
+    // Quando a seção aparece: roda a demonstração ativa e começa a passagem automática
     const io = new IntersectionObserver(
       ([entry]) => {
         visible = entry.isIntersecting;
         if (!visible) return clearTimeout(autoTimer);
         if (!started) {
           started = true;
-          if (isSide()) play(panels[active]);
-          else {
-            const open = rows.find((r) => r.classList.contains('is-open'));
-            if (open) play(open);
-          }
+          play(panels[active]);
         }
         scheduleAuto();
       },
@@ -614,7 +592,6 @@ const fixes = [
       io.disconnect();
       clearTimeout(hoverTimer);
       clearTimeout(autoTimer);
-      box?.replaceChildren();
     };
   });
 </script>

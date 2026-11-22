@@ -2,151 +2,120 @@
 import SectionTitle from './SectionTitle.astro';
 import { site } from '../data/site';
 
+// Apresentação em um texto só, em serifa, e logo abaixo a trajetória sempre visível: a experiência em destaque
+// (coluna maior, com o indicador "Atual") e, ao lado, formação e estudos. Três termos do texto ficam sublinhados;
+// passar o mouse, tocar ou focar um deles acende o bloco correspondente (nada fica escondido).
 const tools = ['Microsoft 365 Admin', 'Entra ID', 'SharePoint', 'Kanban'];
-
-// O que estou estudando agora (terceira coluna da Trajetória)
 const studying = ['SQL', 'DAX no Power BI', 'Data storytelling'];
-
-// A história, em capítulos. As palavras em <b> ficam em destaque (brancas).
-const chapters = [
-  {
-    title: 'Origem',
-    text: 'Cresci entre <b>empreendedores</b>, meu pai e meu avô, vendo de perto o que funcionava e o que podia melhorar em um negócio.',
-  },
-  {
-    title: 'Números',
-    text: 'Na faculdade, encontrei na <b>análise de dados</b> um jeito de levar os números para dentro das decisões de uma empresa.',
-  },
-  {
-    title: 'Hoje',
-    text: 'Sou <b>estagiário de TI</b> em uma indústria farmacêutica. Atendendo chamados e cuidando de acessos, vejo de perto como cada área trabalha e do que ela precisa.',
-  },
-];
 
 // Progresso do curso (o semestre é atualizado em data/site.ts)
 const { semestre: semester, total: totalSemesters } = site.curso;
 ---
 
-<!-- Sem palavra de fundo (ela fica só em Projetos e Contato): o espaço acima do título vem do padding -->
 <section id="apresentacao" class="relative isolate mx-auto max-w-5xl px-6 pt-16 pb-16 sm:pt-24 sm:pb-24 lg:pt-32">
   <SectionTitle title="Prazer, Gabriel" />
 
-  <!-- Computador: a história à esquerda e, ao lado, a frase que resume o que aprendi, em destaque.
-       Celular: tudo em uma coluna -->
-  <div class="mt-8 grid grid-cols-1 gap-10 sm:mt-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:gap-16">
-    <!-- A história em três capítulos: número e título numa coluna estreita, o texto ao lado.
-         Cada linha tem só a altura do próprio texto -->
-    <ol class="border-t border-line">
-      {
-        chapters.map((c, i) => (
-          <li data-reveal class="chapter grid grid-cols-[5.5rem_minmax(0,1fr)] gap-x-5 border-b border-line py-5 sm:grid-cols-[7rem_minmax(0,1fr)] sm:gap-x-6">
-            <div class="pt-0.5">
-              <span class="block font-mono text-[11px] text-muted">( 0{i + 1} )</span>
-              <h3 class="mt-1.5 font-sans text-lg leading-snug font-semibold text-heading sm:text-xl">{c.title}</h3>
-            </div>
-            <p class="leading-relaxed text-fg/75 sm:text-[1.05rem]" set:html={c.text} />
-          </li>
-        ))
-      }
-    </ol>
-
-    <!-- Citação: a mesma serifa da frase da capa, com o final em lima e itálico -->
-    <figure data-reveal class="lg:self-center">
-      <span class="block font-serif text-6xl leading-none text-muted/60" aria-hidden="true">“</span>
-      <blockquote class="-mt-4 font-serif text-[2rem] leading-[1.1] text-balance text-heading sm:text-[2.5rem]">
-        Um dashboard só funciona se <em class="text-accent">quem não é técnico consegue usar sozinho.</em>
-      </blockquote>
-      <figcaption class="mt-6 flex items-center gap-3 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">
-        <span class="h-px w-8 bg-line" aria-hidden="true"></span>
-        O que aprendi no estágio
-      </figcaption>
-    </figure>
-  </div>
-
-  <!-- Trajetória: formação, experiência e estudos lado a lado, como a ficha do projeto (no celular, uma embaixo da outra) -->
-  <div class="mt-14 sm:mt-16">
-    <p class="flex items-center gap-4 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">
-      ( Trajetória ) <span class="h-px flex-1 bg-line" aria-hidden="true"></span>
+  <div data-pt class="mt-8 sm:mt-10">
+    <p data-reveal class="pt-text max-w-4xl font-serif text-[1.55rem] leading-[1.22] text-fg/60 sm:text-[2.1rem] lg:text-[2.5rem]">
+      Cresci entre <b>empreendedores</b>, meu pai e meu avô, vendo de perto o que funcionava e o que podia melhorar em
+      um negócio. Cursando <button type="button" data-term="formacao" class="pt-term">Engenharia de Software</button>,
+      encontrei na <b>análise de dados</b> um jeito de levar os números para dentro dessas decisões. Hoje sou{' '}
+      <button type="button" data-term="experiencia" class="pt-term">estagiário de TI</button> numa indústria
+      farmacêutica e <button type="button" data-term="estudos" class="pt-term">sigo estudando</button> para
+      fazer o caminho inteiro, da extração ao dashboard. No estágio, aprendi que um dashboard só funciona se{' '}
+      <em class="text-accent">quem não é técnico consegue usar sozinho.</em>
     </p>
 
-    <dl class="mt-2 grid md:grid-cols-3">
-      <div data-reveal class="col">
-        <dt class="row-kind">( 01 ) Formação</dt>
-        <dd>
-          <p class="row-title">Engenharia de Software</p>
-          <p class="mt-1 text-heading">UniCesumar</p>
-          <p class="mt-2 text-sm leading-relaxed text-muted">Base técnica em lógica, programação e banco de dados, aplicada desde já a projetos de análise.</p>
-          <div class="mt-4 flex items-center gap-3">
+    <!-- Trajetória: a experiência em destaque à esquerda; formação e estudos empilhados à direita.
+         No celular, tudo em uma coluna, com a experiência primeiro -->
+    <div class="mt-12 grid border-t border-line sm:mt-16 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+      <article data-reveal data-block="experiencia" class="pt-block border-b border-line py-7 md:border-r md:border-b-0 md:py-8 md:pr-10">
+        <p class="pt-kind">
+          <span class="pt-live relative size-1.5 flex-none rounded-full bg-accent" aria-hidden="true"></span>
+          Experiência <span class="text-accent">· Atual</span>
+        </p>
+        <h3 class="mt-4"><span class="block font-sans text-[1.7rem] leading-tight font-semibold text-heading sm:text-[2rem]">Estagiário de TI</span></h3>
+        <p class="mt-1.5 text-lg text-heading">
+          Hebe's Life Science <span class="text-muted">· Indústria farmacêutica</span>
+        </p>
+        <p class="mt-4 max-w-md leading-relaxed text-fg/75">
+          Atendo chamados e cuido de acessos: vejo de perto como cada área trabalha e do que ela precisa. Foi daí que
+          saiu o controle de notebooks.
+        </p>
+        <ul class="mt-5 flex flex-wrap gap-2" aria-label="Ferramentas">
+          {tools.map((t) => <li class="rounded-full border border-line px-3 py-1 font-mono text-[11px] text-muted sm:text-xs">{t}</li>)}
+        </ul>
+      </article>
+
+      <div class="grid content-start">
+        <article data-reveal data-block="formacao" class="pt-block border-b border-line py-7 md:pl-10">
+          <p class="pt-kind">
+            <span class="pt-dot size-1.5 flex-none rounded-full bg-muted/60" aria-hidden="true"></span>
+            Formação
+          </p>
+          <h3 class="mt-3"><span class="block font-sans text-xl leading-tight font-semibold text-heading">Engenharia de Software</span></h3>
+          <p class="mt-1 text-muted">UniCesumar</p>
+          <div class="mt-3 flex items-center gap-3">
             <div class="flex w-32 gap-1" role="img" aria-label={`${semester}º de ${totalSemesters} semestres`}>
-              {
-                Array.from({ length: totalSemesters }, (_, i) => (
-                  <span class:list={['h-1.5 flex-1 rounded-full', i < semester ? 'bg-accent' : 'bg-line']} />
-                ))
-              }
+              {Array.from({ length: totalSemesters }, (_, k) => (
+                <span class:list={['h-1.5 flex-1 rounded-full', k < semester ? 'bg-accent' : 'bg-line']} />
+              ))}
             </div>
             <span class="font-mono text-xs text-muted" aria-hidden="true">{semester}º / {totalSemesters} semestres</span>
           </div>
-        </dd>
-      </div>
+          <p class="mt-3 text-sm leading-relaxed text-muted">Base em lógica, programação e banco de dados.</p>
+        </article>
 
-      <div data-reveal class="col">
-        <dt class="row-kind">( 02 ) Experiência atual</dt>
-        <dd>
-          <p class="row-title">Estagiário de TI</p>
-          <p class="mt-1 text-heading">Hebe's Life Science</p>
-          <p class="text-sm text-muted">Indústria farmacêutica</p>
-          <ul class="mt-3 flex flex-wrap gap-x-2 font-mono text-xs leading-relaxed text-muted" aria-label="Ferramentas">
-            {tools.map((t, i) => <li>{t}{i < tools.length - 1 && <span aria-hidden="true"> ·</span>}</li>)}
-          </ul>
-        </dd>
+        <article data-reveal data-block="estudos" class="pt-block py-7 md:pl-10">
+          <p class="pt-kind">
+            <span class="pt-dot size-1.5 flex-none rounded-full bg-muted/60" aria-hidden="true"></span>
+            Estudando agora
+          </p>
+          <p class="mt-3 font-sans text-lg leading-snug font-semibold text-heading">
+            {studying.map((t, k) => (
+              <>
+                {t}
+                {k < studying.length - 1 && <span class="font-normal text-muted"> · </span>}
+              </>
+            ))}
+          </p>
+        </article>
       </div>
-
-      <div data-reveal class="col">
-        <dt class="row-kind">( 03 ) Em andamento</dt>
-        <dd>
-          <p class="row-title">Estudando agora</p>
-          <ul class="mt-1 flex flex-wrap gap-x-2 text-heading" aria-label="Estudos">
-            {studying.map((t, i) => <li>{t}{i < studying.length - 1 && <span class="text-muted" aria-hidden="true"> ·</span>}</li>)}
-          </ul>
-          <p class="mt-2 text-sm leading-relaxed text-muted">Para fazer o caminho inteiro, da extração ao dashboard.</p>
-        </dd>
-      </div>
-    </dl>
+    </div>
   </div>
 </section>
 
 <style>
-  /* Capítulos da história: as palavras-chave em branco */
-  .chapter :global(b) {
-    font-weight: 500;
+  /* Palavras de destaque do texto: brancas, sem negrito pesado */
+  .pt-text :global(b) {
+    font-weight: 400;
     color: var(--color-heading);
   }
 
-  /* Colunas da trajetória: celular em pilha, separadas por linhas; a partir de md, lado a lado,
-     separadas por uma linha vertical (como a ficha do projeto) */
-  .col {
-    padding-block: 1.5rem;
-    border-bottom: 1px solid var(--color-line);
+  /* Termos ligados aos blocos: brancos, com sublinhado pontilhado; acesos, o sublinhado fica cheio em lima */
+  .pt-term {
+    display: inline;
+    cursor: pointer;
+    font: inherit;
+    color: var(--color-heading);
+    text-decoration: underline dotted;
+    text-decoration-color: color-mix(in oklab, var(--color-heading) 45%, transparent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.18em;
+    transition: text-decoration-color 0.3s ease;
   }
 
-  @media (min-width: 48rem) {
-    .col {
-      padding-inline: 1.5rem;
-      border-bottom: 0;
-      border-right: 1px solid var(--color-line);
-    }
-
-    .col:first-child {
-      padding-left: 0;
-    }
-
-    .col:last-child {
-      padding-right: 0;
-      border-right: 0;
-    }
+  .pt-term:hover,
+  .pt-term.is-lit {
+    text-decoration-style: solid;
+    text-decoration-color: var(--color-accent);
   }
 
-  .row-kind {
+  /* Rótulo de cada bloco: mono, com a bolinha de status */
+  .pt-kind {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     font-family: var(--font-mono);
     font-size: 0.6875rem;
     letter-spacing: 0.15em;
@@ -154,12 +123,100 @@ const { semestre: semester, total: totalSemesters } = site.curso;
     color: var(--color-muted);
   }
 
-  .row-title {
-    margin-top: 0.75rem;
-    font-family: var(--font-sans);
-    font-size: clamp(1.2rem, 2vw, 1.4rem);
-    line-height: 1.2;
-    font-weight: 600;
-    color: var(--color-heading);
+  @media (min-width: 40rem) {
+    .pt-kind {
+      font-size: 0.75rem;
+    }
+  }
+
+  /* "Atual": a bolinha pulsa como um indicador ao vivo, igual ao status da capa */
+  .pt-live::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    background: var(--color-accent);
+    animation: pt-ping 2.4s ease-out infinite;
+  }
+
+  @keyframes pt-ping {
+    from {
+      opacity: 0.7;
+      transform: scale(1);
+    }
+    60%,
+    to {
+      opacity: 0;
+      transform: scale(3.5);
+    }
+  }
+
+  /* Bloco aceso pelo termo do texto: um fundo leve e a bolinha em lima */
+  .pt-block {
+    transition: background-color 0.3s ease;
+  }
+
+  .pt-block.is-lit {
+    background-color: rgb(255 255 255 / 0.03);
+  }
+
+  .pt-dot {
+    transition: background-color 0.3s ease;
+  }
+
+  .pt-block.is-lit .pt-dot {
+    background-color: var(--color-accent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pt-live::after {
+      animation: none;
+    }
   }
 </style>
+
+<script>
+  // Termo ↔ bloco: passar o mouse, tocar ou focar um termo acende o bloco correspondente (e vice-versa no mouse).
+  let controller: AbortController | undefined;
+
+  document.addEventListener('astro:page-load', () => {
+    controller?.abort();
+    const root = document.querySelector<HTMLElement>('[data-pt]');
+    if (!root) return;
+    controller = new AbortController();
+    const { signal } = controller;
+
+    const terms = [...root.querySelectorAll<HTMLElement>('[data-term]')];
+    const blocks = [...root.querySelectorAll<HTMLElement>('[data-block]')];
+
+    const light = (key: string | null) => {
+      terms.forEach((t) => t.classList.toggle('is-lit', t.dataset.term === key));
+      blocks.forEach((b) => b.classList.toggle('is-lit', b.dataset.block === key));
+    };
+
+    terms.forEach((t) => {
+      const key = t.dataset.term ?? null;
+      t.addEventListener('pointerenter', () => light(key), { signal });
+      t.addEventListener('pointerleave', (e) => e.pointerType === 'mouse' && light(null), { signal });
+      t.addEventListener('focus', () => light(key), { signal });
+      t.addEventListener('blur', () => light(null), { signal });
+      // Toque: acende o bloco e rola até ele se estiver fora da tela
+      t.addEventListener(
+        'click',
+        () => {
+          light(key);
+          const block = blocks.find((b) => b.dataset.block === key);
+          const r = block?.getBoundingClientRect();
+          if (block && r && (r.top < 0 || r.bottom > window.innerHeight)) block.scrollIntoView({ block: 'center' });
+        },
+        { signal },
+      );
+    });
+
+    blocks.forEach((b) => {
+      const key = b.dataset.block ?? null;
+      b.addEventListener('pointerenter', (e) => e.pointerType === 'mouse' && light(key), { signal });
+      b.addEventListener('pointerleave', (e) => e.pointerType === 'mouse' && light(null), { signal });
+    });
+  });
+</script>

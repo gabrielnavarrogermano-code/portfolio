@@ -76,12 +76,9 @@ const links = [
               href={link.href}
               data-nav-link={link.href.split('#')[1]}
               data-menu-link
-              class="menu-link group flex items-start gap-3 py-1 sm:gap-5"
+              class="menu-link group flex items-start py-1"
               style={`--n: ${i}`}
             >
-              <span class="mt-[0.6em] font-mono text-xs text-muted sm:text-sm" aria-hidden="true">
-                0{i + 1}
-              </span>
               <span
                 class="menu-link-text font-display leading-[0.95] font-black text-heading uppercase transition-colors group-hover:text-link"
               >

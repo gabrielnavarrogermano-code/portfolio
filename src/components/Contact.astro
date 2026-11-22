@@ -4,126 +4,194 @@ import { temCurriculo } from '../lib/curriculo';
 import SectionTitle from './SectionTitle.astro';
 import BgWord from './BgWord.astro';
 
-// Canais de contato em linhas, como a Trajetória: número, nome grande, o endereço e uma seta.
-// O endereço mostrado sai do próprio link (sem o https://), então muda sozinho quando site.ts mudar.
-const semProtocolo = (url: string) => url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
-
+// Contato com um elemento só em destaque: o e-mail grande, que copia ao clicar.
+// Os outros canais ficam em links pequenos embaixo. O e-mail é dividido antes do @ para quebrar em duas linhas
+// no celular; o script ajusta o tamanho para ocupar a largura da seção.
+const [usuario, dominio] = site.email.split('@');
 const canais = [
-  { label: 'E-mail', detail: site.email, href: `mailto:${site.email}`, icon: '→', copy: true },
-  { label: 'LinkedIn', detail: semProtocolo(site.linkedin), href: site.linkedin, icon: '↗', external: true },
-  { label: 'GitHub', detail: semProtocolo(site.github), href: site.github, icon: '↗', external: true },
-  ...(temCurriculo ? [{ label: 'Currículo', detail: 'PDF · download', href: site.curriculo, icon: '↓', download: true }] : []),
+  { label: 'Abrir no e-mail', href: `mailto:${site.email}`, icon: '→' },
+  { label: 'LinkedIn', href: site.linkedin, icon: '↗', external: true },
+  { label: 'GitHub', href: site.github, icon: '↗', external: true },
+  ...(temCurriculo ? [{ label: 'Currículo', href: site.curriculo, icon: '↓', download: true }] : []),
 ];
 ---
 
-<section id="contato" class="render-later relative isolate mx-auto max-w-5xl px-6 pb-16 [contain-intrinsic-size:auto_800px] sm:pb-24">
+<section id="contato" class="render-later relative isolate mx-auto max-w-5xl px-6 pb-16 [contain-intrinsic-size:auto_700px] sm:pb-24">
   <BgWord word="CONTATO" />
-  <SectionTitle title="Vamos conversar?" subtitle="Escolha o canal que preferir." />
+  <SectionTitle title="Vamos conversar?" />
 
-  <ol class="mt-12 border-t border-line">
+  <div data-reveal class="mt-10 sm:mt-14">
+    <button
+      type="button"
+      data-copy={site.email}
+      class="ct-email group block w-full cursor-pointer text-left"
+      aria-describedby="ct-status"
+    >
+      <span class="sr-only">Copiar o e-mail </span>
+      <span data-fit class="ct-fit block font-display leading-[0.95] font-black text-heading transition-colors">
+        <span class="ct-line">{usuario}</span><span class="ct-line text-muted transition-colors">@{dominio}</span>
+      </span>
+    </button>
+    <p id="ct-status" class="mt-4 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs" aria-live="polite">
+      <span data-copy-status>
+        ( <span class="ct-hint-touch">Toque</span><span class="ct-hint-mouse">Clique</span> para copiar )
+      </span>
+    </p>
+  </div>
+
+  <ul data-reveal class="mt-12 flex flex-wrap gap-x-8 gap-y-3 border-t border-line pt-6 sm:mt-16">
     {
-      canais.map((c, i) => (
-        <li data-reveal data-active class="ch-row group relative grid grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 border-b border-line py-4 sm:grid-cols-[4.5rem_minmax(0,1fr)_minmax(0,1fr)_9rem] sm:gap-x-8 sm:py-5">
-          <span class="ch-num font-mono text-xs text-muted transition-colors">( 0{i + 1} )</span>
-
-          <!-- O link cobre a linha inteira (pelo ::after); o botão de copiar fica por cima dele -->
+      canais.map((c) => (
+        <li>
           <a
             href={c.href}
-            class="ch-link font-sans leading-tight font-semibold text-heading transition-colors"
+            class="group inline-flex items-center gap-2 text-lg font-medium text-heading transition-colors hover:text-link sm:text-xl"
             {...(c.external ? { target: '_blank', rel: 'noopener' } : {})}
             {...(c.download ? { download: site.curriculoNome } : {})}
           >
             {c.label}
+            <span class="text-muted transition-transform group-hover:translate-x-0.5" aria-hidden="true">{c.icon}</span>
           </a>
-
-          <span class="col-start-2 truncate font-mono text-xs text-muted sm:col-start-auto sm:text-sm">{c.detail}</span>
-
-          <span class="col-start-3 row-span-2 row-start-1 flex items-center justify-end gap-3 sm:col-start-auto sm:row-span-1 sm:row-start-auto">
-            {c.copy && (
-              <button
-                type="button"
-                data-copy={site.email}
-                class="relative z-10 hidden cursor-pointer rounded-full border border-line px-3 py-1.5 font-mono text-[11px] tracking-[0.15em] text-muted uppercase transition-colors hover:border-heading/40 hover:text-heading sm:inline-flex"
-              >
-                Copiar
-              </button>
-            )}
-            <span class="ch-icon pointer-events-none grid size-9 place-items-center sm:size-11 rounded-full border border-line text-lg text-heading transition" aria-hidden="true">
-              {c.icon}
-            </span>
-          </span>
         </li>
       ))
     }
-  </ol>
+  </ul>
 </section>
 
 <style>
-  /* Nome do canal em tamanho médio (Geist): a Tektur grande fica para o nome, os títulos de seção e o projeto */
-  .ch-link {
-    font-size: clamp(1.35rem, 2.8vw, 2rem);
+  /* Tektur estreita, como o nome da capa. Sem JS: um tamanho fixo que quebra onde precisar */
+  .ct-fit {
+    font-size: clamp(2rem, 9vw, 5rem);
+    font-stretch: 75%;
+    font-variation-settings: 'wdth' 75;
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
   }
 
-  /* Link esticado: a linha inteira é clicável */
-  .ch-link::after {
-    content: '';
-    position: absolute;
-    inset: 0;
+  /* Celular: usuário em uma linha e @domínio na outra. Computador: tudo em uma linha */
+  .ct-line {
+    display: block;
   }
 
-  .ch-row {
-    transition: background-color 0.3s ease;
+  @media (min-width: 48rem) {
+    .ct-line {
+      display: inline;
+    }
   }
 
-  /* Hover (ou foco pelo teclado): a linha acende em lima e a seta anda */
-  .ch-row:hover,
-  .ch-row:focus-within {
-    background-color: rgb(255 255 255 / 0.025);
+  /* Hover, foco e copiado: o e-mail inteiro acende */
+  .ct-email:hover .ct-fit,
+  .ct-email:focus-visible .ct-fit,
+  .ct-email.is-copied .ct-fit,
+  .ct-email:hover .ct-line,
+  .ct-email:focus-visible .ct-line,
+  .ct-email.is-copied .ct-line {
+    color: var(--color-accent);
   }
 
-  .ch-row:hover .ch-link,
-  .ch-row:focus-within .ch-link,
-  .ch-row.is-active .ch-link,
-  .ch-row:hover .ch-num,
-  .ch-row:focus-within .ch-num,
-  .ch-row.is-active .ch-num {
-    color: var(--color-link);
+  .ct-email:focus-visible {
+    outline-offset: 8px;
   }
 
-  /* A seta anda com transform, o que a colocaria por cima do link esticado: por isso ela é
-     pointer-events-none (o clique passa direto para o link da linha) */
-  .ch-row:hover .ch-icon,
-  .ch-row:focus-within .ch-icon,
-  .ch-row.is-active .ch-icon {
-    border-color: var(--color-heading);
-    background-color: var(--color-heading);
-    color: var(--color-ink);
-    transform: translateX(4px);
+  .ct-hint-mouse {
+    display: none;
   }
 
-  .ch-link:focus-visible {
-    outline: none;
-  }
+  @media (hover: hover) and (pointer: fine) {
+    .ct-hint-touch {
+      display: none;
+    }
 
-  .ch-row:has(.ch-link:focus-visible) {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 4px;
+    .ct-hint-mouse {
+      display: inline;
+    }
   }
 </style>
 
 <script>
-  // Copiar o e-mail: o botão avisa por 2 segundos e volta ao normal
-  document.addEventListener('astro:page-load', () => {
-    document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(btn.dataset.copy ?? '');
-          btn.textContent = 'Copiado ✓';
-        } catch {
-          btn.textContent = 'Não deu';
-        }
-        setTimeout(() => (btn.textContent = 'Copiar'), 2000);
-      });
+  // 1. O e-mail ocupa a largura da seção: mede o texto num tamanho conhecido e escala até caber.
+  // 2. Clicar copia o e-mail; o aviso troca por 2 segundos e volta.
+  const MAX_PX = 150; // teto do tamanho, para o e-mail não ficar enorme em telas muito largas
+  let cleanup: (() => void) | undefined;
+
+  const fit = (el: HTMLElement) => {
+    const box = el.parentElement;
+    if (!box) return;
+    const lines = [...el.querySelectorAll<HTMLElement>('.ct-line')];
+    el.style.fontSize = '100px';
+    el.style.overflowWrap = 'normal';
+    el.style.whiteSpace = 'nowrap';
+    // Em uma linha (computador), a largura é a soma; em duas (celular), a da linha mais larga
+    const inline = getComputedStyle(lines[0]).display === 'inline';
+    const widths = lines.map((l) => {
+      const r = document.createRange();
+      r.selectNodeContents(l);
+      return r.getBoundingClientRect().width;
     });
+    const w = inline ? widths.reduce((a, b) => a + b, 0) : Math.max(...widths);
+    // Seção ainda não desenhada (content-visibility): volta ao tamanho do CSS e tenta de novo quando aparecer
+    if (!w || !box.clientWidth) {
+      el.style.fontSize = el.style.overflowWrap = el.style.whiteSpace = '';
+      return;
+    }
+    const size = Math.min(MAX_PX, (100 * box.clientWidth) / w * 0.98);
+    el.style.fontSize = `${size.toFixed(1)}px`;
+  };
+
+  document.addEventListener('astro:page-load', () => {
+    cleanup?.();
+    const el = document.querySelector<HTMLElement>('[data-fit]');
+    const btn = document.querySelector<HTMLButtonElement>('[data-copy]');
+    const status = document.querySelector<HTMLElement>('[data-copy-status]');
+    const controller = new AbortController();
+    let ro: ResizeObserver | undefined;
+    let io: IntersectionObserver | undefined;
+    let timer = 0;
+
+    if (el?.parentElement) {
+      fit(el);
+      document.fonts?.ready.then(() => fit(el));
+      // Só a largura importa: a altura muda com o próprio ajuste e não deve disparar outro
+      let lastWidth = 0;
+      ro = new ResizeObserver(([entry]) => {
+        const width = Math.round(entry.contentRect.width);
+        if (width === lastWidth) return;
+        lastWidth = width;
+        fit(el);
+      });
+      ro.observe(el.parentElement);
+      // A seção é desenhada só perto da tela: mede de novo quando ela chega
+      io = new IntersectionObserver(([entry]) => entry.isIntersecting && fit(el), { rootMargin: '300px 0px' });
+      io.observe(el);
+    }
+
+    if (btn && status) {
+      const original = status.innerHTML;
+      btn.addEventListener(
+        'click',
+        async () => {
+          clearTimeout(timer);
+          try {
+            await navigator.clipboard.writeText(btn.dataset.copy ?? '');
+            status.textContent = '( Copiado ✓ )';
+            btn.classList.add('is-copied');
+          } catch {
+            status.textContent = '( Não deu para copiar: use “Abrir no e-mail” )';
+          }
+          timer = window.setTimeout(() => {
+            status.innerHTML = original;
+            btn.classList.remove('is-copied');
+          }, 2000);
+        },
+        { signal: controller.signal },
+      );
+    }
+
+    cleanup = () => {
+      controller.abort();
+      ro?.disconnect();
+      io?.disconnect();
+      clearTimeout(timer);
+    };
   });
 </script>

@@ -9,8 +9,9 @@ const projetos = defineCollection({
     z.object({
     title: z.string(),
     summary: z.string(),
-    // Tópico "O problema" mostrado na home, abaixo do card do projeto
-    problem: z.string(),
+    // Antes → depois em uma linha, mostrado na home abaixo do card do projeto
+    before: z.string().optional(),
+    after: z.string().optional(),
     kind: z.string(),
     tools: z.array(z.string()),
     order: z.number().default(99),
@@ -23,8 +24,6 @@ const projetos = defineCollection({
     coverHover: image().optional(),
     // Ficha do cabeçalho do estudo de caso: onde foi feito e o que foi entregue
     context: z.string().optional(),
-    // Resultado em uma frase, mostrado na ficha embaixo do card na home
-    result: z.string().optional(),
     deliverable: z.string().optional(),
     // Números em destaque logo depois da simulação (tirados do próprio texto do estudo)
     stats: z.array(z.object({ value: z.string(), label: z.string() })).optional(),

@@ -29,9 +29,15 @@ const kpis: Record<string, { label: string; value: string; sub: string; pct?: nu
       projetos.map((p, i) => (
         <article>
           <!-- Título do projeto acima do card: primeiro o nome, depois o trabalho -->
-          <h3 class="pc-title mb-6 max-w-4xl font-display leading-[0.95] font-black text-heading uppercase">
+          <h3 class="pc-title max-w-4xl font-display leading-[0.95] font-black text-heading uppercase">
             {p.data.title}
           </h3>
+          <!-- Ferramentas em etiquetas pequenas, logo abaixo do nome -->
+          <ul class="mt-4 mb-6 flex flex-wrap gap-2" aria-label="Ferramentas">
+            {p.data.tools.map((t) => (
+              <li class="rounded-full border border-line px-3 py-1 font-mono text-[11px] text-muted sm:text-xs">{t}</li>
+            ))}
+          </ul>
 
           <!-- Card: uma faixa escura no topo com o número e o tipo; abaixo, o print do dashboard em cores, limpo (o título fica
                fora, acima do card, para não cobrir o trabalho); no hover aproxima e troca para a outra página do dashboard -->
@@ -92,22 +98,25 @@ const kpis: Record<string, { label: string; value: string; sub: string; pct?: nu
             </div>
           </a>
 
-          <!-- Abaixo do card: a ficha do projeto (como na página do estudo) e o link em uma linha grande -->
-          <dl class="mt-8 grid border-t border-line md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)]">
-            {[
-              { label: 'O problema', value: p.data.problem },
-              // espaço que não quebra dentro de cada nome: "Power BI" não se divide entre linhas
-              { label: 'Ferramentas', value: p.data.tools.map((t) => t.replaceAll(' ', ' ')).join(' · ') },
-              ...(p.data.result ? [{ label: 'Resultado', value: p.data.result }] : []),
-            ].map((f) => (
-              <div data-reveal class="border-b border-line py-5 md:border-r md:border-b-0 md:px-6 md:first:pl-0 md:last:border-r-0">
-                <dt class="font-mono text-[11px] tracking-[0.15em] text-muted uppercase">( {f.label} )</dt>
-                <dd class="mt-2 leading-relaxed text-fg/85">{f.value}</dd>
-              </div>
-            ))}
-          </dl>
+          <!-- Abaixo do card: o antes → depois em uma linha (o "antes" apagado, o "depois" aceso; a seta se desenha
+               quando a linha aparece) e o link para o estudo de caso -->
+          {p.data.before && p.data.after && (
+            <div data-reveal class="pc-ba mt-8 grid items-center gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1fr)_4rem_minmax(0,1fr)]">
+              <p>
+                <span class="block font-mono text-[11px] tracking-[0.15em] text-muted uppercase">Antes</span>
+                <span class="mt-1.5 block leading-relaxed text-fg/55">{p.data.before}</span>
+              </p>
+              <span class="pc-arrow relative h-5 w-px justify-self-start md:h-px md:w-full" aria-hidden="true">
+                <span class="pc-arrow-line absolute inset-0 bg-accent" />
+              </span>
+              <p>
+                <span class="block font-mono text-[11px] tracking-[0.15em] text-accent uppercase">Depois</span>
+                <span class="mt-1.5 block leading-relaxed text-heading">{p.data.after}</span>
+              </p>
+            </div>
+          )}
 
-          <div data-reveal data-active class="pc-next group relative flex items-center gap-4 border-b border-line md:border-t py-6 sm:gap-8 sm:py-7 md:mt-6">
+          <div data-reveal data-active class="pc-next group relative mt-8 flex items-center gap-4 border-y border-line py-6 sm:gap-8 sm:py-7">
             <a href={`/projetos/${p.id}/`} class="pc-next-link flex-1 font-sans leading-tight font-semibold text-heading transition-colors">
               Ler estudo de caso
             </a>
@@ -162,6 +171,56 @@ const kpis: Record<string, { label: string; value: string; sub: string; pct?: nu
   .pc-next:has(.pc-next-link:focus-visible) {
     outline: 2px solid var(--color-accent);
     outline-offset: 4px;
+  }
+
+  /* Seta do antes → depois: uma linha lima com a ponta; desce no celular e vai para a direita no computador */
+  .pc-arrow-line::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -1px;
+    width: 7px;
+    height: 7px;
+    border-right: 1px solid var(--color-accent);
+    border-bottom: 1px solid var(--color-accent);
+    transform: translateX(-50%) rotate(45deg);
+  }
+
+  .pc-arrow-line {
+    transform-origin: top;
+  }
+
+  .pc-ba.is-in .pc-arrow-line {
+    animation: pc-draw-y 0.7s cubic-bezier(0.65, 0, 0.2, 1) 0.45s both;
+  }
+
+  @keyframes pc-draw-y {
+    from {
+      transform: scaleY(0);
+    }
+  }
+
+  @media (min-width: 48rem) {
+    .pc-arrow-line {
+      transform-origin: left;
+    }
+
+    .pc-arrow-line::after {
+      left: auto;
+      right: -1px;
+      bottom: 50%;
+      transform: translateY(50%) rotate(-45deg);
+    }
+
+    .pc-ba.is-in .pc-arrow-line {
+      animation-name: pc-draw-x;
+    }
+  }
+
+  @keyframes pc-draw-x {
+    from {
+      transform: scaleX(0);
+    }
   }
 
   .pc-title {
