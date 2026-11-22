@@ -1,8 +1,8 @@
 ---
 // "Como eu trabalho": 4 princípios de negócio como etapas de um pipeline (Problema → Contexto → Linguagem → Prioridade).
 // Em cima, a linha com os 4 nós; a linha enche até a etapa ativa, como dados passando pelo fluxo.
-// Embaixo, o painel da etapa ativa: título, frase, onde já apliquei ("Na prática", quando há) e uma demonstração animada
-// do raciocínio, feita com exemplos de negócio (marcados como exemplo). O projeto em si fica no card e no estudo de caso.
+// Embaixo, o painel da etapa ativa: título, frase e uma demonstração animada do raciocínio, feita com exemplos de
+// negócio (marcados como exemplo). O projeto em si fica no card e no estudo de caso, para não repetir os números dele aqui.
 // - Na primeira vez que a seção aparece, o fluxo passa sozinho por 01 → 04 e volta ao 01 (para quando a pessoa interage).
 // - Sem JS, todos os painéis aparecem um embaixo do outro. Com movimento reduzido, as demonstrações já aparecem no estado final.
 const principles = [
@@ -10,19 +10,16 @@ const principles = [
     short: 'Problema',
     title: 'Primeiro o problema, depois o dado',
     text: 'Um pedido de relatório quase sempre esconde uma decisão. Descobrir qual é define o que vale medir.',
-    practice: 'A pergunta “quais notebooks estão prontos para uso?” trouxe LAPS e antivírus para a base.',
   },
   {
     short: 'Contexto',
     title: 'Número sozinho não decide nada',
     text: 'Um total só diz algo quando tem com o que ser comparado: o mês passado, a meta, o que é normal.',
-    practice: 'O LAPS virou “84% da meta, faltam 12”, e não só “63 notebooks”.',
   },
   {
     short: 'Linguagem',
     title: 'Falo a língua de quem decide',
     text: 'Quem decide não precisa saber o que é churn. Precisa saber quantos clientes perdeu.',
-    practice: 'A equipe consulta o dashboard sozinha, só filtrando.',
   },
   {
     short: 'Prioridade',
@@ -82,15 +79,6 @@ const quadrants = [
             <!-- Título médio em Geist (o span vence a Tektur que o global.css dá a todo h3) -->
             <h3><span class="pp-title block font-sans leading-tight font-semibold text-heading">{p.title}</span></h3>
             <p class="mt-4 text-lg leading-relaxed text-fg/85">{p.text}</p>
-            {p.practice && (
-              <p class="mt-6 flex gap-3 md:mt-auto">
-                <span class="mt-0.5 w-1 flex-none rounded-full bg-accent" aria-hidden="true"></span>
-                <span>
-                  <span class="block font-mono text-[11px] tracking-[0.15em] text-accent uppercase">Na prática</span>
-                  <span class="mt-1 block leading-relaxed text-fg/80">{p.practice}</span>
-                </span>
-              </p>
-            )}
           </div>
 
           <!-- Demonstração: bloco escuro, com as cores do resto do site -->
