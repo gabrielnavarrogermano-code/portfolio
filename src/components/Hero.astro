@@ -6,28 +6,8 @@ import { temCurriculo } from '../lib/curriculo';
 
 const focus = ['Excel', 'Power BI', 'ETL'];
 
-// Abertura, primeiro ato: números soltos espalhados pela tela (x, y em % da tela). O tamanho (s) dá a
-// profundidade: 1 = pequeno e longe, 3 = grande e perto (perde mais o foco). Quando a frase entra em foco,
-// eles desfocam e somem, como uma câmera mudando o foco do fundo para a frente.
-// Depois, a lista de pessoas (fictícias) que a consulta filtra: fase 1 = WHERE área = 'Dados';
+// Abertura: a lista de pessoas (fictícias) que a consulta filtra: fase 1 = WHERE área = 'Dados';
 // fase 2 = AND foco = 'Power BI'. Sobra você.
-const soltos = [
-  { t: '3,2', x: 12, y: 18, s: 2 },
-  { t: '47', x: 28, y: 9, s: 1 },
-  { t: '0,8', x: 71, y: 13, s: 3 },
-  { t: '112', x: 89, y: 27, s: 1 },
-  { t: '28%', x: 9, y: 45, s: 3 },
-  { t: '64', x: 92, y: 53, s: 2 },
-  { t: '9', x: 19, y: 73, s: 1 },
-  { t: '1.024', x: 79, y: 79, s: 3 },
-  { t: '15', x: 47, y: 89, s: 2 },
-  { t: '0,31', x: 63, y: 67, s: 1 },
-  { t: '21', x: 36, y: 29, s: 1 },
-  { t: '73%', x: 56, y: 22, s: 2 },
-  { t: '6', x: 31, y: 64, s: 3 },
-  { t: '2,5', x: 85, y: 93, s: 1 },
-  { t: '340', x: 7, y: 88, s: 2 },
-];
 const acima = [
   { nome: 'Ana Souza', area: 'RH', fase: 1 },
   { nome: 'Lucas Prado', area: 'Dados', fase: 2 },
@@ -49,37 +29,22 @@ const abaixo = [
       sessionStorage.setItem('intro-seen', '1');
       var root = document.documentElement;
       root.classList.add('show-intro', 'intro-pending');
-      // Trava de segurança: se algo falhar, em 7,5 s o site aparece e a rolagem volta
+      // Trava de segurança: se algo falhar, em 5,5 s o site aparece e a rolagem volta
       setTimeout(function () {
         root.classList.remove('show-intro', 'intro-pending', 'name-flying', 'name-hold');
-      }, 7500);
+      }, 5500);
     } catch (e) {}
   })();
 </script>
 
-<!-- Abertura, automática (uns 5 segundos), no traço do site:
-     1. "Números soltos não dizem nada": números espalhados flutuam pela tela; a frase entra em foco no
-        centro enquanto eles desfocam e somem (como uma câmera mudando o foco);
-     2. "Procurando alguém para cuidar dos seus dados?": com o filtro aplicado (a busca do recrutador), a lista risca as pessoas até sobrar
+<!-- Abertura, automática (uns 3 segundos), no traço do site:
+     1. "Procurando alguém para cuidar dos seus dados?": com o filtro aplicado (a busca do recrutador), a lista risca as pessoas até sobrar
         o seu nome, selecionado;
-     3. o fundo some e cada palavra do nome sai da lista e voa até o seu lugar na capa; a capa carrega
+     2. o fundo some e cada palavra do nome sai da lista e voa até o seu lugar na capa; a capa carrega
         como um dashboard (blocos enchendo como barras, o ano contando). Se a pessoa pular antes de a lista
         aparecer, a tela sobe como uma cortina.
      Qualquer clique, toque, rolagem ou tecla pula direto para a capa. -->
 <div data-intro class="intro on-black fixed inset-0 z-[100] items-center justify-center overflow-hidden bg-bg" aria-hidden="true">
-  <div class="intro-act1 absolute inset-0">
-    {
-      soltos.map((n, i) => (
-        <span class={`il-num il-s${n.s}`} style={`left: ${n.x}%; top: ${n.y}%; --d: ${((i * 7) % 10) * 0.04}s; --dx: ${((i * 37) % 21) - 10}px; --dy: ${((i * 23) % 17) - 8}px`}>
-          {n.t}
-        </span>
-      ))
-    }
-    <p class="intro-focus absolute inset-x-0 top-1/2 -translate-y-1/2 px-6 text-center font-serif text-[1.9rem] leading-tight text-balance text-heading sm:text-5xl">
-      Números soltos não <em class="whitespace-nowrap">dizem nada.</em>
-    </p>
-  </div>
-
   <div class="intro-data absolute w-[min(92vw,32rem)]">
     <p class="intro-q intro-q2 mb-6 font-serif text-[1.6rem] leading-tight text-heading sm:text-4xl">
       Procurando alguém para <em class="text-accent">cuidar dos seus dados?</em>
@@ -90,7 +55,7 @@ const abaixo = [
     <ol class="mt-5 border-t border-line">
       {
         acima.map((r) => (
-          <li class="ir-row" style={`--d: ${r.fase === 1 ? 3.25 : 3.6}s`}>
+          <li class="ir-row" style={`--d: ${r.fase === 1 ? 1.1 : 1.45}s`}>
             <span class="ir-row-in"><span class="w-24 flex-none text-muted/70">{r.area}</span>{r.nome}</span>
           </li>
         ))
@@ -102,7 +67,7 @@ const abaixo = [
       </li>
       {
         abaixo.map((r) => (
-          <li class="ir-row" style={`--d: ${r.fase === 1 ? 3.3 : 3.65}s`}>
+          <li class="ir-row" style={`--d: ${r.fase === 1 ? 1.15 : 1.5}s`}>
             <span class="ir-row-in"><span class="w-24 flex-none text-muted/70">{r.area}</span>{r.nome}</span>
           </li>
         ))
@@ -358,18 +323,18 @@ const abaixo = [
 
   :global(html.intro-pending) .hero-name-word {
     transform: translateY(105%);
-    animation: hero-failsafe 0s 6.5s forwards; /* se o script falhar, o nome aparece mesmo assim */
+    animation: hero-failsafe 0s 4.5s forwards; /* se o script falhar, o nome aparece mesmo assim */
   }
 
   :global(html.intro-pending) .hero-load {
     clip-path: inset(-1rem 100% -1rem -1rem);
     opacity: 0;
-    animation: hero-failsafe 0s 6.5s forwards;
+    animation: hero-failsafe 0s 4.5s forwards;
   }
 
   :global(html.intro-pending) .hero-axis::before {
     transform: scaleX(0);
-    animation: hero-failsafe 0s 6.5s forwards;
+    animation: hero-failsafe 0s 4.5s forwards;
   }
 
   @keyframes hero-failsafe {
@@ -403,7 +368,7 @@ const abaixo = [
 
   :global(html.show-intro) .intro {
     display: flex;
-    animation: intro-failsafe 0s 7.5s forwards;
+    animation: intro-failsafe 0s 5.5s forwards;
   }
 
   /* Ao sair pelo nome: o fundo e o resto da abertura somem, só o nome fica (e depois voa) */
@@ -447,16 +412,16 @@ const abaixo = [
     }
   }
 
-  /* Ritmo (~5 s): os números flutuam, a frase entra em foco até ~1,8 s e eles desfocam; o primeiro ato sai
-     em ~2,8 s, a lista entra em ~3 s e filtra até sobrar o seu nome. */
+  /* Ritmo (~3 s): a lista entra logo de cara; ~1 s para ler a pergunta e o filtro, o filtro risca as
+     pessoas (1,1 s e 1,45 s), o seu nome é selecionado em ~1,85 s e a abertura sai em 2,9 s. */
 
   /* A frase da lista sobe e aparece */
   .intro-q {
-    animation: intro-rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) 2.95s both;
+    animation: intro-rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) 0.15s both;
   }
 
   .intro-skip {
-    animation: intro-rise 0.7s ease 0.8s both;
+    animation: intro-rise 0.7s ease 0.6s both;
   }
 
   @keyframes intro-rise {
@@ -466,107 +431,10 @@ const abaixo = [
     }
   }
 
-  @keyframes intro-out {
-    to {
-      opacity: 0;
-    }
-  }
-
-  /* 1. Foco: o primeiro ato inteiro (números e frase) sai junto */
-  .intro-act1 {
-    animation: intro-out 0.35s ease 2.75s forwards;
-  }
-
-  /* Os números: aparecem, flutuam devagar (--dx, --dy) e, quando a frase ganha foco, perdem o foco e apagam.
-     Os grandes (perto) já começam um pouco desfocados e desfocam mais; os pequenos (longe), menos. */
-  .il-num {
-    position: absolute;
-    font-family: var(--font-mono);
-    line-height: 1;
-    white-space: nowrap;
-    color: var(--color-heading);
-    translate: -50% -50%;
-    animation:
-      il-drift 3s linear both,
-      il-blur 2.6s cubic-bezier(0.4, 0, 0.2, 1) var(--d) both;
-  }
-
-  .il-s1 {
-    --o: 0.55;
-    --b0: 0px;
-    --b1: 6px;
-    font-size: 13px;
-  }
-
-  .il-s2 {
-    --o: 0.45;
-    --b0: 1px;
-    --b1: 10px;
-    font-size: clamp(18px, 2.2vw, 26px);
-  }
-
-  .il-s3 {
-    --o: 0.3;
-    --b0: 3px;
-    --b1: 16px;
-    font-size: clamp(34px, 5vw, 64px);
-  }
-
-  @keyframes il-drift {
-    from {
-      transform: translate(calc(var(--dx) * -1), calc(var(--dy) * -1));
-    }
-    to {
-      transform: translate(var(--dx), var(--dy));
-    }
-  }
-
-  @keyframes il-blur {
-    0% {
-      opacity: 0;
-      filter: blur(var(--b0));
-    }
-    15%,
-    28% {
-      opacity: var(--o);
-      filter: blur(var(--b0));
-    }
-    72%,
-    100% {
-      opacity: 0.08;
-      filter: blur(var(--b1));
-    }
-  }
-
-  /* A frase: começa grande e fora de foco e assenta nítida; "dizem nada" acende em lima logo depois */
-  .intro-focus {
-    animation: il-sharp 1.3s cubic-bezier(0.2, 0.7, 0.2, 1) 0.55s both;
-  }
-
-  @keyframes il-sharp {
-    from {
-      opacity: 0;
-      filter: blur(18px);
-      scale: 1.06;
-    }
-  }
-
-  .intro-focus em {
-    color: var(--color-heading);
-    animation: il-accent 0.6s ease 1.75s forwards;
-  }
-
-  @keyframes il-accent {
-    to {
-      color: var(--color-accent);
-    }
-  }
-
-  /* 3. A lista filtrada */
-  /* A segunda parte da abertura troca o lima pelo azul: lima (gráfico) → azul (lista) → lima (capa) */
+  /* A lista filtrada usa o azul no lugar do lima: azul (lista) → lima (capa) */
   .intro-data {
     --color-accent: var(--color-link);
-    animation: intro-data 0.45s ease 2.9s both;
+    animation: intro-data 0.45s ease 0.05s both;
   }
 
   @keyframes intro-data {
@@ -650,7 +518,7 @@ const abaixo = [
     inset: -1px -0.5rem;
     border: 2px solid var(--color-accent);
     opacity: 0;
-    animation: intro-select 0.4s ease 4s forwards;
+    animation: intro-select 0.4s ease 1.85s forwards;
   }
 
   /* Mesma cor do nome da capa, para a troca no fim da abertura não aparecer */
@@ -661,7 +529,7 @@ const abaixo = [
     font-stretch: 75%;
     font-variation-settings: 'wdth' 75;
     opacity: 0.55;
-    animation: intro-select 0.4s ease 4s forwards;
+    animation: intro-select 0.4s ease 1.85s forwards;
   }
 
   @keyframes intro-select {
@@ -672,7 +540,7 @@ const abaixo = [
 </style>
 
 <script>
-  // Abertura: depois de uns 5 segundos (ou no primeiro clique, toque, rolagem ou tecla) a tela sobe,
+  // Abertura: depois de uns 3 segundos (ou no primeiro clique, toque, rolagem ou tecla) a tela sobe,
   // revelando a capa, e o nome entra.
   let controller: AbortController | undefined;
 
@@ -755,13 +623,13 @@ const abaixo = [
       done = true;
       skip.abort();
       clearTimeout(timer);
-      // O nome só faz a ponte se a lista já está na tela (~3,3 s); antes disso, a cortina de sempre
-      if (performance.now() - startedAt > 3300 && handoff(intro)) return;
+      // O nome só faz a ponte se a lista já está na tela (~0,5 s); antes disso, a cortina de sempre
+      if (performance.now() - startedAt > 500 && handoff(intro)) return;
       intro.classList.add('is-leaving');
       setTimeout(() => loadCover(root), 350);
       setTimeout(() => root.classList.remove('show-intro'), 800); // fim da subida (0,75 s)
     };
-    const timer = setTimeout(leave, 5000);
+    const timer = setTimeout(leave, 2900);
     signal.addEventListener('abort', leave);
     for (const type of ['pointerdown', 'keydown', 'wheel', 'touchstart']) {
       window.addEventListener(type, leave, { passive: true, signal: skip.signal });
