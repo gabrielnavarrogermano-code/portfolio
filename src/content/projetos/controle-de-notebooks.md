@@ -35,9 +35,9 @@ Os dados vêm do **Microsoft 365**, a fonte oficial de quem entra na empresa, e 
 - **LAPS** aplicado ou não: o script de segurança que bloqueia instalações sem a conta de administrador
 - **Versão do Windows** (Pro ou Home)
 
-As colunas de **antivírus** e **LAPS** entraram depois, quando a equipe passou a acompanhar a segurança dos notebooks, e foram preenchidas **manualmente**, colaborador por colaborador.
+As colunas de **antivírus** e **LAPS** entraram depois, por decisão da equipe, quando ela passou a acompanhar a segurança dos notebooks. Foram preenchidas **manualmente**, colaborador por colaborador.
 
-Também defini as **regras de negócio**: um notebook compartilhado conta uma vez só, Windows Home conta como pendência de segurança, notebook sem antivírus é crítico e toda conta sem notebook tem um motivo registrado. Setores e nomes seguem um padrão de escrita.
+Para que todo mundo chegue no mesmo número, defini **4 regras de negócio**, como contar uma vez só o notebook compartilhado. A padronização dos nomes de setor foi feita com ajuda de **IA**, e as regras ficaram comigo. As regras completas estão em [Como eu trabalho](/#habilidades).
 
 ## Dashboard
 
