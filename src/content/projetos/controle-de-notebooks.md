@@ -18,40 +18,67 @@ stats:
   - { value: '3', label: 'páginas no dashboard' }
 ---
 
-> Projeto real, feito no estágio de TI na Hebe's Life Science. A simulação acima usa dados fictícios.
+> Projeto real, desenvolvido no estágio de TI da Hebe's Life Science. A simulação acima usa dados fictícios.
 
 ## O problema
 
-A equipe de TI precisava saber, de forma rápida, qual notebook estava com cada colaborador, qual licença Microsoft ele usa e se a máquina estava pronta para uso.
+A equipe de TI não tinha uma visão única dos notebooks. Para saber com quem estava cada máquina, qual licença Microsoft a pessoa usava e se o equipamento estava seguro, era preciso consultar o 365 Admin colaborador por colaborador. Antivírus e LAPS não eram registrados em lugar nenhum.
 
-## Extração e tratamento
+## O que eu entreguei
 
-Os dados vêm do **Microsoft 365**, a fonte oficial de quem entra na empresa, e viram uma base no Excel com uma linha por colaborador:
+- **Base em Excel**, com uma linha por colaborador, extraída do Microsoft 365. As colunas de antivírus e LAPS foram incluídas por decisão da equipe e preenchidas manualmente.
+- **Dashboard no Power BI** com três páginas (Licenças, Dispositivos e Segurança), filtros que valem para todas, meta de 100% para LAPS e antivírus e o custo do Kaspersky projetado pelas licenças de 3 anos, para prever a renovação.
+
+## Por dentro
+
+Para quem avalia a parte técnica: como a base está organizada e como os indicadores são calculados.
+
+### A base
+
+Uma tabela, com uma linha por conta ativa:
 
 - **Nome de usuário**, **e-mail** e **setor**
 - **Licença** Microsoft (Standard ou Basic)
 - **Nome do PC** e **selo de patrimônio**
-- **Antivírus** (Kaspersky) ativo ou não
-- **LAPS** aplicado ou não: o script de segurança que bloqueia instalações sem a conta de administrador
+- **Antivírus** (Kaspersky): ativo ou inativo
+- **LAPS**: aplicado ou pendente
 - **Versão do Windows** (Pro ou Home)
 
-As colunas de **antivírus** e **LAPS** entraram depois, por decisão da equipe, quando ela passou a acompanhar a segurança dos notebooks. Foram preenchidas **manualmente**, colaborador por colaborador.
+### Regras de negócio
 
-Para que todo mundo chegue no mesmo número, defini **4 regras de negócio**, como contar uma vez só o notebook compartilhado. A padronização dos nomes de setor foi feita com ajuda de **IA**, e as regras ficaram comigo. As regras completas estão em [Como eu trabalho](/#habilidades).
+1. Um notebook compartilhado conta uma vez só.
+2. Windows Home conta como pendência de segurança.
+3. Notebook sem antivírus é pendência crítica.
+4. Toda conta sem notebook tem um motivo registrado.
 
-## Dashboard
+### Medidas
 
-O dashboard começou como uma aba do Excel e foi levado para o **Power BI**, em três páginas: **Licenças**, **Dispositivos** e **Segurança**. Os filtros valem para as três e podem ser combinados, da visão geral até um setor ou um tipo de pendência. LAPS e antivírus têm meta de 100%, e o custo do Kaspersky entra como licenças de 3 anos que vencem juntas, o que ajuda a prever a renovação.
+A regra 1 está na própria medida: os indicadores contam **nomes de PC distintos**, e não linhas. Contas sem notebook ficam de fora.
+
+```
+Notebooks = DISTINCTCOUNTNOBLANK ( Base[Nome PC] )
+
+% LAPS =
+DIVIDE (
+    CALCULATE ( [Notebooks], Base[LAPS] = "Aplicado" ),
+    [Notebooks]
+)
+
+Status LAPS =
+SWITCH (
+    TRUE (),
+    [% LAPS] >= 1,    "Meta batida",
+    [% LAPS] >= 0.85, "Atenção",
+    "Crítico"
+)
+```
+
+O antivírus segue a mesma estrutura. O status transforma o percentual em uma decisão: abaixo de 85%, o indicador é crítico.
+
+### Qualidade dos dados
+
+O dashboard também aponta o que pode estar errado na própria base: PCs com dados divergentes entre linhas, selo de patrimônio repetido em PCs diferentes, e-mails fora do domínio e contas sem setor. A padronização dos nomes de setor foi feita com apoio de IA e revisada por mim.
 
 ## Resultado
 
-Antes, cada colaborador era consultado um a um no 365 Admin, e o antivírus e o LAPS não ficavam registrados em lugar nenhum. Agora, a base e o dashboard são a **fonte central de consulta**: basta filtrar para achar um colaborador, e os KPIs mostram o que já foi feito e o que ainda falta.
-
-## O que eu automatizaria
-
-O preenchimento manual abre espaço para esquecimentos. O próximo passo seria buscar os dados direto nas ferramentas:
-
-- **Usuários, licenças e LAPS:** a **Microsoft Graph API** devolve os usuários do 365 e os notebooks registrados no **Entra ID**.
-- **Antivírus:** o console do **Kaspersky** exporta os dispositivos protegidos, cruzados com a base pelo nome do PC.
-
-Um script agendado juntaria as fontes todos os dias, e o Power BI se atualizaria a partir dela. Só o **selo de patrimônio** continuaria manual, por ser uma etiqueta física.
+A base e o dashboard se tornaram a fonte central de consulta da equipe de TI. Localizar um colaborador passou a ser um filtro, e os indicadores mostram, com meta e status, o que já está em conformidade e o que ainda falta.
