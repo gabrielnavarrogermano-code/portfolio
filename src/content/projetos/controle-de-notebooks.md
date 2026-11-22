@@ -1,6 +1,6 @@
 ---
 title: Controle de Notebooks dos Colaboradores
-summary: Extração de dados do Microsoft 365 para uma base de colaboradores em Excel, com dashboard de KPIs no Power BI que se atualiza junto com a planilha.
+summary: Uma visão única dos notebooks da empresa, com um dashboard que mostra o que já está seguro e o que ainda falta.
 before: Cada colaborador consultado um a um no 365 Admin, sem registro de antivírus e LAPS.
 after: Uma fonte central de consulta, com KPIs do que já foi feito e do que ainda falta.
 kind: Extração e Tratamento
@@ -10,15 +10,7 @@ demo: notebooks
 cover: ../../assets/projetos/notebooks-licencas.png
 coverHover: ../../assets/projetos/notebooks-seguranca.png
 context: Estágio de TI · Hebe's Life Science
-deliverable: Base em Excel + dashboard no Power BI
-stats:
-  - { value: '100', label: 'linhas na base' }
-  - { value: '9', label: 'colunas por colaborador' }
-  - { value: '4', label: 'regras de negócio' }
-  - { value: '3', label: 'páginas no dashboard' }
 ---
-
-> Projeto real, desenvolvido no estágio de TI da Hebe's Life Science. A simulação acima usa dados fictícios.
 
 ## O problema
 
