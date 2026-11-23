@@ -13,10 +13,11 @@ const idioma = idiomaDe(Astro.url);
 const tx = textos[idioma].trabalho;
 const principios = tx.principios;
 
-// Contexto: o faturamento dos últimos 6 meses (em mil), com a meta. O mês atual (o último) caiu 8% e ficou em 92% da meta
-const meses = [112, 118, 124, 126, 130, 120];
-const meta = 130;
-const teto = 140;
+// Contexto: o faturamento do restaurante nos últimos 6 meses (em mil, fictício), com a meta. O mês atual (o último)
+// caiu 8% e ficou R$ 4 mil abaixo da meta
+const meses = [41, 44, 47, 49, 52, 48];
+const meta = 52;
+const teto = 56;
 
 // O que cada cena mostra, em texto, para o leitor de tela (a cena em si é só visual)
 const resumos = [
@@ -135,8 +136,8 @@ const posicoes = [
                           </p>
                         </div>
                         <div class="c3-pontos">
-                          {Array.from({ length: 24 }, (_, k) => (
-                            <span class:list={[k === 23 && 'd-hit']} />
+                          {Array.from({ length: 12 }, (_, k) => (
+                            <span class:list={[k === 11 && 'd-hit']} />
                           ))}
                         </div>
                       </div>
@@ -643,7 +644,7 @@ const posicoes = [
     color: var(--color-sunset);
   }
 
-  /* Linguagem: o termo técnico é riscado e vira uma frase; nos 24 clientes, um sai */
+  /* Linguagem: o termo técnico é riscado e vira uma frase; nas 12 lojas, uma está vazia */
   .c3 {
     display: grid;
     gap: 1.6rem;
@@ -671,7 +672,7 @@ const posicoes = [
 
   .c3-pontos {
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 0.6rem;
     max-width: 20rem;
   }

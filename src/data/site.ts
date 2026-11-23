@@ -7,7 +7,7 @@ export const site = {
   ano,
   name: 'Gabriel Navarro Germano',
   description:
-    'Portfólio de Gabriel Navarro Germano: análise de dados, business intelligence e engenharia de software.',
+    'Gabriel Navarro Germano, estudante de Engenharia de Software em Maringá (PR), procura estágio ou vaga júnior em análise de dados e BI. Projetos em Excel e Power BI.',
   email: 'gabrielnavarrogermano@gmail.com',
   linkedin: 'https://www.linkedin.com/in/gabrielnavarrogermano/',
   github: 'https://github.com/gabrielnavarrogermano-code',
