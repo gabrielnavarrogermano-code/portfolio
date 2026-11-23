@@ -13,6 +13,12 @@ const PASSO = 4; // um grão a cada 4 px da foto
 const T = { textos: 0.16, comeca: 0.05, espalha: 0.24, ruido: 0.05, saida: 0.04, viagem: 0.3, fioDe: 0.5, fioAte: 0.78, poSome: 0.86 };
 const TOPO_FIO = 0.58; // o fio da capa vai de 58% da altura da tela até o pé dela
 
+// A cor do fio (--color-fio, no global.css), em RGB
+const corDoFio = (): [number, number, number] => {
+  const m = getComputedStyle(document.documentElement).getPropertyValue('--color-fio').trim().match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [20, 25, 55];
+};
+
 const suave = (t: number) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
 const faixa = (v: number, a: number, b: number) => Math.min(1, Math.max(0, (v - a) / (b - a)));
 const ruido = (i: number) => {
@@ -24,7 +30,7 @@ type Po = {
   cw: number; ch: number;
   dados: ImageData; pixels: Uint32Array; mascaraDados: ImageData; inicio: Float32Array;
   x: Float32Array; y: Float32Array; tx: Float32Array; ty: Float32Array; curva: Float32Array;
-  cinza: Uint8Array; alfa: Float32Array; cel: Uint32Array; corFio: number;
+  cinza: Uint8Array; alfa: Float32Array; cel: Uint32Array; corFio: [number, number, number];
 };
 
 export function iniciarPo(capa: HTMLElement, signal: AbortSignal) {
@@ -114,7 +120,7 @@ export function iniciarPo(capa: HTMLElement, signal: AbortSignal) {
       cw, ch, dados, pixels: new Uint32Array(dados.data.buffer), mascaraDados: ctxMascara.createImageData(cols, linhas), inicio,
       x: Float32Array.from(g.x), y: Float32Array.from(g.y), tx: Float32Array.from(g.tx), ty: Float32Array.from(g.ty),
       curva: Float32Array.from(g.curva), cinza: Uint8Array.from(g.cinza), alfa: Float32Array.from(g.alfa), cel: Uint32Array.from(g.cel),
-      corFio: 26, // Nebulosity: o pó escurece até a cor do fio
+      corFio: corDoFio(), // o pó ganha a cor do fio (Neon Navy) conforme chega nele
     };
     desenhado = -1;
     rolar();
@@ -170,14 +176,14 @@ export function iniciarPo(capa: HTMLElement, signal: AbortSignal) {
         const y = Math.round(po.y[i] + (po.ty[i] - po.y[i]) * k - 60 * arco);
         const a = Math.round(255 * po.alfa[i] * Math.min(1, tt * 5) * some * (1 - 0.35 * arco));
         if (a < 4) continue;
-        const c = Math.round(po.cinza[i] + (po.corFio - po.cinza[i]) * k);
+        const g0 = po.cinza[i], [fr, fg, fb] = po.corFio;
         const lado = k > 0.85 ? 1 : 2;
         for (let yy = y; yy < y + lado; yy++) {
           if (yy < 0 || yy >= ch) continue;
           for (let xx = x; xx < x + lado; xx++) {
             if (xx < 0 || xx >= cw) continue;
             const p = (yy * cw + xx) * 4;
-            d[p] = c; d[p + 1] = c; d[p + 2] = c; d[p + 3] = a;
+            d[p] = g0 + (fr - g0) * k; d[p + 1] = g0 + (fg - g0) * k; d[p + 2] = g0 + (fb - g0) * k; d[p + 3] = a;
           }
         }
       }

@@ -32,6 +32,8 @@
   --color-link-strong: #141937;
   --color-live: #4e0000;
   --color-ice: #e7e7e0;
+  /* O fio que liga o site (e tudo o que é ele: linha do tempo, seta, sublinhado do e-mail, o pó da capa) */
+  --color-fio: #141937;
 
   /* Cores do dashboard de notebooks (só nele; o site continua preto e branco).
      viz-1/viz-2: dados normais, duas séries (validadas para daltonismo no fundo escuro).
@@ -111,6 +113,40 @@ body::before {
   pointer-events: none;
   opacity: 0.08;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+/* ---------- O fundo das páginas com capa ----------
+   1) O papel muda de tom ao longo do caminho, num degradê contínuo pela altura da página inteira (sem cortes):
+      Sunset na capa, um papel levemente azulado no meio (perto da cor do fio) e um tom um pouco mais quente no fim.
+      Fica no fundo do <html>, que cobre o documento todo; a capa (o trilho, --capa-alt) fica toda em Sunset.
+   2) A vinheta: as bordas da tela um pouco mais escuras, como uma foto impressa. Fica parada atrás do conteúdo e
+      só aparece depois da capa (--vinheta, de 0 a 1, vem de lib/fio.ts). */
+html:has([data-capa]) {
+  --capa-alt: 100svh;
+  --fundo-meio: color-mix(in srgb, var(--color-navy) 7%, var(--color-sunset));
+  --fundo-fim: color-mix(in srgb, var(--color-red) 6%, var(--color-sunset));
+  background-image: linear-gradient(
+    to bottom,
+    var(--color-sunset) 0,
+    var(--color-sunset) var(--capa-alt),
+    var(--fundo-meio) 52%,
+    var(--fundo-meio) 68%,
+    var(--fundo-fim) 100%
+  );
+}
+
+html.palco-ativo:has([data-capa]) {
+  --capa-alt: 230svh;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--vinheta, 0);
+  background: radial-gradient(ellipse 85% 80% at 50% 45%, transparent 55%, rgb(26 27 22 / 0.13) 100%);
 }
 
 /* Linhas que entram ao rolar (o script em lib/reveal.ts liga as classes). Animação, e não transição,
@@ -442,7 +478,7 @@ html.capa-carregando #inicio .letra {
   left: 50%;
   width: 1.5px;
   margin-left: -0.75px;
-  background: var(--color-heading);
+  background: var(--color-fio);
   clip-path: inset(0 0 var(--resto, 100%) 0);
   mask-image: linear-gradient(
     to bottom,

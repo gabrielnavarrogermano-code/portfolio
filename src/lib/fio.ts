@@ -51,12 +51,14 @@ export function iniciarFio() {
     f: -1,
   }));
 
-  let vh = innerHeight, quadro = 0, ligado = false;
+  const capa = document.querySelector<HTMLElement>('[data-capa]');
+  let vh = innerHeight, quadro = 0, ligado = false, fimCapa = 0;
   const topo = (e: HTMLElement) => e.getBoundingClientRect().top + scrollY;
 
   const medir = () => {
     vh = innerHeight;
     ligado = temCapa && largo.matches;
+    fimCapa = capa ? topo(capa) + capa.offsetHeight : 0;
     root.classList.toggle('fio-ligado', ligado);
     for (const s of secoes) {
       const t = topo(s.el);
@@ -88,6 +90,8 @@ export function iniciarFio() {
     const frac = PONTA + (0.92 - PONTA) * fimK;
     const ponta = scrollY + vh * frac;
     if (caneta) caneta.style.transform = fimK ? `translateY(${((frac - PONTA) * vh).toFixed(1)}px)` : '';
+    // a vinheta do fundo aparece enquanto a capa sai da tela (ver global.css)
+    root.style.setProperty('--vinheta', capa ? faixa(scrollY, fimCapa - vh, fimCapa - vh * 0.3).toFixed(3) : '1');
     let desenhando = false;
     for (const s of secoes) {
       const m = s.m;
@@ -120,5 +124,6 @@ export function iniciarFio() {
     ro.disconnect();
     cancelAnimationFrame(quadro);
     root.classList.remove('fio-js', 'fio-ligado');
+    root.style.removeProperty('--vinheta');
   };
 }
