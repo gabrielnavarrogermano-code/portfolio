@@ -1,0 +1,14 @@
+---
+import { getCollection } from 'astro:content';
+import EstudoDeCaso from '../../../components/EstudoDeCaso.astro';
+
+// Case studies in English (/en/projects/<id>/). The Portuguese version is in pages/projetos.
+export async function getStaticPaths() {
+  const projetos = await getCollection('projetosEn');
+  return projetos.map((p) => ({ params: { id: p.id }, props: { p } }));
+}
+
+const { p } = Astro.props;
+---
+
+<EstudoDeCaso p={p} />

@@ -1,11 +1,10 @@
-import { defineCollection } from 'astro:content';
+import { defineCollection, type SchemaContext } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 
 // Cada arquivo .md em src/content/projetos vira um card na home e uma página de estudo de caso.
-const projetos = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/projetos' }),
-  schema: ({ image }) =>
+// A versão em inglês do mesmo projeto fica em src/content/projetos-en, com o mesmo nome de arquivo.
+const esquema = ({ image }: SchemaContext) =>
     z.object({
     title: z.string(),
     summary: z.string(),
@@ -27,7 +26,16 @@ const projetos = defineCollection({
     deliverable: z.string().optional(),
     // Números em destaque logo depois da simulação (tirados do próprio texto do estudo)
     stats: z.array(z.object({ value: z.string(), label: z.string() })).optional(),
-  }),
+  });
+
+const projetos = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/projetos' }),
+  schema: esquema,
 });
 
-export const collections = { projetos };
+const projetosEn = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/projetos-en' }),
+  schema: esquema,
+});
+
+export const collections = { projetos, projetosEn };

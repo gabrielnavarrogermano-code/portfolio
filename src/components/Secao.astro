@@ -1,5 +1,6 @@
 ---
 import Letras from './Letras.astro';
+import { idiomaDe, textos } from '../i18n';
 
 // O molde de toda seção, o mesmo da capa (estilos no global.css, "O molde das seções"):
 // a linha de eixo com o número e os rótulos, o título em Tektur e os dois lados:
@@ -18,7 +19,8 @@ interface Props {
   dadosPrimeiro?: boolean;
 }
 
-const { id, num, rotulo, rotuloDir, titulo, tituloLongo = false, rotuloDados = 'dados', dadosPrimeiro = false } = Astro.props;
+const rotulos = textos[idiomaDe(Astro.url)].secao;
+const { id, num, rotulo, rotuloDir, titulo, tituloLongo = false, rotuloDados = rotulos.dados, dadosPrimeiro = false } = Astro.props;
 ---
 
 <section id={id} class="secao" data-secao>
@@ -34,7 +36,7 @@ const { id, num, rotulo, rotuloDir, titulo, tituloLongo = false, rotuloDados = '
     <h2 class:list={['secao-titulo', tituloLongo && 'is-longo']}><Letras texto={titulo} /></h2>
     <div class:list={['lados', dadosPrimeiro && 'dados-primeiro']} data-lados>
       <div class="negocio">
-        <p class="rotulo-lado">negócio</p>
+        <p class="rotulo-lado">{rotulos.negocio}</p>
         <slot name="negocio" />
       </div>
       <div class="painel">

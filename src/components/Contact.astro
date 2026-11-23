@@ -2,6 +2,7 @@
 import { site } from '../data/site';
 import { temCurriculo } from '../lib/curriculo';
 import Secao from './Secao.astro';
+import { idiomaDe, textos } from '../i18n';
 
 // ( 0N ) Contato: à esquerda, o convite e o botão que copia o e-mail; no painel, os canais como linhas de uma tabela.
 interface Props {
@@ -9,22 +10,21 @@ interface Props {
 }
 const { num } = Astro.props;
 
+const tx = textos[idiomaDe(Astro.url)].contato;
 const canais = [
-  { k: 'E-mail', v: site.email, href: `mailto:${site.email}`, icon: '→' },
+  { k: tx.email, v: site.email, href: `mailto:${site.email}`, icon: '→' },
   { k: 'LinkedIn', v: site.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com/, '').replace(/\/$/, ''), href: site.linkedin, icon: '↗', external: true },
   { k: 'GitHub', v: site.github.replace(/^https?:\/\/(www\.)?github\.com\//, ''), href: site.github, icon: '↗', external: true },
-  ...(temCurriculo ? [{ k: 'Currículo', v: 'PDF', href: site.curriculo, icon: '↓', download: true }] : []),
+  ...(temCurriculo ? [{ k: tx.curriculo, v: 'PDF', href: site.curriculo, icon: '↓', download: true }] : []),
 ];
 ---
 
-<Secao id="contato" num={num} rotulo="Contato" rotuloDir="Disponível" titulo="Vamos conversar?">
+<Secao id="contato" num={num} rotulo={tx.rotulo} rotuloDir={tx.rotuloDir} titulo={tx.titulo}>
   <Fragment slot="negocio">
-    <p class="serif-grande">
-      Me conta o <b>problema</b>. <em>A gente começa pela pergunta.</em>
-    </p>
+    <p class="serif-grande" set:html={tx.frase} />
     <div class="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2">
-      <button type="button" data-copy={site.email} class="btn btn-cheio cursor-pointer" aria-describedby="ct-status">
-        <span data-copy-label>Copiar e-mail</span> <span class="seta" aria-hidden="true">→</span>
+      <button type="button" data-copy={site.email} data-txt-copiar={tx.copiar} data-txt-copiado={tx.copiado} data-txt-erro={tx.erro} class="btn btn-cheio cursor-pointer" aria-describedby="ct-status">
+        <span data-copy-label>{tx.copiar}</span> <span class="seta" aria-hidden="true">→</span>
       </button>
       <p id="ct-status" class="font-mono text-[11px] tracking-[0.15em] text-muted uppercase" aria-live="polite" data-copy-status></p>
     </div>
@@ -132,13 +132,13 @@ const canais = [
         clearTimeout(timer);
         try {
           await navigator.clipboard.writeText(btn.dataset.copy ?? '');
-          label.textContent = 'Copiado ✓';
+          label.textContent = btn.dataset.txtCopiado ?? '';
           status.textContent = '';
         } catch {
-          status.textContent = 'Não deu para copiar: use o e-mail ao lado';
+          status.textContent = btn.dataset.txtErro ?? '';
         }
         timer = window.setTimeout(() => {
-          label.textContent = 'Copiar e-mail';
+          label.textContent = btn.dataset.txtCopiar ?? '';
           status.textContent = '';
         }, 2000);
       },

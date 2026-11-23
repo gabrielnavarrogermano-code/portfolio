@@ -2,12 +2,16 @@
 import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
 import Secao from './Secao.astro';
+import { idiomaDe, caminho, textos } from '../i18n';
 
 // ( 02 ) Projetos: uma seção por projeto, no molde de todas.
 // À esquerda, o resumo e o antes → depois (no celular, o print vem primeiro, logo depois do título) (a linha do "depois" se desenha em vermelho); no painel, o print do
 // dashboard (no hover, troca para a outra página dele) e a ficha: contexto, etapa e ferramentas.
 // Os números do projeto ficam no estudo de caso, para não repetir aqui.
-const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order - b.data.order);
+const idioma = idiomaDe(Astro.url);
+const tx = textos[idioma].projetos;
+// Os projetos no idioma da página (o inglês fica em src/content/projetos-en)
+const projetos = (await getCollection(idioma === 'en' ? 'projetosEn' : 'projetos')).sort((a, b) => a.data.order - b.data.order);
 ---
 
 <div id="projetos">
@@ -15,8 +19,8 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
     projetos.map((p, i) => (
       <Secao
         num={String(i + 2).padStart(2, '0')}
-        rotulo="Projetos"
-        rotuloDir={projetos.length > 1 ? `Na prática · ${i + 1} de ${projetos.length}` : 'Na prática'}
+        rotulo={tx.rotulo}
+        rotuloDir={projetos.length > 1 ? tx.deTotal(i + 1, projetos.length) : tx.naPratica}
         titulo={p.data.title}
         tituloLongo={p.data.title.length > 24}
         dadosPrimeiro
@@ -26,42 +30,42 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
           {p.data.before && p.data.after && (
             <div class="pj-ba">
               <div>
-                <small>Antes</small>
+                <small>{tx.antes}</small>
                 <p>{p.data.before}</p>
               </div>
               <div class="pj-depois">
-                <small>Depois</small>
+                <small>{tx.depois}</small>
                 <p>{p.data.after}</p>
               </div>
             </div>
           )}
           <p class="mt-7">
-            <a href={`/projetos/${p.id}/`} class="btn btn-cheio">
-              Ler estudo de caso <span class="seta" aria-hidden="true">→</span>
+            <a href={caminho(idioma, `projeto:${p.id}`)} class="btn btn-cheio">
+              {tx.ler} <span class="seta" aria-hidden="true">→</span>
             </a>
           </p>
         </Fragment>
 
-        <a slot="dados" href={`/projetos/${p.id}/`} data-active class="pj-print group" aria-label={`Abrir o estudo de caso: ${p.data.title}`}>
+        <a slot="dados" href={caminho(idioma, `projeto:${p.id}`)} data-active class="pj-print group" aria-label={tx.abrir(p.data.title)}>
           {p.data.cover && (
             <Image src={p.data.cover} alt="" widths={[640, 1024]} sizes="(min-width: 896px) 34rem, 100vw" format="webp" class="pj-img" />
           )}
           {p.data.coverHover && (
             <Image src={p.data.coverHover} alt="" widths={[640, 1024]} sizes="(min-width: 896px) 34rem, 100vw" format="webp" class="pj-img pj-img-hover" />
           )}
-          {p.data.coverHover && <span class="pj-dica" aria-hidden="true">Passe o mouse: outra página do dashboard</span>}
+          {p.data.coverHover && <span class="pj-dica" aria-hidden="true">{tx.dica}</span>}
         </a>
 
         <dl slot="dados" class="pj-ficha">
           {p.data.context && (
             <>
-              <dt>Contexto</dt>
+              <dt>{tx.contexto}</dt>
               <dd>{p.data.context}</dd>
             </>
           )}
-          <dt>Etapa</dt>
+          <dt>{tx.etapa}</dt>
           <dd>{p.data.kind}</dd>
-          <dt>Ferramentas</dt>
+          <dt>{tx.ferramentas}</dt>
           <dd>{p.data.tools.join(' · ')}</dd>
         </dl>
       </Secao>

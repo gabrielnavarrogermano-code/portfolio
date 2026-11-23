@@ -1,74 +1,62 @@
 ---
 import Secao from './Secao.astro';
 import { site } from '../data/site';
+import { idiomaDe, textos } from '../i18n';
 
-// ( 01 ) Prazer, Gabriel: a história à esquerda e a trajetória (experiência, formação e estudos) no painel.
-// A experiência fica sempre visível, sem depender de toque ou hover.
+// ( 01 ) Prazer, Gabriel: a história em três blocos à esquerda e a trajetória (experiência, formação e estudos)
+// no painel. A experiência fica sempre visível, sem depender de toque ou hover. Textos em src/i18n.ts.
+const tx = textos[idiomaDe(Astro.url)].prazer;
 const tools = ['Microsoft 365 Admin', 'Entra ID', 'SharePoint', 'Kanban'];
-const studying = ['SQL', 'DAX no Power BI', 'Data storytelling'];
 
 // Progresso do curso (o semestre é atualizado em data/site.ts)
 const { semestre: semester, total: totalSemesters } = site.curso;
 ---
 
-<Secao id="apresentacao" num="01" rotulo="Apresentação" rotuloDir="Quem sou" titulo="Prazer, Gabriel">
+<Secao id="apresentacao" num="01" rotulo={tx.rotulo} rotuloDir={tx.rotuloDir} titulo={tx.titulo}>
   <!-- A história em três blocos curtos, cada um com um rótulo: dá para ler por partes, sem um bloco corrido -->
   <div slot="negocio" class="pt-historia">
     <div>
-      <p class="pt-rot">Origem</p>
-      <p class="serif-grande">
-        Cresci entre <b>empreendedores</b>, meu pai e meu avô, vendo de perto o que funcionava e o que podia melhorar em
-        um negócio.
-      </p>
+      <p class="pt-rot">{tx.origem}</p>
+      <p class="serif-grande" set:html={tx.origemTexto} />
     </div>
     <div>
-      <p class="pt-rot">Descoberta</p>
-      <p class="serif-grande">
-        Cursando <b>Engenharia de Software</b>, encontrei na <b>análise de dados</b> um jeito de levar os números para
-        dentro dessas decisões.
-      </p>
+      <p class="pt-rot">{tx.descoberta}</p>
+      <p class="serif-grande" set:html={tx.descobertaTexto} />
     </div>
     <div>
-      <p class="pt-rot">Agora</p>
-      <p class="serif-grande">
-        Hoje sou <b>estagiário de TI</b> numa indústria farmacêutica e sigo estudando para fazer o caminho inteiro, da
-        extração ao dashboard. No estágio, aprendi que um dashboard só funciona
-        se <em>quem não é técnico consegue usar sozinho.</em>
-      </p>
+      <p class="pt-rot">{tx.agora}</p>
+      <p class="serif-grande" set:html={tx.agoraTexto} />
     </div>
   </div>
 
   <article slot="dados" class="pt-item">
     <p class="pt-kind">
       <span class="pt-live relative size-1.5 flex-none rounded-full bg-heading" aria-hidden="true"></span>
-      Experiência <span class="pt-atual">Atual</span>
+      {tx.experiencia} <span class="pt-atual">{tx.atual}</span>
     </p>
-    <h3 class="pt-linha">Estagiário de TI</h3>
-    <p class="pt-texto">
-      Hebe's Life Science · indústria farmacêutica. Atendo chamados e cuido de acessos: vejo de perto como cada área
-      trabalha e do que ela precisa. Foi daí que saiu o controle de notebooks.
-    </p>
-    <ul class="mt-3 flex flex-wrap gap-2" aria-label="Ferramentas">
+    <h3 class="pt-linha">{tx.cargo}</h3>
+    <p class="pt-texto">{tx.empresa}</p>
+    <ul class="mt-3 flex flex-wrap gap-2" aria-label={tx.ferramentas}>
       {tools.map((t) => <li class="rounded-full border border-line px-3 py-1 font-mono text-[11px] text-muted">{t}</li>)}
     </ul>
   </article>
 
   <article slot="dados" class="pt-item">
-    <p class="pt-kind">Formação</p>
-    <h3 class="pt-linha">Engenharia de Software</h3>
+    <p class="pt-kind">{tx.formacao}</p>
+    <h3 class="pt-linha">{tx.curso}</h3>
     <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
-      <div class="flex w-36 gap-1" role="img" aria-label={`${semester}º de ${totalSemesters} semestres`}>
+      <div class="flex w-36 gap-1" role="img" aria-label={tx.semestres(semester, totalSemesters)}>
         {Array.from({ length: totalSemesters }, (_, k) => (
           <span class:list={['h-1.5 flex-1 rounded-full', k < semester ? 'bg-heading' : 'bg-heading/20']} />
         ))}
       </div>
-      <span class="font-mono text-xs text-muted">UniCesumar · {semester}º / {totalSemesters}</span>
+      <span class="font-mono text-xs text-muted">{tx.semestreCurto(semester, totalSemesters)}</span>
     </div>
   </article>
 
   <article slot="dados" class="pt-item">
-    <p class="pt-kind">Estudando agora</p>
-    <h3 class="pt-linha">{studying.join(' · ')}</h3>
+    <p class="pt-kind">{tx.estudando}</p>
+    <h3 class="pt-linha">{tx.estudos.join(' · ')}</h3>
   </article>
 </Secao>
 

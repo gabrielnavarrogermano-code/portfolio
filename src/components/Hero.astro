@@ -4,6 +4,9 @@ import foto from '../assets/gabriel-recorte.png';
 import { site } from '../data/site';
 import { temCurriculo } from '../lib/curriculo';
 import Letras from './Letras.astro';
+import { idiomaDe, textos } from '../i18n';
+
+const tx = textos[idiomaDe(Astro.url)].capa;
 ---
 
 <!-- Antes de pintar: esconde os blocos da capa para eles encherem como uma barra (capa-carregando) e, em telas
@@ -27,7 +30,7 @@ import Letras from './Letras.astro';
     <div class="capa-conteudo">
       <!-- O nome gigante, atrás de você. Entra letra por letra -->
       <h1 data-capa-some class="capa-nome">
-        <span class="sr-only">{site.name}, Análise de Dados & BI</span>
+        <span class="sr-only">{tx.nomeSr}</span>
         <span class="capa-nome-texto" aria-hidden="true">
           <span class="hero-name-line"><Letras texto="Gabriel" atraso={0.35} /></span>
           <span class="hero-name-line"><Letras texto="Navarro" atraso={0.5} /></span>
@@ -53,7 +56,7 @@ import Letras from './Letras.astro';
         <figure class="retrato-moldura">
           <Image
             src={foto}
-            alt="Foto de Gabriel Navarro Germano"
+            alt={tx.foto}
             widths={[480, 928]}
             sizes="(min-width: 768px) 50rem, 20rem"
             format="webp"
@@ -69,16 +72,16 @@ import Letras from './Letras.astro';
       <!-- Os dois lados: negócio e dados -->
       <div class="capa-lados mx-auto w-full max-w-6xl px-6">
         <div data-capa-some class="capa-lado">
-          <p class="capa-palavra capa-neg font-serif text-[2.6rem] leading-none text-heading sm:text-6xl"><Letras texto="negócio" atraso={0.3} /></p>
+          <p class="capa-palavra capa-neg font-serif text-[2.6rem] leading-none text-heading sm:text-6xl"><Letras texto={tx.negocio} atraso={0.3} /></p>
           <p class="capa-desc capa-neg hero-load mt-3 max-w-[17rem] text-sm leading-relaxed text-muted sm:text-base" style="--k: 2">
-            Começo pela decisão que o número precisa ajudar a tomar, não pelo gráfico.
+            {tx.negocioTexto}
           </p>
           <div class="capa-acoes capa-acoes-neg hero-load mt-5 flex items-center gap-2" style="--k: 4">
-            <a href="#contato" class="btn btn-cheio">Entre em contato <span class="seta" aria-hidden="true">→</span></a>
+            <a href="#contato" class="btn btn-cheio">{tx.contato} <span class="seta" aria-hidden="true">→</span></a>
             {
               temCurriculo && (
-                <a href={site.curriculo} download={site.curriculoNome} class="btn btn-linha capa-cv" aria-label="Baixar currículo">
-                  <span aria-hidden="true">↓</span> <span class="capa-cv-texto">Currículo</span>
+                <a href={site.curriculo} download={site.curriculoNome} class="btn btn-linha capa-cv" aria-label={tx.curriculoRotulo}>
+                  <span aria-hidden="true">↓</span> <span class="capa-cv-texto">{tx.curriculo}</span>
                 </a>
               )
             }
@@ -86,9 +89,9 @@ import Letras from './Letras.astro';
         </div>
 
         <div data-capa-some class="capa-lado capa-lado-dados md:text-right">
-          <p class="capa-palavra capa-dad capa-dados font-display leading-none text-heading uppercase"><Letras texto="Dados" atraso={0.45} /></p>
+          <p class="capa-palavra capa-dad capa-dados font-display leading-none text-heading uppercase"><Letras texto={tx.dados} atraso={0.45} /></p>
           <p class="capa-desc capa-dad hero-load mt-3 max-w-[17rem] text-sm leading-relaxed text-muted sm:text-base md:ml-auto" style="--k: 3">
-            Excel, Power BI e ETL para transformar planilhas soltas em dashboards que a equipe usa.
+            {tx.dadosTexto}
           </p>
           <div class="capa-acoes capa-acoes-dad hero-load mt-5 flex items-center gap-2 md:justify-end" style="--k: 5">
             <a href={site.linkedin} target="_blank" rel="noopener" aria-label="LinkedIn" class="capa-redondo">

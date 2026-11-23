@@ -1,10 +1,12 @@
 ---
 import { site } from '../data/site';
+import { idiomaDe, textos } from '../i18n';
 
 // Rodapé: a mesma linha de eixo das seções, onde o fio termina. Os links ficam aqui porque a página do projeto não
 // tem a seção de contato.
+const tx = textos[idiomaDe(Astro.url)].rodape;
 const links = [
-  { label: 'E-mail', href: `mailto:${site.email}` },
+  { label: tx.email, href: `mailto:${site.email}` },
   { label: 'LinkedIn', href: site.linkedin, external: true },
   { label: 'GitHub', href: site.github, external: true },
 ];
@@ -29,7 +31,7 @@ const links = [
         }
       </ul>
       <button type="button" data-to-top class="eixo-forte ml-auto cursor-pointer uppercase transition-colors hover:text-accent">
-        Voltar ao topo ↑
+        {tx.topo}
       </button>
     </div>
     <ul class="mt-5 flex gap-5 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:hidden">

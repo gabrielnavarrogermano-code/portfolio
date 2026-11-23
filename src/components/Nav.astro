@@ -1,23 +1,36 @@
 ---
 import { site } from '../data/site';
+import { idiomaDe, caminho, outroIdioma, textos } from '../i18n';
 
-const links = [
-  { href: '/#apresentacao', label: 'Apresentação' },
-  { href: '/#projetos', label: 'Projetos' },
-  { href: '/#habilidades', label: 'Como eu trabalho' },
-  { href: '/#contato', label: 'Contato' },
-];
+const idioma = idiomaDe(Astro.url);
+const tx = textos[idioma].nav;
+const inicio = caminho(idioma, '');
+const links = tx.links.map((l) => ({ href: caminho(idioma, `#${l.id}`), label: l.label }));
+// O botão de idioma leva para a mesma página no outro idioma
+const outro = outroIdioma(Astro.url);
+const outroLang = idioma === 'pt' ? 'en' : 'pt-BR';
 ---
 
 <header class="fixed inset-x-0 top-0 z-50 px-4 pt-4">
   <nav
     class="relative mx-auto flex max-w-5xl items-center justify-between overflow-hidden rounded-full border border-line bg-bg/90 py-2 pr-2 pl-5 backdrop-blur-md"
   >
-    <a href="/" class="font-display font-semibold tracking-tight text-heading">
+    <a href={inicio} class="font-display font-semibold tracking-tight text-heading">
       gabriel<span class="text-accent">.</span>dados
     </a>
 
     <div class="flex items-center gap-1">
+      <!-- Idioma: PT / EN, ao lado do Menu -->
+      <a
+        href={outro}
+        hreflang={outroLang}
+        lang={outroLang}
+        aria-label={tx.trocarRotulo}
+        title={tx.trocarRotulo}
+        class="inline-flex items-center rounded-full border border-line px-3 py-2 font-mono text-xs tracking-[0.12em] text-heading transition-colors hover:border-navy hover:text-navy"
+      >
+        {tx.trocar}
+      </a>
       <button
         type="button"
         data-menu-open
@@ -29,13 +42,13 @@ const links = [
           <span class="h-px w-full bg-current"></span>
           <span class="h-px w-2/3 bg-current transition-all group-hover:w-full"></span>
         </span>
-        Menu
+        {tx.menu}
       </button>
       <a
-        href="/#contato"
+        href={caminho(idioma, '#contato')}
         class="hidden rounded-full bg-red px-4 py-2.5 text-sm font-medium text-sunset transition-colors hover:bg-navy sm:inline-flex"
       >
-        Contato
+        {tx.contato}
       </a>
     </div>
 
@@ -49,7 +62,7 @@ const links = [
      Fica fora do header para cobrir também a barra. -->
 <div id="site-menu" class="site-menu on-navy fixed inset-0 z-[70] flex flex-col bg-bg" role="dialog" aria-modal="true" aria-label="Menu">
   <div class="mx-auto flex w-full max-w-5xl items-center justify-between px-6 pt-7 sm:pt-8">
-    <a href="/" class="menu-fade font-display font-semibold tracking-tight text-heading">
+    <a href={inicio} class="menu-fade font-display font-semibold tracking-tight text-heading">
       gabriel<span class="text-accent">.</span>dados
     </a>
     <button
@@ -57,7 +70,7 @@ const links = [
       data-menu-close
       class="menu-fade inline-flex cursor-pointer items-center gap-2.5 rounded-full border border-line px-4 py-2.5 font-mono text-xs tracking-[0.15em] text-heading uppercase transition-colors hover:border-heading/40"
     >
-      Fechar
+      {tx.fechar}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-3.5 w-3.5" aria-hidden="true">
         <path d="M6 6l12 12M18 6 6 18" stroke-linecap="round"></path>
       </svg>
@@ -66,7 +79,7 @@ const links = [
 
   <div class="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-6 py-8">
     <p class="menu-fade flex items-center gap-4 font-mono text-xs tracking-[0.15em] text-muted uppercase">
-      Páginas <span class="h-px flex-1 bg-line" aria-hidden="true"></span>
+      {tx.paginas} <span class="h-px flex-1 bg-line" aria-hidden="true"></span>
     </p>
     <ul class="mt-6">
       {
