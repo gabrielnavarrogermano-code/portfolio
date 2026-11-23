@@ -60,7 +60,7 @@ const tx = textos[idiomaDe(Astro.url)].capa;
             src={foto}
             alt={tx.foto}
             widths={[480, 928]}
-            sizes="(min-width: 768px) 50rem, 21rem"
+            sizes="(min-width: 768px) 50rem, 22rem"
             format="webp"
             quality={92}
             loading="eager"
@@ -324,10 +324,10 @@ const tx = textos[idiomaDe(Astro.url)].capa;
   }
 
   /* ---------- Celular: a capa inteira numa tela só ----------
-     A mesma lógica do computador, compacta: a foto de perfil redonda no centro, o nome em duas linhas e, embaixo,
-     "negócio" e "Dados" lado a lado, separados pelo eixo (uma linha fina no meio), com os botões numa linha só.
-     As caixas dos lados viram "invisíveis" (display: contents) para cada peça se encaixar na sua linha; a ordem é
-     dada pelo order. A foto em si não muda: só o enquadramento (um recorte redondo e mais próximo) e a cor. Sem pó. */
+     O mesmo cartaz do computador, em pé: o nome gigante em três linhas, a foto recortada em preto e branco com o arco
+     atrás e, embaixo, "negócio" e "Dados" lado a lado, separados pelo eixo (uma linha fina no meio), com os botões
+     numa linha só. As caixas dos lados viram "invisíveis" (display: contents) para cada peça se encaixar na sua
+     linha; a ordem é dada pelo order. Sem pó. */
   @media (max-width: 47.99rem) {
     .capa-conteudo {
       flex-flow: row wrap;
@@ -336,58 +336,45 @@ const tx = textos[idiomaDe(Astro.url)].capa;
       padding: 5.25rem 1.5rem 2.5rem;
     }
 
+    /* A foto como no computador: o recorte inteiro em preto e branco, saindo da borda de baixo, com o arco atrás
+       e a base se dissolvendo no papel. Fica entre o nome e os dois lados. */
     .retrato {
-      order: 1;
+      order: 3;
       flex: none;
-      width: 10rem;
-      aspect-ratio: 1;
-      /* o espaço que sobra na tela vai para cima da foto: o conjunto fica no meio da tela */
-      margin: clamp(0.5rem, calc((100svh - 40rem) / 2), 5rem) calc((100% - 10rem) / 2) 0;
-      overflow: hidden;
-      border-radius: 9999px;
-      background: color-mix(in srgb, var(--color-navy) 9%, var(--color-sunset));
-      box-shadow: inset 0 0 0 1px rgb(20 25 55 / 0.12);
+      width: min(22rem, 100%);
+      margin: 0.25rem auto 0;
     }
 
-    .retrato-moldura {
-      mask-image: none;
+    .retrato::before {
+      content: '';
+      position: absolute;
+      z-index: -1;
+      inset: 22% 6% 0;
+      border-radius: 999px 999px 0 0;
+      background: linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--color-navy) 14%, var(--color-sunset)),
+        color-mix(in srgb, var(--color-navy) 6%, var(--color-sunset))
+      );
+      box-shadow: inset 0 0 0 1px rgb(20 25 55 / 0.08);
     }
 
-    /* No celular, a foto de perfil fica colorida (só com o grão do site); no computador continua em preto e branco */
-    .retrato-foto {
-      object-fit: cover;
-      object-position: 50% 0;
-      /* Ampliada de verdade (2,1x) em vez de transform: scale, para o filtro de grão rodar no tamanho final e a foto não borrar */
-      inset: auto;
-      left: -55%;
-      top: -9.9%;
-      width: 210%;
-      height: 210%;
-      max-width: none;
-      filter: url(#capa-grao);
+    .retrato .retrato-moldura {
+      mask-image: linear-gradient(to top, transparent, #000 10%);
     }
 
     .retrato-copia {
       display: none;
     }
 
-    /* O nome em duas linhas centralizadas: GABRIEL NAVARRO (~7,5em na Tektur estreita) ocupa a largura e GERMANO
-       desce para a linha de baixo */
+    /* O nome em três linhas, enchendo a largura: NAVARRO (a mais larga) ocupa ~90% da tela (ver .capa-nome-texto) */
     .capa-nome {
-      order: 2;
+      order: 1;
       flex: 0 0 100%;
       display: flex;
       justify-content: center;
-      margin-top: 1.25rem;
+      margin-top: 0.5rem;
       padding: 0;
-    }
-
-    .capa-nome .capa-nome-texto {
-      flex-flow: row wrap;
-      justify-content: center;
-      gap: 0 0.18em;
-      width: auto;
-      font-size: calc(100cqi / 7.8);
     }
 
     .capa-lados,
@@ -414,13 +401,13 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     }
 
     .capa-palavra {
-      order: 3;
+      order: 4;
       align-self: flex-end;
       padding-top: 1.5rem;
     }
 
     .capa-palavra.capa-dad {
-      order: 4;
+      order: 5;
     }
 
     .capa-neg.capa-palavra {
@@ -432,25 +419,25 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     }
 
     .capa-desc {
-      order: 5;
+      order: 6;
       padding-top: 0.6rem;
       font-size: 0.8125rem;
       line-height: 1.5;
     }
 
     .capa-desc.capa-dad {
-      order: 6;
+      order: 7;
     }
 
     /* Os botões numa linha só, centralizados: contato e currículo (só o ícone), LinkedIn e GitHub */
     .capa-acoes {
-      order: 7;
+      order: 8;
       gap: 0.4rem;
       margin: 1.5rem 0 0 auto;
     }
 
     .capa-acoes-dad {
-      order: 8;
+      order: 9;
       margin: 1.5rem auto 0 0.4rem;
     }
 
