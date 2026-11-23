@@ -1,12 +1,10 @@
 // Dados pessoais usados em todo o site. Edite aqui e tudo se atualiza.
 
-// Ano do portfólio: vem do ano da publicação, então vira sozinho a cada janeiro.
-// `anoEmDois` é o formato dos rótulos do site: "20 26".
+// Ano do portfólio (rodapé): vem do ano da publicação, então vira sozinho a cada janeiro.
 const ano = new Date().getFullYear();
 
 export const site = {
   ano,
-  anoEmDois: `${String(ano).slice(0, 2)} ${String(ano).slice(2)}`,
   name: 'Gabriel Navarro Germano',
   description:
     'Portfólio de Gabriel Navarro Germano: análise de dados, business intelligence e engenharia de software.',

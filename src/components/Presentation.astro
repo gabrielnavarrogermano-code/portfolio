@@ -12,13 +12,31 @@ const { semestre: semester, total: totalSemesters } = site.curso;
 ---
 
 <Secao id="apresentacao" num="01" rotulo="Apresentação" rotuloDir="Quem sou" titulo="Prazer, Gabriel">
-  <p slot="negocio" class="serif-grande">
-    Cresci entre <b>empreendedores</b>, meu pai e meu avô, vendo de perto o que funcionava e o que podia melhorar em um
-    negócio. Cursando <b>Engenharia de Software</b>, encontrei na <b>análise de dados</b> um jeito de levar os números
-    para dentro dessas decisões. Hoje sou <b>estagiário de TI</b> numa indústria farmacêutica e sigo estudando para
-    fazer o caminho inteiro, da extração ao dashboard. No estágio, aprendi que um dashboard só funciona
-    se <em>quem não é técnico consegue usar sozinho.</em>
-  </p>
+  <!-- A história em três blocos curtos, cada um com um rótulo: dá para ler por partes, sem um bloco corrido -->
+  <div slot="negocio" class="pt-historia">
+    <div>
+      <p class="pt-rot">Origem</p>
+      <p class="serif-grande">
+        Cresci entre <b>empreendedores</b>, meu pai e meu avô, vendo de perto o que funcionava e o que podia melhorar em
+        um negócio.
+      </p>
+    </div>
+    <div>
+      <p class="pt-rot">Descoberta</p>
+      <p class="serif-grande">
+        Cursando <b>Engenharia de Software</b>, encontrei na <b>análise de dados</b> um jeito de levar os números para
+        dentro dessas decisões.
+      </p>
+    </div>
+    <div>
+      <p class="pt-rot">Agora</p>
+      <p class="serif-grande">
+        Hoje sou <b>estagiário de TI</b> numa indústria farmacêutica e sigo estudando para fazer o caminho inteiro, da
+        extração ao dashboard. No estágio, aprendi que um dashboard só funciona
+        se <em>quem não é técnico consegue usar sozinho.</em>
+      </p>
+    </div>
+  </div>
 
   <article slot="dados" class="pt-item">
     <p class="pt-kind">
@@ -55,6 +73,35 @@ const { semestre: semester, total: totalSemesters } = site.curso;
 </Secao>
 
 <style>
+  /* A história: três blocos, cada um com o rótulo em mono e um traço; a serifa um pouco menor que a de uma frase só */
+  .pt-historia {
+    display: grid;
+    gap: 1.4rem;
+  }
+
+  .pt-historia .serif-grande {
+    font-size: clamp(1.25rem, 1.8vw, 1.55rem);
+  }
+
+  .pt-rot {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.65625rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .pt-rot::before {
+    content: '';
+    width: 1.1rem;
+    height: 1px;
+    background: var(--color-accent);
+  }
+
   .pt-item + .pt-item {
     margin-top: 1.5rem;
     padding-top: 1.4rem;

@@ -4,7 +4,10 @@ import Secao from './Secao.astro';
 // ( 0N ) Como eu trabalho: 4 princípios de negócio.
 // À esquerda, a lista dos princípios (abas): o ativo abre e mostra o título e a frase. No painel, a demonstração
 // animada do raciocínio dele, feita com exemplos de negócio (marcados como exemplo).
-// - Na primeira vez que a seção aparece, passa sozinho por 01 → 04 e volta ao 01 (para quando a pessoa interage).
+// - Em telas estreitas (celular), o card de cada princípio vai para dentro dele: tocou, abre o texto e o card juntos,
+//   logo embaixo (o script move os cards; em telas largas eles voltam para o painel da direita).
+// - Na primeira vez que a seção aparece, passa sozinho por 01 → 04 e volta ao 01 (para quando a pessoa interage);
+//   no celular, não, para a página não mudar de altura sozinha enquanto a pessoa lê.
 // - Sem JS, todos os princípios ficam abertos e as demonstrações, uma embaixo da outra.
 // - Com movimento reduzido, as demonstrações já aparecem no estado final.
 interface Props {
@@ -292,6 +295,45 @@ const quadrants = [
     color: var(--color-muted);
   }
 
+  /* ---------- Celular: o card dentro do princípio ----------
+     O painel da direita some (os cards foram para dentro dos princípios) e cada card ganha o mesmo visual do painel:
+     papel com borda azul e a faixa Neon Navy no topo com o rótulo. */
+  [data-principles].is-celular :global(.painel) {
+    display: none;
+  }
+
+  .pp-corpo .pp-panel {
+    --color-heading: var(--color-navy);
+    --color-line: rgb(20 25 55 / 0.14);
+    position: relative;
+    margin: 0.25rem 0 1.4rem;
+    padding: 3.3rem 1.1rem 1.3rem;
+    border-radius: 1rem;
+    background: linear-gradient(var(--color-navy) 0 2.3rem, var(--color-sunset) 2.3rem);
+    box-shadow: inset 0 0 0 1px rgb(20 25 55 / 0.35);
+  }
+
+  .pp-corpo .pp-panel::before {
+    content: 'dados · exemplo';
+    position: absolute;
+    top: 0.8rem;
+    left: 1.1rem;
+    font-family: var(--font-mono);
+    font-size: 0.65625rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--color-sunset);
+  }
+
+  [data-principles].is-celular .pp-corpo > div {
+    padding-left: 0;
+  }
+
+  [data-principles].is-celular .pp-titulo,
+  [data-principles].is-celular .pp-texto {
+    padding-left: 2.3rem;
+  }
+
   /* ---------- Painéis das demonstrações ---------- */
   .pp-panels {
     display: grid;
@@ -474,9 +516,23 @@ const quadrants = [
     const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-tab]')];
     const items = tabs.map((t) => t.closest('li')!);
     const panels = [...root.querySelectorAll<HTMLElement>('[data-panel]')];
+    const panelsHome = root.querySelector<HTMLElement>('.pp-panels');
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const estreita = matchMedia('(max-width: 55.99rem)');
     const controller = new AbortController();
     const { signal } = controller;
+
+    // Celular: cada card vai para dentro do princípio dele; tela larga: todos voltam para o painel da direita
+    const posicionar = () => {
+      const celular = estreita.matches;
+      root.classList.toggle('is-celular', celular);
+      panels.forEach((p, i) => {
+        const destino = celular ? items[i].querySelector<HTMLElement>('.pp-corpo > div') : panelsHome;
+        if (destino && p.parentElement !== destino) destino.append(p);
+      });
+    };
+    posicionar();
+    estreita.addEventListener('change', posicionar, { signal });
 
     // Reinicia a demonstração (tirar e pôr a classe faz as animações rodarem de novo)
     const play = (el: HTMLElement) => {
@@ -487,6 +543,7 @@ const quadrants = [
     };
 
     let active = -1;
+    let started = false;
     const setActive = (i: number, focus = false) => {
       if (i === active) return;
       active = i;
@@ -498,16 +555,21 @@ const quadrants = [
       panels.forEach((p, k) => p.classList.toggle('is-active', k === i));
       if (focus) tabs[i].focus();
       play(panels[i]);
+      // Celular: o anterior fecha e o tocado pode subir para baixo do menu; depois da animação, traz ele de volta
+      if (estreita.matches && started) {
+        window.setTimeout(() => {
+          if (tabs[i].getBoundingClientRect().top < 90) tabs[i].scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+        }, 600);
+      }
     };
     setActive(0);
 
     // ----- Passagem automática (só na primeira vez que a seção aparece) -----
     // Passa sozinha por 01 → 02 → 03 → 04 e volta ao 01, onde para.
     // Para de vez quando a pessoa mexe o mouse sobre a seção, toca, clica ou usa o teclado; pausa fora da tela.
-    let auto = !reduced;
+    let auto = !reduced && !estreita.matches;
     let autoTimer = 0;
     let visible = false;
-    let started = false;
 
     const stopAuto = () => {
       auto = false;

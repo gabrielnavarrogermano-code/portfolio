@@ -4,7 +4,7 @@ import { Image } from 'astro:assets';
 import Secao from './Secao.astro';
 
 // ( 02 ) Projetos: uma seção por projeto, no molde de todas.
-// À esquerda, o resumo e o antes → depois (a linha do "depois" se desenha em vermelho); no painel, o print do
+// À esquerda, o resumo e o antes → depois (no celular, o print vem primeiro, logo depois do título) (a linha do "depois" se desenha em vermelho); no painel, o print do
 // dashboard (no hover, troca para a outra página dele) e a ficha: contexto, etapa e ferramentas.
 // Os números do projeto ficam no estudo de caso, para não repetir aqui.
 const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order - b.data.order);
@@ -19,6 +19,7 @@ const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order -
         rotuloDir={projetos.length > 1 ? `Na prática · ${i + 1} de ${projetos.length}` : 'Na prática'}
         titulo={p.data.title}
         tituloLongo={p.data.title.length > 24}
+        dadosPrimeiro
       >
         <Fragment slot="negocio">
           <p class="serif-grande">{p.data.summary}</p>

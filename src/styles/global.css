@@ -337,7 +337,7 @@ html.capa-carregando #inicio .letra {
    ====================================================================== */
 .secao {
   position: relative;
-  padding-block: 7rem 4rem;
+  padding-block: 4.75rem 2.75rem;
 }
 
 @media (min-width: 56rem) {
@@ -433,8 +433,15 @@ html.capa-carregando #inicio .letra {
 /* Os dois lados */
 .lados {
   display: grid;
-  gap: 2.25rem;
-  margin-top: 2.5rem;
+  gap: 1.75rem;
+  margin-top: 2rem;
+}
+
+/* Lados empilhados (celular): o painel pode vir antes do texto */
+@media (max-width: 55.99rem) {
+  .lados.dados-primeiro .painel {
+    order: -1;
+  }
 }
 
 @media (min-width: 56rem) {

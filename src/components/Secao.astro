@@ -6,6 +6,7 @@ import Letras from './Letras.astro';
 // - slot "negocio": o lado humano, no papel;
 // - slot "dados": a evidência, no painel: papel com borda azul, a faixa Neon Navy no topo e os títulos em azul.
 // Os dois segmentos do fio (lib/fio.ts) ficam aqui: um chega na linha de eixo, o outro passa entre os lados.
+// dadosPrimeiro: no celular (lados empilhados), o painel vem antes do texto (ex.: o print do projeto).
 interface Props {
   id?: string;
   num: string;
@@ -14,9 +15,10 @@ interface Props {
   titulo: string;
   tituloLongo?: boolean;
   rotuloDados?: string;
+  dadosPrimeiro?: boolean;
 }
 
-const { id, num, rotulo, rotuloDir, titulo, tituloLongo = false, rotuloDados = 'dados' } = Astro.props;
+const { id, num, rotulo, rotuloDir, titulo, tituloLongo = false, rotuloDados = 'dados', dadosPrimeiro = false } = Astro.props;
 ---
 
 <section id={id} class="secao" data-secao>
@@ -30,7 +32,7 @@ const { id, num, rotulo, rotuloDir, titulo, tituloLongo = false, rotuloDados = '
       <span class="eixo-forte">{rotuloDir}</span>
     </div>
     <h2 class:list={['secao-titulo', tituloLongo && 'is-longo']}><Letras texto={titulo} /></h2>
-    <div class="lados" data-lados>
+    <div class:list={['lados', dadosPrimeiro && 'dados-primeiro']} data-lados>
       <div class="negocio">
         <p class="rotulo-lado">negócio</p>
         <slot name="negocio" />
