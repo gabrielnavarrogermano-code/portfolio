@@ -1,8 +1,8 @@
 ---
-title: Controle de Notebooks dos Colaboradores
-summary: Uma visão única dos notebooks da empresa, com um dashboard que mostra o que já está seguro e o que ainda falta.
-before: Cada colaborador consultado um a um no 365 Admin, sem registro de antivírus e LAPS.
-after: Uma fonte central de consulta, com KPIs do que já foi feito e do que ainda falta.
+title: Licenças, segurança e custos do Microsoft 365
+summary: Um painel que mostra, num lugar só, quem usa qual licença, quais equipamentos ainda não estão seguros e quanto a empresa gasta com isso.
+before: Cada colaborador consultado um a um no 365 Admin, sem registro de antivírus, de LAPS ou do custo das licenças.
+after: Uma fonte central em três abas, licenças, segurança e custos, com o que já está certo e o que ainda falta.
 kind: Extração e Tratamento
 tools: [Microsoft 365, Excel, Power BI]
 order: 1
@@ -14,63 +14,91 @@ context: Estágio de TI · Hebe's Life Science
 
 ## O problema
 
-A equipe de TI não tinha uma visão única dos notebooks. Para saber com quem estava cada máquina, qual licença Microsoft a pessoa usava e se o equipamento estava seguro, era preciso consultar o 365 Admin colaborador por colaborador. Antivírus e LAPS não eram registrados em lugar nenhum.
+A equipe de TI não tinha uma visão única das contas Microsoft 365 e dos equipamentos. Para saber qual licença cada pessoa usava, em qual computador e se esse computador estava seguro, era preciso consultar o 365 Admin colaborador por colaborador. Antivírus e LAPS não eram registrados em lugar nenhum, e ninguém sabia quanto as licenças custavam para cada setor.
 
 ## O que eu entreguei
 
-- **Base em Excel**, com uma linha por colaborador, extraída do Microsoft 365. As colunas de antivírus e LAPS foram incluídas por decisão da equipe e preenchidas manualmente.
-- **Dashboard no Power BI** com três páginas (Licenças, Dispositivos e Segurança), filtros que valem para todas, meta de 100% para LAPS e antivírus e o custo do Kaspersky projetado pelas licenças de 3 anos, para prever a renovação.
+- **Base em Excel**, com uma linha por conta ou equipamento, extraída do Microsoft 365. Antivírus, LAPS e o motivo de quem não tem equipamento da empresa foram incluídos por decisão da equipe e são preenchidos à mão, com listas suspensas que não aceitam valores fora do padrão.
+- **Painel no Power BI** com três abas, cada uma respondendo a uma pergunta:
+  - **Licenças:** quantas contas usam cada licença, em cada setor, e quais licenças podem ser revistas.
+  - **Segurança:** quais equipamentos estão sem LAPS, sem antivírus ou com uma versão do Windows que precisa mudar, setor por setor.
+  - **Custos:** quanto as licenças custam por ano, por mês, por conta e por setor.
+- **Filtros por aba**, só os que fazem sentido em cada uma, com dicas ao passar o mouse e um layout próprio para o celular.
 
 ## Por dentro
 
-Para quem avalia a parte técnica: como a base está organizada e como os indicadores são calculados.
+Para quem avalia a parte técnica: como a base está organizada, como os dados são tratados e como os indicadores são calculados.
 
 ### A base
 
-Uma tabela, com uma linha por conta ativa:
+Uma tabela, com uma linha por registro: uma pessoa, uma conta administradora, um dispositivo compartilhado ou uma máquina sem usuário.
 
-- **Nome de usuário**, **e-mail** e **setor**
-- **Licença** Microsoft (Standard ou Basic)
+- **Nome**, **e-mail**, **setor** e **função**
+- **Licenças** Microsoft 365 e Adobe
 - **Nome do PC** e **selo de patrimônio**
-- **Antivírus** (Kaspersky): ativo ou inativo
-- **LAPS**: aplicado ou pendente
-- **Versão do Windows** (Pro ou Home)
+- **Antivírus** (Kaspersky) e **LAPS**
+- **Versão do Windows**
+- **Motivo** de quem não tem equipamento da empresa
 
-### Regras de negócio
+### O tratamento, no Power Query
 
-1. Um notebook compartilhado conta uma vez só.
-2. Windows Home conta como pendência de segurança.
-3. Notebook sem antivírus é pendência crítica.
-4. Toda conta sem notebook tem um motivo registrado.
+Antes de virar indicador, cada linha é limpa e classificada:
+
+1. **Tipo de conta:** pela função e pelo nome, a linha vira usuário, conta administradora, dispositivo compartilhado ou máquina sem usuário.
+2. **Licença:** a mesma conta pode ter várias licenças. A classificação segue uma ordem de prioridade (sem licença, Basic, Standard), e as licenças gratuitas ficam de fora, porque não mudam nenhuma decisão.
+3. **Equipamento:** sem nome de PC, o motivo informado diz se a pessoa usa um computador particular, se não tem computador ou se o motivo não foi informado.
+4. **Pendências de segurança:** sem LAPS, sem antivírus ou Windows 11 HOME, que precisa virar PRO para usar o LAPS.
+
+### Regras de contagem
+
+1. Uma conta conta uma vez só, pelo e-mail: o mesmo e-mail em duas linhas é uma conta.
+2. Um equipamento conta uma vez só, pelo nome do PC: um computador usado por duas pessoas é um equipamento.
+3. Não ter equipamento é informação, não pendência: não soma nos indicadores de problema.
+4. A cobertura de LAPS é calculada sobre todos os equipamentos, inclusive os Windows HOME, de propósito: eles também precisam do LAPS.
 
 ### Medidas
 
-A regra 1 está na própria medida: os indicadores contam **nomes de PC distintos**, e não linhas. Contas sem notebook ficam de fora.
+As regras 1 e 2 estão nas próprias medidas, que contam valores distintos, e não linhas. Simplificadas para leitura:
 
 ```
-Notebooks = DISTINCTCOUNTNOBLANK ( Base[Nome PC] )
+Contas Ativas =
+CALCULATE (
+    DISTINCTCOUNT ( usuarios_office365[E-MAIL] ),
+    usuarios_office365[Conta Ativa] = "Sim"
+)
+
+Computadores = DISTINCTCOUNTNOBLANK ( usuarios_office365[NOME PC] )
 
 % LAPS =
 DIVIDE (
-    CALCULATE ( [Notebooks], Base[LAPS] = "Aplicado" ),
-    [Notebooks]
+    CALCULATE ( [Computadores], usuarios_office365[Status LAPS] = "Com LAPS" ),
+    [Computadores]
 )
 
-Status LAPS =
-SWITCH (
-    TRUE (),
-    [% LAPS] >= 1,    "Meta batida",
-    [% LAPS] >= 0.85, "Atenção",
-    "Crítico"
-)
+Custo Licenças (ano) =
+    [Contas Standard] * [Preço M365 Standard]
+        + [Contas Basic] * [Preço M365 Basic]
+        + [Contas Adobe] * [Preço Adobe Acrobat Pro]
+        + [Computadores com Antivírus] * [Valor Custo Antivírus] / [Anos Licença Antivírus]
 ```
 
-O antivírus segue a mesma estrutura. O status transforma o percentual em uma decisão: abaixo de 85%, o indicador é crítico.
+O antivírus é pago a cada três anos, por isso entra no custo anual dividido por 3. O preço dele é um parâmetro: na aba Custos, um filtro simula outros valores e todo o custo é recalculado.
+
+### Licenças que podem ser revistas
+
+Uma conta Standard de quem não tem equipamento da empresa poderia, em princípio, ser Basic, que custa bem menos por conta. O painel mostra essas contas e o motivo de cada uma (computador particular, sem computador ou sem motivo informado), mas diz que elas **podem ser revistas**, e não que devem virar Basic: quem trabalha num computador particular pode precisar dos aplicativos do Standard. A decisão fica com quem conhece a rotina de cada pessoa.
+
+### Decisões de design
+
+- **Nenhum número se repete entre as abas.** Antes de criar um visual, eu confiro se a métrica já aparece em outra aba.
+- **A aba Licenças mostra só quantidades, e a aba Custos, só valores em reais.**
+- **Cada aba tem só os filtros que fazem sentido nela,** com nomes simples, sem termos técnicos como "N/A" ou "Unlicensed".
+- **Cada licença tem uma cor fixa,** a mesma em todas as abas.
 
 ### Qualidade dos dados
 
-O dashboard também aponta o que pode estar errado na própria base: PCs com dados divergentes entre linhas, selo de patrimônio repetido em PCs diferentes, e-mails fora do domínio e contas sem setor. A padronização dos nomes de setor foi feita com apoio de IA e revisada por mim.
+Além das listas suspensas na planilha, o modelo aponta o que pode estar errado na própria base: PCs com dados diferentes entre as linhas, o mesmo selo de patrimônio em PCs diferentes, e-mails fora do domínio da empresa e contas sem setor. A padronização dos nomes de setor foi feita com apoio de IA e revisada por mim.
 
 ## Resultado
 
-A base e o dashboard se tornaram a fonte central de consulta da equipe de TI. Localizar um colaborador passou a ser um filtro, e os indicadores mostram, com meta e status, o que já está em conformidade e o que ainda falta.
+A planilha e o painel se tornaram a fonte central da equipe de TI para licenças, segurança e custos do Microsoft 365. Localizar um colaborador passou a ser um filtro, saber quanto um setor custa passou a ser um gráfico, e o que falta para a segurança chegar a 100% fica à vista, setor por setor.

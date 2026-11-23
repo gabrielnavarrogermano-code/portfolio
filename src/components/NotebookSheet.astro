@@ -1,529 +1,1160 @@
 ---
-// Simulação da planilha de controle de notebooks (dados fictícios).
-// Ordem das colunas igual à planilha real. O dashboard vem primeiro; a base aparece embaixo, como fonte de dados,
-// com só as últimas linhas. O dashboard calcula sobre as 100 linhas.
-import { initial, incoming, records, compute, sectorGroups, OTHERS, donutDash, PEND_TOP, PEND_CAD, MOTIVOS, AV_PRICE, AV_YEARS, NB_PRICE, LIC_PRICE, LIC_PARTS, DEV_PARTS, FILTERS, type Example } from '../lib/notebooks';
-import Kpis from './NotebookKpis.astro';
-import StackedBars from './NotebookStackedBars.astro';
+// Simulação do painel "Usuários Office 365 e Equipamentos" no Power BI (dados fictícios), com as três abas do painel
+// real (Licenças, Segurança e Custos), a barra lateral de filtros e, embaixo, a planilha que alimenta o painel.
+// A cada colaborador novo que chega do Microsoft 365, a linha entra na planilha e o painel é recalculado.
+// Sem JS, o painel aparece calculado e as abas funcionam (radio + CSS); os filtros precisam do script.
+import {
+  exemplos,
+  chegando,
+  registros,
+  calcular,
+  listaPendencias,
+  pendencias,
+  rosca,
+  ordemSetores,
+  MOTIVOS,
+  FILTRO_LIC,
+  FILTRO_TIPO,
+  FILTRO_FALTA,
+  WINDOWS,
+  AV_SIMULACAO,
+  AV_PRECO,
+  PRECO,
+  SEL_VAZIA,
+  brl,
+  brl2,
+  type Rec,
+} from '../lib/notebooks';
 
-const cols = ['Nome de usuário', 'E-mail cadastrado', 'Setor', 'Licenças', 'Nome PC', 'Antivírus', 'LAPS', 'Selo de patrimônio', 'Versão Windows'];
+// Estado inicial: a planilha antes dos colaboradores novos, sem filtros
+const inicial = registros.filter((x) => x.n < 0);
+const { t, w } = calcular(inicial, SEL_VAZIA);
+const pend = listaPendencias(inicial, SEL_VAZIA);
 
-// No celular só cabem as colunas principais: e-mail, licença, patrimônio e Windows ficam no computador
-const desktopOnly = new Set([1, 3, 7, 8]);
-
-const email = (nome: string) =>
-  nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(' ', '.') + '@empresa.com.br';
-
-// Texto e tom de cada célula: ok (verde), warn (amarelo, precisa de atenção) ou muted (não se aplica)
-type Tone = 'ok' | 'warn' | 'muted' | undefined;
-const cell = (e: Example, ci: number): [string, Tone] => {
-  const noPc = !e.pc;
-  switch (ci) {
-    case 0: return [e.nome, undefined];
-    case 1: return [email(e.nome), undefined];
-    case 2: return [e.setor, undefined];
-    case 3: return [e.lic, undefined];
-    case 4: return noPc ? ['Sem notebook', 'warn'] : [e.pc, undefined];
-    case 5: return noPc ? ['—', 'muted'] : [e.av!, e.av === 'Ativo' ? 'ok' : 'warn'];
-    case 6: return noPc ? ['—', 'muted'] : [e.laps!, e.laps === 'Aplicado' ? 'ok' : 'warn'];
-    case 7: return noPc ? ['—', 'muted'] : e.pat ? [e.pat, undefined] : ['Sem selo', 'warn'];
-    default: return noPc ? ['—', 'muted'] : [e.win!, undefined];
-  }
-};
-
-// A base aparece como fonte de dados, embaixo do dashboard: só as últimas linhas, onde entram os novos
-const shownInitial = initial.slice(-4);
-const rows = [...shownInitial.map((e) => ({ e, isNew: false })), ...incoming.map((e) => ({ e, isNew: true }))];
-// Número de cada linha na base completa (as amostras são as últimas antes dos novos colaboradores)
-const firstRow = records.filter((r) => r.n < 0).length - shownInitial.length + 1;
-
-// Estado inicial já vem calculado (funciona sem JS): planilha antes dos 3 novos colaboradores
-const { t, w } = compute(records.filter((r) => r.n < 0));
-
-// Páginas do relatório no Power BI, cada uma com os seus KPIs
-const PAGES = [
+const ABAS = [
   ['lic', 'Licenças'],
-  ['dev', 'Dispositivos'],
   ['seg', 'Segurança'],
+  ['cus', 'Custos'],
 ] as const;
 
-type Kpi = { label: string; key: string; sub?: string; subKey?: string; st?: string; gauge?: string };
-const kpis: Record<(typeof PAGES)[number][0], Kpi[]> = {
+type Kpi = { rotulo: string; sub?: string; subKey?: string; key: string; st?: boolean };
+const kpis: Record<'lic' | 'seg' | 'cus', Kpi[]> = {
   lic: [
-    { label: 'Licenças em uso', key: 'contas', sub: 'contas ativas no Microsoft 365' },
-    { label: 'Gasto com Microsoft 365', key: 'm365', subKey: 'm365:sub' },
-    { label: 'Pendências de cadastro', key: 'pc:total', sub: 'itens para corrigir na planilha', st: 'pc:total:st' },
-  ],
-  dev: [
-    { label: 'Notebooks em uso', key: 'equip', sub: 'notebooks corporativos' },
-    { label: 'Contas sem notebook corp.', key: 'semPc', subKey: 'semPc:sub' },
-    { label: 'Gasto com dispositivos', key: 'dev', subKey: 'dev:sub' },
+    { rotulo: 'Contas ativas', subKey: 'lic:contas:sub', key: 'lic:contas' },
+    { rotulo: 'M365 Empresas (Standard)', key: 'lic:std' },
+    { rotulo: 'M365 Empresas Basic', key: 'lic:basic' },
+    { rotulo: 'Adobe Acrobat Pro', key: 'lic:adobe' },
+    { rotulo: 'Antivírus (Kaspersky)', key: 'lic:av' },
   ],
   seg: [
-    { label: '% LAPS · meta 100%', key: 'laps', subKey: 'laps:sub', st: 'laps:st', gauge: 'laps' },
-    { label: '% Antivírus · meta 100%', key: 'av', subKey: 'av:sub', st: 'av:st', gauge: 'av' },
-    { label: 'Notebooks com pendência', key: 'seg', subKey: 'seg:sub', st: 'seg:st' },
+    { rotulo: 'Equipamentos sem LAPS', subKey: 'seg:laps:sub', key: 'seg:laps', st: true },
+    { rotulo: 'Equipamentos sem antivírus', subKey: 'seg:av:sub', key: 'seg:av', st: true },
+    { rotulo: 'Windows 11 HOME', sub: 'precisam virar PRO para usar o LAPS', key: 'seg:home', st: true },
+    { rotulo: 'Windows 10', sub: 'fora do suporte da Microsoft desde 14/10/2025', key: 'seg:w10', st: true },
+    { rotulo: 'Windows PRO sem LAPS', sub: 'Windows PRO: dá para instalar o LAPS já', key: 'seg:prolaps', st: true },
+    { rotulo: 'Contas em computador particular', sub: 'usam computador próprio · sem antivírus nem LAPS da empresa', key: 'seg:part', st: true },
+  ],
+  cus: [
+    { rotulo: 'Custo anual total de licenças', sub: 'M365 + Adobe + antivírus (÷ 3 anos)', key: 'cus:total' },
+    { rotulo: 'Custo por mês', sub: 'custo anual ÷ 12', key: 'cus:mes' },
+    { rotulo: 'Custo por conta ativa', sub: 'custo anual de licenças ÷ contas ativas', key: 'cus:conta' },
+    { rotulo: 'Antivírus (contrato de 3 anos)', subKey: 'cus:avc:sub', key: 'cus:avc' },
   ],
 };
 
-const licencas = [
-  ['Standard', 'Microsoft 365 Empresas Standard'],
-  ['Basic', 'Microsoft 365 Empresas Basic'],
-];
-
-const brl = (v: number) => `R$ ${v.toLocaleString('pt-BR')}`;
-
-// Cor de cada parte das barras empilhadas de gasto (mesma ordem de LIC_PARTS e DEV_PARTS): azul e magenta,
-// par validado para daltonismo no fundo escuro
-const PART_COLORS = ['bg-viz-1', 'bg-viz-2'];
-
-// Tipos de pendência de segurança, pela gravidade: sem antivírus é crítico, sem LAPS é sério, Windows Home é atenção
-const SEG_PARTS = [
-  ['laps', 'Sem LAPS'],
-  ['av', 'Sem antivírus'],
-  ['home', 'Windows Home'],
+// Partes das barras empilhadas (chave, texto e a cor fixa de cada licença, igual em todas as abas)
+const PARTES_LIC = [
+  ['std', 'Contas Standard', 'nb-ouro'],
+  ['basic', 'Contas Basic', 'nb-prata'],
+  ['adobe', 'Contas Adobe', 'nb-roxo'],
 ] as const;
-const SEG_COLORS = ['bg-serious', 'bg-crit', 'bg-warn'];
+const PARTES_CUS = [
+  ['m365', 'Custo M365 (ano)', 'nb-ouro'],
+  ['adobe', 'Custo Adobe (ano)', 'nb-roxo'],
+  ['av', 'Custo antivírus (ano)', 'nb-ciano'],
+] as const;
+const FATIAS = [
+  ['std', 'M365 Standard', 'nb-ouro'],
+  ['adobe', 'Adobe', 'nb-roxo'],
+  ['av', 'Antivírus', 'nb-ciano'],
+  ['basic', 'M365 Basic', 'nb-prata'],
+] as const;
+const arcos = rosca(FATIAS.map(([k]) => w[`cus:don:${k}`]));
 
-// Linhas dos gráficos por setor: [chave, texto]. "Outros" mostra quantos setores soma
-// No celular, os gráficos por setor mostram só os maiores e um "Ver todos"
-const MOBILE_SECTORS = 5;
+const precos = `Standard ${brl2(PRECO.Standard)} · Basic ${brl2(PRECO.Basic)} · Adobe ${brl2(PRECO.Adobe)} por conta por ano · antivírus ${brl2(AV_PRECO)} por equipamento a cada 3 anos`;
 
-const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTHERS ? `${list.length} setores menores` : s]);
+// A planilha: as últimas linhas, onde entram os colaboradores novos
+const COLS = ['Nome dos usuários', 'E-mail', 'Centro de custo', 'Função', 'Licenças', 'Nome PC', 'Com antivírus', 'Com LAPS', 'Motivo sem equipamento', 'Selo de patrimônio', 'Versão Windows'];
+// No celular só cabem as colunas principais
+const SO_TELA_LARGA = new Set([1, 3, 4, 8, 9, 10]);
+const celula = (x: Rec, c: number): [string, string?] => {
+  const sem = !x.pc;
+  switch (c) {
+    case 0: return [x.nome];
+    case 1: return [x.email];
+    case 2: return [x.setor];
+    case 3: return [x.funcao || '—', x.funcao ? undefined : 'nb-apagado'];
+    case 4: return [`Microsoft 365 Empresas${x.lic === 'Basic' ? ' Basic' : ''}${x.adobe ? '; Adobe Acrobat Pro' : ''}`];
+    case 5: return sem ? ['—', 'nb-apagado'] : [x.pc];
+    case 6: return sem ? ['—', 'nb-apagado'] : x.av ? ['SIM', 'nb-ok'] : ['NÃO', 'nb-ruim'];
+    case 7: return sem ? ['—', 'nb-apagado'] : x.laps ? ['SIM', 'nb-ok'] : ['NÃO', 'nb-ruim'];
+    case 8: return sem ? [MOTIVOS.find(([k]) => k === x.motivo)![1]] : ['—', 'nb-apagado'];
+    case 9: return sem ? ['—', 'nb-apagado'] : [x.selo];
+    default: return sem ? ['—', 'nb-apagado'] : [x.win!];
+  }
+};
+const linhas = [...exemplos.map((x) => ({ x, nova: false })), ...chegando.map((x) => ({ x, nova: true }))];
+const primeiraLinha = inicial.length - exemplos.length + 2; // + 1 do cabeçalho da planilha
 ---
 
-<div data-sheet class="relative overflow-hidden rounded-2xl border border-line bg-white/[0.03]">
-  <!-- Dashboard no Power BI: conectado à planilha, recalculado sobre as 100 linhas a cada colaborador novo -->
-  <div class="flex items-center gap-1.5 border-b border-line px-4 py-3">
-    <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
-    <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
-    <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
-    <span class="ml-2 truncate font-mono text-xs text-muted">controle-notebooks.pbix</span>
-    <span class="ml-auto flex-none pl-2 text-xs text-muted">Power BI</span>
+<div data-sheet class="nb">
+  <div class="nb-janela">
+    <span></span><span></span><span></span>
+    <span class="nb-arquivo">usuarios-office365.pbix</span>
+    <span class="ml-auto">Power BI</span>
   </div>
-  <div class="sheet-pages relative flex flex-col p-3 sm:block sm:p-5">
-    <!-- Cabeçalho: título, situação dos filtros e o botão que abre o painel de filtros -->
-    <div class="flex items-start justify-between gap-3 max-sm:order-[-2]">
-      <div class="min-w-0">
-        <p class="font-semibold text-heading">Relatório · Usuários Microsoft 365 e equipamentos</p>
-        <p data-updated aria-live="polite" class="text-[11px] text-muted">Atualiza sempre que a planilha de usuários é alterada</p>
+
+  <div class="nb-relatorio">
+    <!-- As abas do relatório: radios no início, para o CSS mostrar só a página escolhida -->
+    {ABAS.map(([k], i) => <input type="radio" name="nb-aba" id={`nb-pg-${k}`} value={k} checked={i === 0} class="nb-aba-input sr-only" />)}
+
+    <!-- Barra lateral de filtros, como no painel real. No celular, abre pelo botão Filtros -->
+    <aside id="nb-filtros" data-painel class="nb-lateral">
+      <div class="flex items-center justify-between">
+        <p class="nb-lateral-titulo">Filtros</p>
+        <button type="button" data-fechar class="nb-fechar" aria-label="Fechar filtros">×</button>
       </div>
-      <button
-        type="button"
-        data-filter-open
-        aria-expanded="false"
-        aria-controls="sheet-filters"
-        class="sheet-filter-btn flex flex-none cursor-pointer items-center gap-1.5 rounded border border-line px-2.5 py-1.5 text-xs text-fg/85 hover:text-heading"
-      >
-        <svg viewBox="0 0 24 24" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
-        Filtros
-        <span data-filter-count hidden class="rounded-full bg-accent px-1.5 text-[10px] leading-4 font-semibold text-bg"></span>
-      </button>
-    </div>
 
-    <!-- Filtros em uso: uma etiqueta por filtro, o ✕ tira só aquele -->
-    <div data-filter-row class="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] max-sm:order-[-2] max-sm:hidden">
-      <span data-filter-status aria-live="polite" class="text-muted/70">Sem filtros: todas as contas da base.</span>
-      <span data-filter-chips class="contents"></span>
-      <button type="button" data-filter-clear hidden class="cursor-pointer text-muted underline underline-offset-2 hover:text-fg">Limpar filtros</button>
-    </div>
+      <label class="nb-filtro">
+        <span class="nb-filtro-nome">Setor</span>
+        <select data-f="setor" class="nb-select">
+          <option value="">Todos</option>
+          {ordemSetores.map((s) => <option value={s}>{s.replace('⚠ ', '')}</option>)}
+        </select>
+      </label>
 
-    <!-- Painel de filtros na lateral, como no Power BI. Cada filtro recalcula o dashboard só com as linhas que passam em todos -->
-    <div id="sheet-filters" data-filter-panel hidden class="absolute inset-y-0 right-0 z-20 w-full border-l border-line bg-bg sm:w-72">
-      <div class="p-4">
-        <div class="flex items-center justify-between">
-          <p class="text-sm font-semibold text-heading">Filtros</p>
-          <button type="button" data-filter-close class="cursor-pointer rounded px-1.5 text-lg leading-none text-muted hover:text-heading" aria-label="Fechar filtros">×</button>
-        </div>
-        <p class="mt-0.5 text-[11px] text-muted">Valem para as {PAGES.length} páginas do relatório</p>
-        <div class="mt-4 space-y-3">
-          {
-            FILTERS.map((f) => (
-              <label class="block">
-                <span class="block text-[11px] text-muted">{f.label}</span>
-                <span class="relative mt-1 block">
-                  <select data-filter={f.key} class="sheet-filter w-full cursor-pointer appearance-none truncate rounded border border-line bg-transparent py-1.5 pr-6 pl-2 text-xs text-fg/85">
-                    <option value="">Todos</option>
-                    {f.options.map(([v, label]) => <option value={v}>{label}</option>)}
-                  </select>
-                  <span class="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-xs text-muted" aria-hidden="true">▾</span>
-                </span>
-              </label>
-            ))
-          }
-        </div>
-        <!-- Celular: o painel cobre o dashboard inteiro, então fecha por aqui também -->
-        <button type="button" data-filter-close class="mt-5 w-full cursor-pointer rounded bg-accent py-2 text-xs font-semibold text-bg sm:hidden">Ver resultado</button>
+      <!-- Filtros de cada aba: só os que fazem sentido nela -->
+      <fieldset class="nb-filtro" data-para="lic">
+        <legend class="nb-filtro-nome">Licença</legend>
+        {FILTRO_LIC.map(([v, rotulo]) => <label class="nb-check"><input type="checkbox" data-f="lic" value={v} />{rotulo}</label>)}
+      </fieldset>
+      <fieldset class="nb-filtro" data-para="lic">
+        <legend class="nb-filtro-nome">Tipo de conta</legend>
+        {FILTRO_TIPO.map((v) => <label class="nb-check"><input type="checkbox" data-f="tipo" value={v} />{v}</label>)}
+      </fieldset>
+      <fieldset class="nb-filtro" data-para="seg">
+        <legend class="nb-filtro-nome">Versão do Windows</legend>
+        {WINDOWS.map((v) => <label class="nb-check"><input type="checkbox" data-f="win" value={v} />{v}</label>)}
+      </fieldset>
+      <fieldset class="nb-filtro" data-para="seg">
+        <legend class="nb-filtro-nome">O que falta no equipamento</legend>
+        {FILTRO_FALTA.map(([v, rotulo]) => <label class="nb-check"><input type="checkbox" data-f="falta" value={v} />{rotulo}</label>)}
+      </fieldset>
+      <label class="nb-filtro" data-para="cus">
+        <span class="nb-filtro-nome">Custo antivírus (simulação)</span>
+        <select data-f="av" class="nb-select">
+          <option value="">Todos ({brl(AV_PRECO)})</option>
+          {AV_SIMULACAO.map((v) => <option value={v}>{brl(v)}</option>)}
+        </select>
+      </label>
+
+      <div class="nb-aviso">
+        <p data-aviso aria-live="polite">Sem filtros ativos – os números referem-se ao total</p>
+        <button type="button" data-limpar hidden class="nb-limpar">Limpar filtros</button>
       </div>
-    </div>
+    </aside>
 
-    <!-- Aba Licenças: licenças do Microsoft 365 em uso, gasto com elas e pendências de cadastro -->
-    <div data-page="lic" class="mt-3">
-      <Kpis items={kpis.lic} t={t} w={w} />
-      <div class="mt-2 grid gap-2 lg:grid-cols-3">
-        <div class="flex min-w-0 flex-col gap-2 max-sm:contents">
-          <!-- Licenças em uso por tipo, com o valor anual de cada tipo -->
-          <div class="rounded border border-line px-3 py-3">
-            <p class="text-xs leading-tight text-muted">Licenças em uso por tipo</p>
-            <ul class="mt-2.5 space-y-2">
-              {
-                licencas.map(([k, label], ci) => (
-                  <li>
-                    <div class="flex justify-between gap-2 text-xs">
-                      <span class="flex min-w-0 items-center gap-1.5 text-fg/85"><span class:list={['h-2 w-2 flex-none rounded-sm', PART_COLORS[ci]]} /><span class="truncate">{label}</span></span>
-                      <span data-m={`lic:${k}`} class="font-mono text-fg/85">{t[`lic:${k}`]}</span>
-                    </div>
-                    <div class="mt-1 h-1.5">
-                      <span data-w={`lic:${k}`} class:list={['sheet-bar block h-full rounded-sm', PART_COLORS[ci]]} style={`width: ${w[`lic:${k}`]}%`} />
-                    </div>
-                    <p data-m={`lic:${k}:cost`} class="mt-1 text-[11px] text-muted">{t[`lic:${k}:cost`]}</p>
-                  </li>
-                ))
-              }
-            </ul>
-          </div>
+    <div class="nb-main">
+      <!-- Cabeçalho: título, nome da aba e o aviso de colaborador novo -->
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="nb-titulo">Usuários Office 365 e Equipamentos</p>
+          <p class="nb-sub">
+            {ABAS.map(([k, rotulo]) => <span data-pg={k}>{rotulo}</span>)}
+            <span data-atualizado aria-live="polite" class="nb-atualizado"></span>
+          </p>
+        </div>
+        <button type="button" data-abrir aria-expanded="false" aria-controls="nb-filtros" class="nb-botao-filtros">
+          <svg viewBox="0 0 24 24" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
+          Filtros <span data-contador hidden class="nb-contador"></span>
+        </button>
+      </div>
 
-          <!-- Pendências de cadastro: barra relativa ao maior item da lista -->
-          <div data-detail class="flex-1 rounded border border-line px-3 py-3 max-sm:order-1">
-            <div class="flex justify-between gap-2 text-xs leading-tight text-muted">
-              <p>Pendências de cadastro</p>
-              <p>Qtd</p>
+      <!-- ===== Licenças: só quantidades ===== -->
+      <div data-pg="lic" class="nb-pagina">
+        <div class="nb-kpis nb-kpis-5">
+          {kpis.lic.map((k) => (
+            <div class="nb-card nb-kpi">
+              <p class="nb-kpi-rotulo">{k.rotulo}</p>
+              {(k.sub || k.subKey) && <p class="nb-kpi-sub" data-m={k.subKey}>{k.subKey ? t[k.subKey] : k.sub}</p>}
+              <p data-m={k.key} class="nb-kpi-valor">{t[k.key]}</p>
             </div>
-            <ul class="mt-2 space-y-1.5">
-              {
-                PEND_CAD.map(([k, label]) => (
-                  <li title={label} class="grid grid-cols-[minmax(0,1fr)_3.5rem_1.25rem] items-center gap-2 text-xs">
-                    <span class="flex min-w-0 items-center gap-1.5 text-fg/85">
-                      <span data-st={`pc:${k}:st`} data-status={t[`pc:${k}:st`]} class="sheet-st-icon w-3 flex-none text-center text-[10px] font-bold" aria-hidden="true" />
-                      <span class="truncate">{label}</span>
-                    </span>
-                    <span class="h-1.5">
-                      <span data-w={`pc:${k}`} class="sheet-bar block h-full rounded-sm bg-warn" style={`width: ${w[`pc:${k}`]}%`} />
-                    </span>
-                    <span data-m={`pc:${k}`} class="text-right font-mono text-fg/85">{t[`pc:${k}`]}</span>
-                  </li>
-                ))
-              }
-            </ul>
-          </div>
+          ))}
         </div>
 
-        <div class="min-w-0 lg:col-span-2">
-          <StackedBars
-            title="Gasto com Microsoft 365 por setor"
-            note={`12 meses · ${brl(LIC_PRICE.Standard)}/ano por licença Standard e ${brl(LIC_PRICE.Basic)}/ano por Basic`}
-            prefix="lcs"
-            parts={LIC_PARTS}
-            colors={PART_COLORS}
-            groups={groups}
-            mobile={MOBILE_SECTORS}
-            t={t}
-            w={w}
-          />
+        <div class="nb-grade-lic">
+          <!-- Licenças por setor: Standard, Basic e Adobe empilhadas, do setor com mais contas para o com menos -->
+          <div class="nb-card">
+            <p class="nb-card-titulo">Licenças por setor</p>
+            <p class="nb-card-sub">Contas com Standard, Basic e Adobe em cada setor</p>
+            <p class="nb-legenda">{PARTES_LIC.map(([, rotulo, cor]) => <span><i class={cor} />{rotulo}</span>)}</p>
+            <ul class="nb-barras">
+              {ordemSetores.map((s) => (
+                <li data-tip={`lic:set:${s}:tip`} title={t[`lic:set:${s}:tip`]}>
+                  <span class="nb-barra-nome">{s}</span>
+                  <span class="nb-barra-trilho">
+                    <span data-w={`lic:set:${s}`} class="nb-barra" style={`width: ${w[`lic:set:${s}`]}%`}>
+                      {PARTES_LIC.map(([k, , cor]) => (
+                        <span data-w={`lic:set:${s}:${k}`} class:list={['nb-parte', cor]} style={`width: ${w[`lic:set:${s}:${k}`]}%`}>
+                          <span data-m={`lic:set:${s}:${k}`}>{t[`lic:set:${s}:${k}`]}</span>
+                        </span>
+                      ))}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <!-- Licenças que podem ser revistas: só quantidades, e o motivo das Standard sem equipamento -->
+          <div class="flex min-w-0 flex-col gap-2">
+            <div class="nb-card nb-kpi">
+              <p class="nb-kpi-rotulo">Standard que podem ser revistas</p>
+              <p class="nb-kpi-sub">sem notebook da empresa · poderiam ser Basic</p>
+              <p data-m="lic:rev" class="nb-kpi-valor">{t['lic:rev']}</p>
+            </div>
+            <div class="nb-card nb-kpi">
+              <p class="nb-kpi-rotulo">Contas não pessoais com licença paga</p>
+              <p class="nb-kpi-sub">contas administradoras e dispositivos compartilhados</p>
+              <p data-m="lic:np" class="nb-kpi-valor">{t['lic:np']}</p>
+            </div>
+            <div class="nb-card flex-1">
+              <p class="nb-card-titulo">Por que essas Standard não têm equipamento</p>
+              <p class="nb-card-sub">Contas Standard sem notebook da empresa, por motivo · passe o mouse para ver quem são</p>
+              <ul class="nb-barras nb-barras-motivo">
+                {MOTIVOS.map(([k, rotulo]) => (
+                  <li data-tip={`lic:mot:${k}:tip`} title={t[`lic:mot:${k}:tip`]}>
+                    <span class="nb-barra-nome">{rotulo}</span>
+                    <span class="nb-barra-trilho">
+                      <span data-w={`lic:mot:${k}`} class="nb-barra nb-ouro" style={`width: ${w[`lic:mot:${k}`]}%`} />
+                      <span data-m={`lic:mot:${k}`} class="nb-barra-valor">{t[`lic:mot:${k}`]}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
-      <!-- Celular: o que não é essencial fica atrás deste botão -->
-      <button type="button" data-detail-btn data-js-only aria-expanded="false" class="mt-2 w-full cursor-pointer rounded border border-line py-2 text-xs text-fg/85 hover:text-heading sm:hidden">Ver detalhes</button>
-    </div>
 
-    <!-- Aba Dispositivos: notebooks em uso, gasto com eles e onde faltam notebooks.
-         Três colunas da mesma altura: tipo de gasto + motivo, gasto por setor, contas e notebooks por setor -->
-    <div data-page="dev" class="mt-3">
-      <Kpis items={kpis.dev} t={t} w={w} />
-      <div class="mt-2 grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-        <div class="flex min-w-0 flex-col gap-2 max-sm:contents md:col-span-2 md:grid md:grid-cols-2 lg:col-span-1 lg:flex">
-          <!-- Gasto com dispositivos por tipo: barra relativa ao maior gasto, com o % do total -->
-          <div data-detail class="rounded border border-line px-3 py-3 max-sm:order-1">
-            <p class="text-xs leading-tight text-muted">Gasto com dispositivos por tipo</p>
-            <ul class="mt-2.5 space-y-2.5">
-              {
-                DEV_PARTS.map(([k, label], ci) => (
-                  <li>
-                    <div class="flex justify-between gap-2 text-xs">
-                      <span class="flex min-w-0 items-center gap-1.5 text-fg/85"><span class:list={['h-2 w-2 flex-none rounded-sm', PART_COLORS[ci]]} /><span class="truncate">{label}</span></span>
-                      <span class="flex-none font-mono text-fg/85"><span data-m={`dev:${k}`}>{t[`dev:${k}`]}</span><span class="text-muted/70"> · </span><span data-m={`dev:${k}:pct`}>{t[`dev:${k}:pct`]}</span></span>
-                    </div>
-                    <div class="mt-1 h-1.5">
-                      <span data-w={`dev:${k}`} class:list={['sheet-bar block h-full rounded-sm', PART_COLORS[ci]]} style={`width: ${w[`dev:${k}`]}%`} />
-                    </div>
-                    <p data-m={`dev:${k}:sub`} class="mt-1 text-[11px] text-muted">{t[`dev:${k}:sub`]}</p>
-                  </li>
-                ))
-              }
+      <!-- ===== Segurança ===== -->
+      <div data-pg="seg" class="nb-pagina">
+        <div class="nb-kpis nb-kpis-6">
+          {kpis.seg.map((k) => (
+            <div class="nb-card nb-kpi">
+              <p class="nb-kpi-rotulo">{k.rotulo}</p>
+              <p class="nb-kpi-sub" data-m={k.subKey}>{k.subKey ? t[k.subKey] : k.sub}</p>
+              <p data-m={k.key} data-st={`${k.key}:st`} data-estado={t[`${k.key}:st`]} class="nb-kpi-valor nb-estado">{t[k.key]}</p>
+            </div>
+          ))}
+        </div>
+
+        <!-- Equipamentos por setor: com pendência (embaixo) e sem pendência, em colunas empilhadas -->
+        <div class="nb-card mt-2">
+          <p class="nb-card-titulo">Equipamentos por setor</p>
+          <p class="nb-card-sub">Com pendência = sem LAPS, sem antivírus ou Windows HOME · passe o mouse para ver os equipamentos</p>
+          <p class="nb-legenda"><span><i class="nb-vermelho" />Com pendência de segurança</span><span><i class="nb-ouro" />Sem pendência de segurança</span></p>
+          <div class="nb-colunas-rolagem">
+            <ul class="nb-colunas">
+              {ordemSetores.map((s) => (
+                <li data-tip={`seg:set:${s}:tip`} title={t[`seg:set:${s}:tip`]}>
+                  <span class="nb-coluna">
+                    <span data-h={`seg:set:${s}:sem`} class="nb-coluna-parte nb-ouro" style={`height: ${w[`seg:set:${s}:sem`]}%`}><span data-m={`seg:set:${s}:sem`}>{t[`seg:set:${s}:sem`]}</span></span>
+                    <span data-h={`seg:set:${s}:com`} class="nb-coluna-parte nb-vermelho" style={`height: ${w[`seg:set:${s}:com`]}%`}><span data-m={`seg:set:${s}:com`}>{t[`seg:set:${s}:com`]}</span></span>
+                  </span>
+                  <span class="nb-coluna-nome">{s.replace('⚠ ', '')}</span>
+                </li>
+              ))}
             </ul>
-            <p class="mt-3 border-t border-line pt-2.5 text-[11px] text-muted/80 max-sm:hidden">As licenças do Kaspersky valem {AV_YEARS} anos e vencem todas juntas: o valor ajuda a prever o custo da renovação.</p>
           </div>
+        </div>
 
-          <!-- Motivo de não ter notebook corporativo -->
-          <div data-detail class="flex-1 rounded border border-line px-3 py-3 max-sm:order-1">
-            <p class="text-xs leading-tight text-muted">Contas sem notebook corp. · motivo</p>
-            <table class="mt-2 w-full text-xs tabular-nums">
+        <!-- A lista dos equipamentos com pendência de segurança -->
+        <div class="nb-card mt-2">
+          <p class="nb-card-titulo">Equipamentos com pendência de segurança</p>
+          <div class="nb-tabela-rolagem">
+            <table class="nb-tabela">
               <thead>
-                <tr class="text-muted">
-                  <th class="pb-1.5 text-left font-normal"><span class="sr-only">Motivo</span></th>
-                  <th class="pb-1.5 text-right font-normal">Usuários</th>
-                  <th class="pb-1.5 text-right font-normal">%</th>
-                </tr>
+                <tr><th>Nome dos usuários</th><th>Centro de custo</th><th>Nome PC</th><th>Windows</th><th>Status LAPS</th><th>Status antivírus</th><th>Pendências de segurança</th></tr>
               </thead>
-              <tbody>
-                {
-                  MOTIVOS.map(([k, label]) => (
-                    <tr class="border-t border-line">
-                      <td class="py-1.5 text-fg/85">{label}</td>
-                      <td data-m={`mot:${k}`} class="py-1.5 text-right font-mono text-fg/85">{t[`mot:${k}`]}</td>
-                      <td data-m={`mot:${k}:pct`} class="py-1.5 text-right font-mono text-fg/85">{t[`mot:${k}:pct`]}</td>
-                    </tr>
-                  ))
-                }
+              <tbody data-pendencias>
+                {pend.map((x) => (
+                  <tr>
+                    <td>{x.nome}</td><td>{x.setor}</td><td>{x.pc}</td><td>{x.win}</td>
+                    <td class={x.laps ? 'nb-ok' : 'nb-ruim'}>{x.laps ? 'Com LAPS' : 'Sem LAPS'}</td>
+                    <td class={x.av ? 'nb-ok' : 'nb-ruim'}>{x.av ? 'Com antivírus' : 'Sem antivírus'}</td>
+                    <td>{pendencias(x)}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         </div>
-
-        <StackedBars
-          title="Gasto com dispositivos por setor"
-          note={`${brl(NB_PRICE)} por notebook e ${brl(AV_PRICE)} por antivírus ativo`}
-          prefix="dvs"
-          parts={DEV_PARTS}
-          colors={PART_COLORS}
-          groups={groups}
-          mobile={MOBILE_SECTORS}
-          t={t}
-          w={w}
-        />
-
-        <!-- Contas e notebooks por setor: barra clara = contas, barra cheia por dentro = notebooks -->
-        <div data-detail data-more-wrap class="flex min-w-0 flex-col rounded border border-line px-3 py-3 max-sm:order-1">
-          <p class="text-xs leading-tight text-muted">Contas e notebooks por setor</p>
-          <p class="mt-1 flex gap-3 text-[11px] text-muted">
-            <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-viz-1/45" />Contas</span>
-            <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-viz-1" />Notebooks</span>
-          </p>
-          <ul class="mt-3 flex flex-1 flex-col justify-between gap-2">
-            {
-              groups.slice(0, -1).map(([s, label], i) => (
-                <li data-tip={`set:${s}:tip`} title={t[`set:${s}:tip`]} data-more={i >= MOBILE_SECTORS || undefined}>
-                  <div class="flex justify-between gap-2 text-[11px]">
-                    <span class="truncate text-fg/85">{label}</span>
-                    <span class="flex-none font-mono text-fg/85">
-                      <span data-m={`set:${s}:c`}>{t[`set:${s}:c`]}</span>
-                      <span class="text-muted/70"> / </span>
-                      <span data-m={`set:${s}:d`}>{t[`set:${s}:d`]}</span>
-                    </span>
-                  </div>
-                  <div class="mt-1 h-1.5" role="img" aria-label={t[`set:${s}:tip`]}>
-                    <span data-w={`set:${s}:c`} class="sheet-bar block h-full rounded-sm bg-viz-1/45" style={`width: ${w[`set:${s}:c`]}%`}>
-                      <span data-w={`set:${s}:d`} class="sheet-bar block h-full rounded-sm bg-viz-1" style={`width: ${w[`set:${s}:d`]}%`} />
-                    </span>
-                  </div>
-                </li>
-              ))
-            }
-          </ul>
-          <button type="button" data-more-btn data-js-only class="mt-3 cursor-pointer self-start text-[11px] text-link hover:underline sm:hidden">Ver todos os setores</button>
-          <!-- "Outros" soma vários setores: vai como texto para não esmagar as barras -->
-          <p data-tip={`set:${OTHERS}:tip`} title={t[`set:${OTHERS}:tip`]} class="mt-3 flex justify-between gap-2 border-t border-line pt-2 text-[11px] text-muted">
-            <span>+ {groups.at(-1)![1]}</span>
-            <span class="font-mono text-fg/85"><span data-m={`set:${OTHERS}:c`}>{t[`set:${OTHERS}:c`]}</span><span class="text-muted/70"> / </span><span data-m={`set:${OTHERS}:d`}>{t[`set:${OTHERS}:d`]}</span></span>
-          </p>
-        </div>
       </div>
-      <!-- Celular: o que não é essencial fica atrás deste botão -->
-      <button type="button" data-detail-btn data-js-only aria-expanded="false" class="mt-2 w-full cursor-pointer rounded border border-line py-2 text-xs text-fg/85 hover:text-heading sm:hidden">Ver detalhes</button>
-    </div>
 
-    <!-- Aba Segurança: LAPS, antivírus, versão do Windows e os setores com mais pendências -->
-    <div data-page="seg" class="mt-3">
-      <Kpis items={kpis.seg} t={t} w={w} />
-      <div class="mt-2 grid gap-2 lg:grid-cols-3">
-        <!-- Versão do Windows: rosquinha com o % do Pro no meio -->
-        <div class="rounded border border-line px-3 py-3">
-          <p class="text-xs leading-tight text-muted">Versão do Windows</p>
-          <div class="mt-3 flex items-center gap-5 lg:flex-col lg:gap-4">
-            <div class="relative size-28 flex-none" role="img" aria-label={`Windows 11 Pro: ${t['win:Pro']}, Windows 11 Home: ${t['win:Home']}`}>
-              <svg viewBox="0 0 36 36" class="size-full -rotate-90">
-                {[0, 1].map((seg) => {
-                  const d = donutDash(w['win:Pro'], seg);
-                  return (
-                    <circle
-                      data-donut="win:Pro"
-                      data-seg={seg}
-                      cx="18"
-                      cy="18"
-                      r="15.9155"
-                      fill="none"
-                      stroke-width="3.5"
-                      class:list={['sheet-donut', seg === 0 ? 'stroke-viz-1' : 'stroke-warn']}
-                      stroke-dasharray={d.dash}
-                      stroke-dashoffset={d.offset}
-                    />
-                  );
-                })}
-              </svg>
-              <span class="absolute inset-0 flex flex-col items-center justify-center leading-none">
-                <span data-m="win:Pro:pct" class="text-lg font-semibold text-heading tabular-nums">{t['win:Pro:pct']}</span>
-                <span class="mt-1 text-[10px] text-muted">Pro</span>
-              </span>
+      <!-- ===== Custos: só valores em R$ ===== -->
+      <div data-pg="cus" class="nb-pagina">
+        <div class="nb-kpis nb-kpis-4">
+          {kpis.cus.map((k) => (
+            <div class="nb-card nb-kpi">
+              <p class="nb-kpi-rotulo">{k.rotulo}</p>
+              <p class="nb-kpi-sub" data-m={k.subKey}>{k.subKey ? t[k.subKey] : k.sub}</p>
+              <p data-m={k.key} class="nb-kpi-valor nb-kpi-dinheiro">{t[k.key]}</p>
             </div>
-            <ul class="min-w-0 flex-1 space-y-1.5 text-xs lg:w-full lg:flex-none">
-              {
-                [
-                  ['Pro', 'bg-viz-1'],
-                  ['Home', 'bg-warn'],
-                ].map(([v, color]) => (
-                  <li class="flex items-center gap-1.5">
-                    <span class:list={['h-2 w-2 flex-none rounded-sm', color]} />
-                    <span class="text-fg/85">Windows 11 {v}</span>
-                    <span class="ml-auto font-mono whitespace-nowrap text-fg/85">
-                      <span data-m={`win:${v}`}>{t[`win:${v}`]}</span>
-                      <span class="text-muted/70"> · </span>
-                      <span data-m={`win:${v}:pct`}>{t[`win:${v}:pct`]}</span>
-                    </span>
-                  </li>
-                ))
-              }
-            </ul>
-          </div>
-          <p class="mt-3 text-[11px] text-muted/70 max-sm:hidden">Notebooks com Windows Home contam como pendência de segurança.</p>
+          ))}
         </div>
 
-        <!-- Setores com mais pendências de segurança: top 6 -->
-        <div class="rounded border border-line px-3 py-3 lg:col-span-2">
-          <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <p class="text-xs leading-tight text-muted">Setores com mais pendências de segurança</p>
-            <p class="hidden flex-wrap gap-3 text-[11px] text-muted sm:flex">
-              {SEG_PARTS.map(([, label], ci) => <span class="flex items-center gap-1.5"><span class:list={['h-2 w-2 rounded-sm', SEG_COLORS[ci]]} />{label}</span>)}
-            </p>
-          </div>
-          <!-- Celular: ranking numerado com o detalhe de cada tipo à vista (não existe "passar o mouse") -->
-          <ol class="mt-1.5 sm:hidden">
-            {
-              Array.from({ length: PEND_TOP }, (_, i) => (
-                <li class="flex items-center gap-3 border-b border-line py-2.5 last:border-0 last:pb-0">
-                  <span class="w-5 flex-none text-xs text-muted tabular-nums">{i + 1}º</span>
-                  <div class="min-w-0 flex-1">
-                    <p data-m={`pend:${i}:name`} class="truncate text-sm text-fg">{t[`pend:${i}:name`]}</p>
-                    <p class="mt-1.5 flex flex-wrap gap-1.5 text-[11px]">
-                      {SEG_PARTS.map(([k, label], ci) => (
-                        <span data-chip class:list={['flex items-center gap-1 rounded border border-line px-1.5 py-0.5 text-muted', t[`pend:${i}:${k}`] === '0' && 'opacity-40']}>
-                          <span class:list={['h-1.5 w-1.5 rounded-sm', SEG_COLORS[ci]]} />
-                          {label} <span data-m={`pend:${i}:${k}`} class="font-mono text-fg">{t[`pend:${i}:${k}`]}</span>
+        <div class="nb-grade-cus">
+          <!-- Custo anual por setor: M365, Adobe e antivírus (÷ 3 anos), com o valor escrito na barra -->
+          <div class="nb-card">
+            <p class="nb-card-titulo">Custo anual de licenças por setor</p>
+            <p class="nb-card-sub">M365 + Adobe + antivírus (÷ 3 anos) · valores em milhares de reais</p>
+            <p class="nb-legenda">{PARTES_CUS.map(([, rotulo, cor]) => <span><i class={cor} />{rotulo}</span>)}</p>
+            <ul class="nb-barras">
+              {ordemSetores.map((s) => (
+                <li data-tip={`cus:set:${s}:tip`} title={t[`cus:set:${s}:tip`]}>
+                  <span class="nb-barra-nome">{s}</span>
+                  <span class="nb-barra-trilho">
+                    <span data-w={`cus:set:${s}`} class="nb-barra" style={`width: ${w[`cus:set:${s}`]}%`}>
+                      {PARTES_CUS.map(([k, , cor]) => (
+                        <span data-w={`cus:set:${s}:${k}`} class:list={['nb-parte', cor]} style={`width: ${w[`cus:set:${s}:${k}`]}%`}>
+                          <span data-m={`cus:set:${s}:${k}`}>{t[`cus:set:${s}:${k}`]}</span>
                         </span>
                       ))}
-                    </p>
-                  </div>
-                  <span class="flex flex-none items-center gap-1.5">
-                    <span data-st={`pend:${i}:st`} data-status={t[`pend:${i}:st`]} class="sheet-st-dot h-2.5 w-2.5 rounded-full" />
-                    <span data-m={`pend:${i}`} class="text-xl font-semibold text-heading tabular-nums">{t[`pend:${i}`]}</span>
+                    </span>
                   </span>
                 </li>
-              ))
-            }
-          </ol>
-          <!-- Computador: barra do total dividida por tipo de pendência, detalhe ao passar o mouse -->
-          <ol class="mt-3 hidden space-y-3 sm:block">
-            {
-              Array.from({ length: PEND_TOP }, (_, i) => (
-                <li data-tip={`pend:${i}:tip`} title={t[`pend:${i}:tip`]} class="grid grid-cols-[1.25rem_10rem_minmax(0,1fr)] items-center gap-2 text-xs">
-                  <span class="text-muted tabular-nums">{i + 1}º</span>
-                  <span data-m={`pend:${i}:name`} class="truncate text-fg/85">{t[`pend:${i}:name`]}</span>
-                  <div class="pr-12">
-                    <span data-w={`pend:${i}`} class="sheet-bar relative block h-2" style={`width: ${w[`pend:${i}`]}%`}>
-                      <span class="flex h-full gap-px overflow-hidden rounded-sm">
-                        {SEG_PARTS.map(([k], ci) => <span data-w={`pend:${i}:${k}`} class:list={['sheet-bar block h-full flex-none', SEG_COLORS[ci]]} style={`width: ${w[`pend:${i}:${k}`]}%`} />)}
-                      </span>
-                      <span class="absolute top-1/2 left-full ml-2 flex -translate-y-1/2 items-center gap-1.5">
-                        <span data-st={`pend:${i}:st`} data-status={t[`pend:${i}:st`]} class="sheet-st-dot h-2 w-2 flex-none rounded-full" />
-                        <span data-m={`pend:${i}`} class="text-sm font-semibold text-heading tabular-nums">{t[`pend:${i}`]}</span>
-                      </span>
+              ))}
+            </ul>
+          </div>
+
+          <div class="flex min-w-0 flex-col gap-2">
+            <!-- Para onde vai o dinheiro: rosca com o valor e o % de cada licença -->
+            <div class="nb-card">
+              <p class="nb-card-titulo">Para onde vai o dinheiro (R$ por ano)</p>
+              <p class="nb-card-sub">Preços fictícios: {precos}</p>
+              <div class="nb-rosca">
+                <svg viewBox="0 0 36 36" class="nb-rosca-svg" aria-hidden="true">
+                  {FATIAS.map(([k, , cor], i) => (
+                    <circle data-fatia={k} cx="18" cy="18" r="15.9155" fill="none" stroke-width="5.5" class:list={['nb-fatia', cor]} stroke-dasharray={arcos[i].dash} stroke-dashoffset={arcos[i].offset} />
+                  ))}
+                </svg>
+                <ul class="nb-rosca-legenda">
+                  {FATIAS.map(([k, rotulo, cor]) => (
+                    <li>
+                      <i class={cor} />
+                      <span>{rotulo}</span>
+                      <span class="nb-rosca-valor"><span data-m={`cus:don:${k}`}>{t[`cus:don:${k}`]}</span> (<span data-m={`cus:don:${k}:pct`}>{t[`cus:don:${k}:pct`]}</span>)</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <!-- Custo por conta ativa por setor -->
+            <div class="nb-card flex-1">
+              <p class="nb-card-titulo">Custo por conta ativa por setor (R$ por ano)</p>
+              <p class="nb-card-sub">Custo anual de licenças do setor ÷ contas ativas do setor · passe o mouse para ver a conta</p>
+              <ul class="nb-barras nb-barras-compactas">
+                {ordemSetores.map((s) => (
+                  <li data-tip={`cus:cc:${s}:tip`} title={t[`cus:cc:${s}:tip`]}>
+                    <span class="nb-barra-nome">{s}</span>
+                    <span class="nb-barra-trilho">
+                      <span data-w={`cus:cc:${s}`} class="nb-barra nb-ouro" style={`width: ${w[`cus:cc:${s}`]}%`} />
+                      <span data-m={`cus:cc:${s}`} class="nb-barra-valor">{t[`cus:cc:${s}`]}</span>
                     </span>
-                  </div>
-                </li>
-              ))
-            }
-          </ol>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Páginas do relatório no rodapé, como as abas do Power BI (radio + CSS: funciona sem JS) -->
-    <div role="radiogroup" aria-label="Páginas do relatório" class="mt-3 flex gap-0.5 rounded border border-line bg-white/[0.02] p-0.5 max-sm:order-[-1] sm:-mx-5 sm:-mb-5 sm:gap-1 sm:overflow-x-auto sm:rounded-none sm:border-0 sm:border-t sm:p-0 sm:px-5">
-      {
-        PAGES.map(([k, label], i) => (
-          <Fragment>
-            <input type="radio" name="sheet-page" id={`pg-${k}`} value={k} checked={i === 0} class="sheet-page-input sr-only" />
-            <label for={`pg-${k}`} class="sheet-page-tab flex-1 cursor-pointer rounded-sm px-2 py-2 text-center text-xs whitespace-nowrap text-muted hover:text-fg sm:-mt-px sm:flex-none sm:rounded-none sm:border-t-2 sm:border-transparent sm:px-4 sm:py-2.5">{label}</label>
-          </Fragment>
-        ))
-      }
+      <!-- As abas no rodapé, como no Power BI -->
+      <div role="radiogroup" aria-label="Abas do relatório" class="nb-abas">
+        {ABAS.map(([k, rotulo]) => <label for={`nb-pg-${k}`} class="nb-aba">{rotulo}</label>)}
+      </div>
     </div>
   </div>
 
-  <!-- Fonte de dados do dashboard: só as últimas linhas da base, onde entram os colaboradores novos -->
-  <div class="relative border-t border-line">
-  <div class="flex items-center gap-1.5 border-b border-line px-4 py-3">
-    <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
-    <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
-    <span class="h-2.5 w-2.5 rounded-full border border-line"></span>
-    <span class="ml-2 truncate font-mono text-xs text-muted">controle-notebooks.xlsx</span>
-    <span class="ml-auto flex-none pl-2 text-xs text-muted">fonte de dados</span>
-  </div>
+  <!-- A planilha que alimenta o painel: as últimas linhas, onde entram os colaboradores novos -->
+  <div class="nb-planilha">
+    <div class="nb-janela">
+      <span></span><span></span><span></span>
+      <span class="nb-arquivo">usuarios_office365.xlsx</span>
+      <span class="ml-auto">fonte de dados</span>
+    </div>
 
-  <!-- Aviso de novo colaborador vindo do Microsoft 365 -->
-  <div
-    data-toast
-    aria-live="polite"
-    class="sheet-toast absolute top-14 right-4 z-10 rounded-xl border border-line bg-bg px-4 py-3 text-sm shadow-lg"
-  >
-    <p class="text-xs text-muted">Microsoft 365 · novo colaborador</p>
-    <p data-toast-name class="mt-0.5 font-medium text-heading"></p>
-  </div>
+    <div data-aviso-novo aria-live="polite" class="nb-aviso-novo">
+      <p class="text-xs text-muted">Microsoft 365 · novo colaborador</p>
+      <p data-aviso-nome class="mt-0.5 font-medium text-heading"></p>
+    </div>
 
-  <p class="px-4 pt-3 text-sm text-muted">Aba <span class="font-mono text-fg">Base</span> · últimas linhas</p>
-
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm tabular-nums">
-      <thead>
-        <tr>
-          <th class="hidden w-10 border-b border-line px-3 py-2 text-left font-mono text-xs font-normal text-muted/60 sm:table-cell">#</th>
-          {cols.map((c, ci) => <th class:list={['border-b border-line px-3 py-2 text-left font-medium whitespace-nowrap text-muted', desktopOnly.has(ci) && 'hidden sm:table-cell']}>{c}</th>)}
-        </tr>
-      </thead>
-      <tbody>
-        {
-          rows.map(({ e, isNew }, i) => (
-            <tr data-new={isNew || undefined} hidden={isNew}>
-              <td class="hidden border-b border-line px-3 py-2 font-mono text-xs text-muted/60 sm:table-cell">{firstRow + i}</td>
-              {cols.map((_, ci) => {
-                const [v, tone] = cell(e, ci);
-                return (
-                  <td style={`--c: ${ci}`} class:list={['border-b border-line px-3 py-2 whitespace-nowrap text-fg/85', desktopOnly.has(ci) && 'hidden sm:table-cell']}>
-                    {tone === 'ok' || tone === 'warn' ? (
-                      <span class:list={[tone === 'ok' ? 'text-good' : 'text-warn']}>
-                        {tone === 'ok' ? '✓' : '!'} {v}
-                      </span>
-                    ) : (
-                      <span class:list={[tone === 'muted' && 'text-muted/70']}>{v}</span>
-                    )}
-                  </td>
-                );
+    <p class="px-4 pt-3 text-sm text-muted">Aba <span class="font-mono text-fg">usuarios_office365</span> · últimas linhas</p>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm tabular-nums">
+        <thead>
+          <tr>
+            <th class="nb-num hidden sm:table-cell">#</th>
+            {COLS.map((c, ci) => <th class:list={['nb-th', SO_TELA_LARGA.has(ci) && 'hidden sm:table-cell']}>{c}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {linhas.map(({ x, nova }, i) => (
+            <tr data-nova={nova || undefined} hidden={nova}>
+              <td class="nb-num hidden sm:table-cell">{primeiraLinha + i}</td>
+              {COLS.map((_, ci) => {
+                const [v, tom] = celula(x, ci);
+                return <td style={`--c: ${ci}`} class:list={['nb-td', tom, SO_TELA_LARGA.has(ci) && 'hidden sm:table-cell']}>{v}</td>;
               })}
             </tr>
-          ))
-        }
-      </tbody>
-    </table>
-  </div>
-
-  <p class="flex flex-wrap justify-between gap-x-4 gap-y-1 px-4 pt-2 pb-3 text-xs text-muted">
-    <span>Exibindo <span data-shown data-base={shownInitial.length}>{shownInitial.length}</span> de <span data-total>{t.contas}</span> linhas da planilha</span>
-    <span class="sm:hidden">← arraste a tabela para ver mais →</span>
-  </p>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="flex flex-wrap justify-between gap-x-4 gap-y-1 px-4 pt-2 pb-3 text-xs text-muted">
+      <span>Exibindo <span data-exibindo data-base={exemplos.length}>{exemplos.length}</span> de <span data-total>{inicial.length}</span> linhas da planilha</span>
+      <span class="sm:hidden">← arraste a tabela para ver mais →</span>
+    </p>
   </div>
 </div>
 
 <style>
-  .sheet-toast {
+  /* ---------- Cores do painel (as mesmas do painel real) ---------- */
+  .nb {
+    --nb-fundo: #0d1330;
+    --nb-card: #141c40;
+    --nb-linha: rgb(255 255 255 / 0.08);
+    --nb-texto: #e9ecf5;
+    --nb-apagado: #a3abc4;
+    --nb-ouro: #d4a84b;
+    --nb-prata: #b8bfcc;
+    --nb-roxo: #c77dff;
+    --nb-ciano: #4fc3f7;
+    --nb-vermelho: #ff6170;
+    --nb-verde: #4cc38a;
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+    border: 1px solid var(--color-line);
+    background: var(--nb-fundo);
+    color: var(--nb-texto);
+  }
+
+  .nb-ouro { background: var(--nb-ouro); stroke: var(--nb-ouro); }
+  .nb-prata { background: var(--nb-prata); stroke: var(--nb-prata); }
+  .nb-roxo { background: var(--nb-roxo); stroke: var(--nb-roxo); }
+  .nb-ciano { background: var(--nb-ciano); stroke: var(--nb-ciano); }
+  .nb-vermelho { background: var(--nb-vermelho); }
+
+  /* Barra de título da janela (o arquivo do Power BI e o da planilha) */
+  .nb-janela {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--nb-linha);
+    font-size: 0.75rem;
+    color: var(--nb-apagado);
+  }
+
+  .nb-janela > span:nth-child(-n + 3) {
+    width: 0.625rem;
+    height: 0.625rem;
+    border: 1px solid var(--nb-linha);
+    border-radius: 9999px;
+  }
+
+  .nb-arquivo {
+    margin-left: 0.5rem;
+    font-family: var(--font-mono);
+  }
+
+  /* ---------- Relatório: barra lateral de filtros + página ---------- */
+  .nb-relatorio {
+    position: relative;
+    display: grid;
+  }
+
+  @media (min-width: 64rem) {
+    .nb-relatorio {
+      grid-template-columns: 12.5rem minmax(0, 1fr);
+    }
+  }
+
+  /* Só a aba escolhida aparece (sem suporte a :has, todas ficam à vista) */
+  .nb-relatorio:has(#nb-pg-seg:checked) [data-pg]:not([data-pg='seg']),
+  .nb-relatorio:has(#nb-pg-cus:checked) [data-pg]:not([data-pg='cus']),
+  .nb-relatorio:not(:has(#nb-pg-seg:checked, #nb-pg-cus:checked)) [data-pg]:not([data-pg='lic']),
+  .nb-relatorio:has(#nb-pg-seg:checked) [data-para]:not([data-para='seg']),
+  .nb-relatorio:has(#nb-pg-cus:checked) [data-para]:not([data-para='cus']),
+  .nb-relatorio:not(:has(#nb-pg-seg:checked, #nb-pg-cus:checked)) [data-para]:not([data-para='lic']) {
+    display: none;
+  }
+
+  /* A barra lateral, em papel (como no painel real): filtros em cartões brancos */
+  .nb-lateral {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.9rem 0.75rem;
+    background: var(--color-sunset);
+    color: var(--color-navy);
+  }
+
+  .nb-lateral-titulo {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .nb-fechar {
+    display: none;
+    padding: 0 0.4rem;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .nb-filtro {
+    display: block;
+    margin: 0;
+    padding: 0.55rem 0.65rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: #fbfaf7;
+    box-shadow: inset 0 0 0 1px rgb(20 25 55 / 0.1);
+  }
+
+  .nb-filtro-nome {
+    display: block;
+    padding: 0;
+    margin-bottom: 0.35rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+  }
+
+  .nb-select {
+    width: 100%;
+    padding: 0.25rem 0.4rem;
+    border: 1px solid rgb(20 25 55 / 0.25);
+    border-radius: 0.25rem;
+    background: white;
+    font-size: 0.75rem;
+    color: var(--color-navy);
+    cursor: pointer;
+  }
+
+  .nb-check {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.15rem 0;
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+
+  .nb-check input {
+    accent-color: var(--color-navy);
+  }
+
+  .nb-aviso {
+    margin-top: auto;
+    padding: 0.65rem;
+    border-radius: 0.5rem;
+    background: #fbfaf7;
+    box-shadow: inset 0 0 0 1px rgb(20 25 55 / 0.1);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  .nb-aviso .is-ativo {
+    color: #a24e00;
+    font-weight: 600;
+  }
+
+  .nb-limpar {
+    margin-top: 0.4rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+  }
+
+  /* Celular e tablet: a barra lateral vira um painel por cima, aberto pelo botão Filtros */
+  @media (max-width: 63.99rem) {
+    .nb-lateral {
+      position: absolute;
+      inset: 0 0 auto auto;
+      z-index: 20;
+      width: min(18rem, 100%);
+      min-height: 100%;
+      box-shadow: -12px 0 32px rgb(0 0 0 / 0.4);
+    }
+
+    .nb-lateral:not(.is-aberta) {
+      display: none;
+    }
+
+    .nb-fechar {
+      display: block;
+    }
+  }
+
+  .nb-botao-filtros {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.35rem 0.65rem;
+    border: 1px solid var(--nb-linha);
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    color: var(--nb-texto);
+    cursor: pointer;
+  }
+
+  .nb-botao-filtros.is-ativo {
+    border-color: var(--nb-ouro);
+  }
+
+  .nb-contador {
+    padding: 0 0.35rem;
+    border-radius: 9999px;
+    background: var(--nb-ouro);
+    font-size: 0.625rem;
+    font-weight: 700;
+    line-height: 1rem;
+    color: var(--nb-fundo);
+  }
+
+  @media (min-width: 64rem) {
+    .nb-botao-filtros {
+      display: none;
+    }
+  }
+
+  /* ---------- A página ---------- */
+  .nb-main {
+    min-width: 0;
+    padding: 0.9rem 0.9rem 0;
+  }
+
+  .nb-titulo {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: white;
+  }
+
+  .nb-sub {
+    font-size: 0.75rem;
+    color: var(--nb-apagado);
+  }
+
+  .nb-atualizado:not(:empty)::before {
+    content: ' · ';
+  }
+
+  .nb-atualizado {
+    color: var(--nb-ouro);
+  }
+
+  .nb-pagina {
+    margin-top: 0.75rem;
+  }
+
+  .nb-card {
+    min-width: 0;
+    padding: 0.7rem 0.8rem;
+    border-radius: 0.5rem;
+    background: var(--nb-card);
+  }
+
+  .nb-card-titulo {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: white;
+  }
+
+  .nb-card-sub {
+    font-size: 0.6875rem;
+    line-height: 1.35;
+    color: var(--nb-apagado);
+  }
+
+  /* ---------- Cards de número ---------- */
+  .nb-kpis {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (min-width: 40rem) {
+    .nb-kpis-5,
+    .nb-kpis-6 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .nb-kpis-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 80rem) {
+    .nb-kpis-5 {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .nb-kpis-6 {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+  }
+
+  .nb-kpi {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .nb-kpi-rotulo {
+    font-size: 0.6875rem;
+    line-height: 1.3;
+    color: #d5daea;
+  }
+
+  .nb-kpi-sub {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    font-size: 0.625rem;
+    line-height: 1.3;
+    color: var(--nb-apagado);
+  }
+
+  .nb-kpi-valor {
+    margin-top: auto;
+    padding-top: 0.3rem;
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.1;
+    text-align: center;
+    color: white;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nb-kpi-dinheiro {
+    font-size: clamp(1.1rem, 2.2vw, 1.6rem);
+    white-space: nowrap;
+  }
+
+  /* Indicador de pendência: vermelho com algum equipamento, verde (e ✓) com zero */
+  .nb-estado[data-estado='ruim'] {
+    color: var(--nb-vermelho);
+  }
+
+  .nb-estado[data-estado='bom'] {
+    color: var(--nb-verde);
+  }
+
+  .nb-estado[data-estado='bom']::after {
+    content: ' ✓';
+    font-size: 0.6em;
+  }
+
+  .nb-kpi-valor.is-pulo {
+    animation: nb-pulo 0.6s ease;
+  }
+
+  @keyframes nb-pulo {
+    30% {
+      transform: scale(1.12);
+    }
+  }
+
+  /* ---------- Legendas e barras horizontais ---------- */
+  .nb-legenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.8rem;
+    margin-top: 0.45rem;
+    font-size: 0.6875rem;
+    color: #d5daea;
+  }
+
+  .nb-legenda span,
+  .nb-rosca-legenda li {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .nb-legenda i,
+  .nb-rosca-legenda i {
+    width: 0.55rem;
+    height: 0.55rem;
+    flex: none;
+    border-radius: 9999px;
+  }
+
+  .nb-barras {
+    display: grid;
+    gap: 0.3rem;
+    margin-top: 0.6rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nb-barras li {
+    display: grid;
+    grid-template-columns: 8.5rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .nb-barras-motivo {
+    gap: 0.6rem;
+  }
+
+  .nb-barras-motivo li {
+    grid-template-columns: 9rem minmax(0, 1fr);
+  }
+
+  .nb-barras-compactas {
+    gap: 0.2rem;
+  }
+
+  .nb-barra-nome {
+    overflow: hidden;
+    font-size: 0.6875rem;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #d5daea;
+  }
+
+  .nb-barra-trilho {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+    padding-right: 3.5rem;
+  }
+
+  .nb-barra {
+    display: flex;
+    flex: none;
+    height: 1rem;
+    overflow: hidden;
+    border-radius: 0.15rem;
+    transition: width 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .nb-barras-compactas .nb-barra {
+    height: 0.75rem;
+  }
+
+  .nb-parte {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-size: 0.625rem;
+    font-weight: 700;
+    white-space: nowrap;
+    color: var(--nb-fundo);
+    transition: width 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .nb-parte + .nb-parte {
+    border-left: 1px solid var(--nb-card);
+  }
+
+  .nb-barra-valor {
+    flex: none;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Colunas (equipamentos por setor) ---------- */
+  .nb-colunas-rolagem {
+    overflow-x: auto;
+  }
+
+  .nb-colunas {
+    display: grid;
+    grid-auto-columns: minmax(2.6rem, 1fr);
+    grid-auto-flow: column;
+    gap: 0.4rem;
+    min-width: 46rem;
+    margin-top: 0.6rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nb-colunas li {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+  }
+
+  .nb-coluna {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 8.5rem;
+  }
+
+  .nb-coluna-parte {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: var(--nb-fundo);
+    transition: height 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .nb-coluna-parte:first-child {
+    border-radius: 0.15rem 0.15rem 0 0;
+  }
+
+  .nb-coluna-nome {
+    display: -webkit-box;
+    height: 2.1em;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    font-size: 0.5625rem;
+    line-height: 1.05;
+    text-align: center;
+    color: #d5daea;
+  }
+
+  /* ---------- Tabela de pendências ---------- */
+  .nb-tabela-rolagem {
+    max-height: 13rem;
+    margin-top: 0.5rem;
+    overflow: auto;
+  }
+
+  .nb-tabela {
+    width: 100%;
+    font-size: 0.6875rem;
+    white-space: nowrap;
+  }
+
+  .nb-tabela th {
+    position: sticky;
+    top: 0;
+    padding: 0.35rem 0.5rem;
+    background: #1d2754;
+    font-weight: 600;
+    text-align: left;
+    color: white;
+  }
+
+  /* As linhas da tabela são recriadas pelo script ao filtrar: os estilos delas precisam valer sem o escopo do Astro */
+  .nb-tabela :global(td) {
+    padding: 0.3rem 0.5rem;
+    border-bottom: 1px solid var(--nb-linha);
+  }
+
+  .nb-tabela :global(.nb-ok) {
+    color: var(--nb-verde);
+  }
+
+  .nb-tabela :global(.nb-ruim) {
+    color: var(--nb-vermelho);
+  }
+
+  .nb-ok {
+    color: var(--nb-verde);
+  }
+
+  .nb-ruim {
+    color: var(--nb-vermelho);
+  }
+
+  .nb-apagado {
+    color: var(--nb-apagado);
+  }
+
+  /* ---------- Rosca ---------- */
+  .nb-rosca {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: 0.6rem;
+  }
+
+  .nb-rosca-svg {
+    width: 7.5rem;
+    height: 7.5rem;
+    flex: none;
+    transform: rotate(-90deg);
+  }
+
+  .nb-fatia {
+    background: none;
+    transition:
+      stroke-dasharray 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
+      stroke-dashoffset 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .nb-rosca-legenda {
+    display: grid;
+    gap: 0.45rem;
+    padding: 0;
+    font-size: 0.75rem;
+    list-style: none;
+  }
+
+  .nb-rosca-valor {
+    margin-left: auto;
+    padding-left: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Grades das páginas ---------- */
+  .nb-grade-lic,
+  .nb-grade-cus {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  @media (min-width: 56rem) {
+    .nb-grade-lic {
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    }
+
+    .nb-grade-cus {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+  }
+
+  /* ---------- Abas no rodapé ---------- */
+  .nb-abas {
+    display: flex;
+    gap: 0.25rem;
+    margin: 0.9rem -0.9rem 0;
+    padding: 0 0.9rem;
+    border-top: 1px solid var(--nb-linha);
+    background: rgb(0 0 0 / 0.18);
+  }
+
+  .nb-aba {
+    margin-top: -1px;
+    padding: 0.6rem 1rem;
+    border-top: 2px solid transparent;
+    font-size: 0.75rem;
+    color: var(--nb-apagado);
+    cursor: pointer;
+  }
+
+  .nb-aba:hover {
+    color: white;
+  }
+
+  #nb-pg-lic:checked ~ .nb-main [for='nb-pg-lic'],
+  #nb-pg-seg:checked ~ .nb-main [for='nb-pg-seg'],
+  #nb-pg-cus:checked ~ .nb-main [for='nb-pg-cus'] {
+    border-color: var(--nb-ouro);
+    background: rgb(255 255 255 / 0.05);
+    font-weight: 600;
+    color: white;
+  }
+
+  #nb-pg-lic:focus-visible ~ .nb-main [for='nb-pg-lic'],
+  #nb-pg-seg:focus-visible ~ .nb-main [for='nb-pg-seg'],
+  #nb-pg-cus:focus-visible ~ .nb-main [for='nb-pg-cus'] {
+    outline: 2px solid var(--nb-ouro);
+    outline-offset: -2px;
+  }
+
+  /* ---------- A planilha ---------- */
+  .nb-planilha {
+    position: relative;
+    border-top: 1px solid var(--nb-linha);
+    background: var(--color-sunset);
+    color: var(--color-fg);
+  }
+
+  .nb-planilha .nb-janela {
+    border-color: var(--color-line);
+    color: var(--color-muted);
+  }
+
+  .nb-planilha .nb-janela > span:nth-child(-n + 3) {
+    border-color: var(--color-line);
+  }
+
+  .nb-th,
+  .nb-num {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--color-line);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: left;
+    white-space: nowrap;
+    color: var(--color-muted);
+  }
+
+  .nb-td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--color-line);
+    white-space: nowrap;
+  }
+
+  td.nb-num {
+    font-family: var(--font-mono);
+    font-weight: 400;
+  }
+
+  .nb-planilha .nb-ok {
+    color: #1d7a4a;
+    font-weight: 600;
+  }
+
+  .nb-planilha .nb-ruim {
+    color: #b3261e;
+    font-weight: 600;
+  }
+
+  .nb-planilha .nb-apagado {
+    color: var(--color-muted);
+  }
+
+  .nb-aviso-novo {
+    position: absolute;
+    top: 3.4rem;
+    right: 1rem;
+    z-index: 10;
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--color-line);
+    border-radius: 0.75rem;
+    background: var(--color-card);
+    box-shadow: 0 12px 30px -12px rgb(20 25 55 / 0.35);
     opacity: 0;
     transform: translateY(-6px);
     pointer-events: none;
@@ -532,405 +1163,222 @@ const groups: [string, string][] = sectorGroups.map(([s, list]) => [s, s === OTH
       transform 0.3s ease;
   }
 
-  .sheet-toast.is-on {
+  .nb-aviso-novo.is-on {
     opacity: 1;
     transform: none;
   }
 
   /* Linha nova: destaque que some e células entrando em sequência */
   tr.is-in {
-    animation: row-flash 2.4s ease;
+    animation: nb-linha 2.4s ease;
   }
 
   tr.is-in td {
-    animation: cell-in 0.4s ease both;
-    animation-delay: calc(var(--c, 0) * 70ms);
+    animation: nb-celula 0.4s ease both;
+    animation-delay: calc(var(--c, 0) * 60ms);
   }
 
-  @keyframes row-flash {
+  @keyframes nb-linha {
     from {
-      background: rgb(255 255 255 / 0.1);
+      background: color-mix(in srgb, var(--color-latao) 30%, transparent);
     }
   }
 
-  @keyframes cell-in {
+  @keyframes nb-celula {
     from {
       opacity: 0;
       transform: translateY(4px);
     }
   }
 
-  /* Filtros: lista de opções no tema escuro; filtro em uso fica com a borda acesa */
-  .sheet-filter {
-    color-scheme: dark;
-    transition: border-color 0.2s ease;
-  }
-
-  .sheet-filter option {
-    background: var(--color-bg);
-  }
-
-  .sheet-filter.is-active {
-    border-color: var(--color-accent);
-    color: var(--color-heading);
-  }
-
-  .sheet-filter:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
-  }
-
-  /* Páginas do relatório: só a escolhida aparece (sem suporte a :has, todas ficam à vista) */
-  .sheet-pages:has(#pg-dev:checked) [data-page]:not([data-page='dev']),
-  .sheet-pages:has(#pg-seg:checked) [data-page]:not([data-page='seg']),
-  .sheet-pages:not(:has(#pg-dev:checked, #pg-seg:checked)) [data-page]:not([data-page='lic']) {
-    display: none;
-  }
-
-  .sheet-page-tab {
-    transition:
-      color 0.2s ease,
-      border-color 0.2s ease;
-  }
-
-  /* Aba escolhida: fundo aceso e traço em cima, como no Power BI */
-  .sheet-page-input:checked + .sheet-page-tab {
-    border-color: var(--color-accent);
-    background: rgb(255 255 255 / 0.06);
-    color: var(--color-heading);
-    font-weight: 500;
-  }
-
-  /* Celular: as abas viram um seletor no topo, e a escolhida fica com o fundo aceso */
-  @media (max-width: 639.98px) {
-    .sheet-page-input:checked + .sheet-page-tab {
-      background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  @media (prefers-reduced-motion: reduce) {
+    .nb-barra,
+    .nb-parte,
+    .nb-coluna-parte,
+    .nb-fatia {
+      transition: none;
     }
-
-    /* Com JS, o que não é essencial fica atrás do "Ver detalhes", e os gráficos por setor atrás do "Ver todos" */
-    [data-sheet][data-js] :global([data-page]:not(.is-open) [data-detail]),
-    [data-sheet][data-js] :global([data-more-wrap]:not(.is-all) [data-more]) {
-      display: none;
-    }
-  }
-
-  /* Sem JS, tudo fica à vista e os botões que abrem e fecham somem */
-  [data-sheet]:not([data-js]) :global([data-js-only]) {
-    display: none;
-  }
-
-  .sheet-page-input:focus-visible + .sheet-page-tab {
-    outline: 2px solid var(--color-accent);
-    outline-offset: -2px;
-  }
-
-  /* Barras e KPIs também ficam dentro dos componentes NotebookKpis e NotebookStackedBars */
-  [data-sheet] :global(.sheet-bar) {
-    transition: width 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-
-  /* Botão de filtros: borda acesa com o painel aberto ou com filtro em uso */
-  .sheet-filter-btn[aria-expanded='true'],
-  .sheet-filter-btn.is-active {
-    border-color: var(--color-accent);
-    color: var(--color-heading);
-  }
-
-  .sheet-filter-btn:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
-  }
-
-  [data-filter-panel] {
-    box-shadow: -12px 0 32px rgb(0 0 0 / 0.35);
-  }
-
-  /* Status (KPIs, semáforos e ranking): a cor sempre vem com ícone ou texto */
-  [data-sheet] :global([data-status='good']) {
-    --st: var(--color-good);
-    --st-icon: '✓';
-    --st-label: 'OK';
-  }
-
-  [data-sheet] :global([data-status='warn']) {
-    --st: var(--color-warn);
-    --st-icon: '!';
-    --st-label: 'Atenção';
-  }
-
-  [data-sheet] :global([data-status='serious']) {
-    --st: var(--color-serious);
-    --st-icon: '!';
-    --st-label: 'Sério';
-  }
-
-  [data-sheet] :global([data-status='crit']) {
-    --st: var(--color-crit);
-    --st-icon: '✕';
-    --st-label: 'Crítico';
-  }
-
-  [data-sheet] :global(.sheet-st-bar),
-  [data-sheet] :global(.sheet-st-dot) {
-    background: var(--st, transparent);
-    transition: background 0.4s ease;
-  }
-
-  /* Selo do KPI: ícone na cor do status e o texto em cinza */
-  [data-sheet] :global(.sheet-st-badge)::before {
-    content: var(--st-icon) ' ';
-    color: var(--st);
-  }
-
-  [data-sheet] :global(.sheet-st-badge)::after {
-    content: var(--st-label);
-    color: var(--color-muted);
-  }
-
-  [data-sheet] :global(.sheet-st-icon)::before {
-    content: var(--st-icon);
-    color: var(--st);
-  }
-
-  [data-sheet] :global(.sheet-gauge) {
-    stroke: var(--st);
-    transition:
-      stroke-dasharray 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
-      stroke 0.4s ease;
-  }
-
-  /* Gasto por setor: o setor que mais gasta fica em destaque, os outros um pouco apagados */
-  [data-sheet] :global([data-rank] > li:not(.is-top) .sheet-bar > span:first-child) {
-    opacity: 0.7;
-  }
-
-  [data-sheet] :global([data-rank] > li.is-top > span:first-child) {
-    color: var(--color-heading);
-    font-weight: 600;
-  }
-
-  .sheet-donut {
-    transition:
-      stroke-dasharray 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
-      stroke-dashoffset 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-
-  [data-sheet] :global(.sheet-kpi.is-bump) {
-    animation: kpi-bump 0.6s ease;
-  }
-
-  @keyframes kpi-bump {
-    30% {
-      transform: scale(1.12);
-    }
-  }
-
-  [data-sheet] :global(.sheet-kpi) {
-    display: inline-block;
-    transform-origin: left;
   }
 </style>
 
 <script>
-  import { records, compute, donutDash, applyFilters } from '../lib/notebooks';
+  import { registros, calcular, listaPendencias, pendencias, rosca, SEL_VAZIA, type Sel } from '../lib/notebooks';
 
-  let timer: number | undefined;
+  let relogio: number | undefined;
 
-  function initSheet() {
+  function iniciar() {
     const root = document.querySelector<HTMLElement>('[data-sheet]');
     if (!root) return;
 
-    const toast = root.querySelector<HTMLElement>('[data-toast]')!;
-    const toastName = root.querySelector<HTMLElement>('[data-toast-name]')!;
-    const shownEl = root.querySelector<HTMLElement>('[data-shown]')!;
-    const totalEl = root.querySelector<HTMLElement>('[data-total]')!;
-    const shownBase = Number(shownEl.dataset.base);
-    // Linha do cabeçalho do dashboard que avisa quem acabou de entrar na base
-    const updatedEl = root.querySelector<HTMLElement>('[data-updated]')!;
-    const updatedDefault = updatedEl.textContent;
-    const fresh = [...root.querySelectorAll<HTMLTableRowElement>('tbody tr[data-new]')];
-    const selects = [...root.querySelectorAll<HTMLSelectElement>('[data-filter]')];
-    const statusEl = root.querySelector<HTMLElement>('[data-filter-status]')!;
-    const clearBtn = root.querySelector<HTMLButtonElement>('[data-filter-clear]')!;
-    const chipsEl = root.querySelector<HTMLElement>('[data-filter-chips]')!;
-    const countEl = root.querySelector<HTMLElement>('[data-filter-count]')!;
-    const panel = root.querySelector<HTMLElement>('[data-filter-panel]')!;
-    const openBtn = root.querySelector<HTMLButtonElement>('[data-filter-open]')!;
-    const closeBtns = root.querySelectorAll<HTMLButtonElement>('[data-filter-close]');
-    const filterRow = root.querySelector<HTMLElement>('[data-filter-row]')!;
+    const $ = <T extends Element = HTMLElement>(s: string) => root.querySelector<T>(s)!;
+    const campos = [...root.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-f]')];
+    const painel = $('[data-painel]');
+    const abrir = $<HTMLButtonElement>('[data-abrir]');
+    const contador = $('[data-contador]');
+    const aviso = $('[data-aviso]');
+    const limpar = $<HTMLButtonElement>('[data-limpar]');
+    const tbodyPend = $('[data-pendencias]');
+    const atualizado = $('[data-atualizado]');
+    const avisoNovo = $('[data-aviso-novo]');
+    const avisoNome = $('[data-aviso-nome]');
+    const exibindo = $('[data-exibindo]');
+    const total = $('[data-total]');
+    const novas = [...root.querySelectorAll<HTMLTableRowElement>('tr[data-nova]')];
+    const base0 = Number(exibindo.dataset.base);
+    let proximo = 0;
+    let visivel = false;
 
-    // Celular: com JS, os detalhes de cada página e os setores menores ficam atrás de um botão
-    root.dataset.js = '';
-    root.querySelectorAll<HTMLButtonElement>('[data-detail-btn]').forEach((btn) =>
-      btn.addEventListener('click', () => {
-        const open = btn.closest('[data-page]')!.classList.toggle('is-open');
-        btn.textContent = open ? 'Ocultar detalhes' : 'Ver detalhes';
-        btn.setAttribute('aria-expanded', String(open));
-      }),
-    );
-    root.querySelectorAll<HTMLButtonElement>('[data-more-btn]').forEach((btn) =>
-      btn.addEventListener('click', () => {
-        const all = btn.closest('[data-more-wrap]')!.classList.toggle('is-all');
-        btn.textContent = all ? 'Ver menos setores' : 'Ver todos os setores';
-      }),
-    );
-    // Nome de cada filtro, para as etiquetas
-    const labelOf = (s: HTMLSelectElement) => s.closest('label')?.querySelector('span')?.textContent ?? '';
-    let next = 0;
-    let visible = false;
+    // Os filtros escolhidos, no formato do cálculo
+    const selecao = (): Sel => {
+      const s: Sel = structuredClone(SEL_VAZIA);
+      for (const c of campos) {
+        const k = c.dataset.f as keyof Sel;
+        if (c instanceof HTMLInputElement) {
+          if (c.checked) (s[k] as string[]).push(c.value);
+        } else (s[k] as string) = c.value;
+      }
+      return s;
+    };
 
-    // Recalcula o dashboard sobre as linhas da planilha completa que passam nos filtros, como o Power BI faz
+    // Nome de cada filtro em uso, para o aviso da barra lateral
+    const emUso = () => {
+      const nomes = new Set<string>();
+      for (const c of campos) {
+        const ativo = c instanceof HTMLInputElement ? c.checked : !!c.value;
+        if (ativo) nomes.add(c.closest('.nb-filtro')!.querySelector('.nb-filtro-nome')!.textContent!);
+      }
+      return [...nomes];
+    };
+
+    const celula = (texto: string, classe?: string) => {
+      const td = document.createElement('td');
+      td.textContent = texto;
+      if (classe) td.className = classe;
+      return td;
+    };
+
+    // Recalcula o painel sobre as linhas da planilha que passam nos filtros, como o Power BI faz
     const render = () => {
-      const base = records.filter((r) => r.n < next);
-      const sel = Object.fromEntries(selects.map((s) => [s.dataset.filter!, s.value]));
-      const rows = applyFilters(base, sel);
-      const { t, w } = compute(rows);
-      shownEl.textContent = String(shownBase + next);
-      totalEl.textContent = String(base.length);
+      const base = registros.filter((x) => x.n < proximo);
+      const s = selecao();
+      const { t, w } = calcular(base, s);
+      exibindo.textContent = String(base0 + proximo);
+      total.textContent = String(base.length);
 
-      // Situação dos filtros: contador no botão e uma etiqueta por filtro em uso
-      const active = selects.filter((s) => s.value);
-      selects.forEach((s) => s.classList.toggle('is-active', !!s.value));
-      openBtn.classList.toggle('is-active', active.length > 0);
-      countEl.hidden = !active.length;
-      countEl.textContent = String(active.length);
-      clearBtn.hidden = !active.length;
-      // No celular, a linha de filtros só aparece com algum filtro em uso
-      filterRow.classList.toggle('max-sm:hidden', !active.length);
-      statusEl.textContent = !active.length
-        ? 'Sem filtros: todas as contas da base.'
-        : rows.length
-          ? `${rows.length} de ${base.length} contas ·`
-          : `Nenhuma das ${base.length} contas atende a todos ·`;
-      chipsEl.replaceChildren(
-        ...active.map((s) => {
-          const chip = document.createElement('button');
-          chip.type = 'button';
-          chip.className = 'cursor-pointer rounded border border-accent/50 px-1.5 py-0.5 text-fg/85 hover:border-accent hover:text-heading';
-          chip.textContent = `${labelOf(s)}: ${s.selectedOptions[0].text} ✕`;
-          chip.setAttribute('aria-label', `Tirar o filtro ${labelOf(s)}`);
-          chip.addEventListener('click', () => {
-            s.value = '';
-            render();
-          });
-          return chip;
-        }),
-      );
       root.querySelectorAll<HTMLElement>('[data-m]').forEach((el) => {
         const v = t[el.dataset.m!];
         if (v === undefined || el.textContent === v) return;
         el.textContent = v;
-        if (!el.classList.contains('sheet-kpi')) return;
-        el.classList.remove('is-bump');
+        if (!el.classList.contains('nb-kpi-valor')) return;
+        el.classList.remove('is-pulo');
         void el.offsetWidth;
-        el.classList.add('is-bump');
+        el.classList.add('is-pulo');
       });
-      root.querySelectorAll<HTMLElement>('[data-w]').forEach((el) => {
-        el.style.width = `${w[el.dataset.w!] ?? 0}%`;
+      root.querySelectorAll<HTMLElement>('[data-w]').forEach((el) => (el.style.width = `${w[el.dataset.w!] ?? 0}%`));
+      root.querySelectorAll<HTMLElement>('[data-h]').forEach((el) => (el.style.height = `${w[el.dataset.h!] ?? 0}%`));
+      root.querySelectorAll<HTMLElement>('[data-st]').forEach((el) => (el.dataset.estado = t[el.dataset.st!] ?? ''));
+      root.querySelectorAll<HTMLElement>('[data-tip]').forEach((el) => (el.title = t[el.dataset.tip!] ?? ''));
+      const fatias = [...root.querySelectorAll<SVGCircleElement>('[data-fatia]')];
+      rosca(fatias.map((f) => w[`cus:don:${f.dataset.fatia}`] ?? 0)).forEach((d, i) => {
+        fatias[i].setAttribute('stroke-dasharray', d.dash);
+        fatias[i].setAttribute('stroke-dashoffset', d.offset);
       });
-      // Status de cada KPI, semáforo e ranking; anéis de meta; maior setor de cada gráfico de gasto
-      root.querySelectorAll<HTMLElement>('[data-st]').forEach((el) => {
-        el.dataset.status = t[el.dataset.st!] ?? '';
-      });
-      root.querySelectorAll<SVGCircleElement>('[data-gauge]').forEach((el) => {
-        el.setAttribute('stroke-dasharray', `${w[el.dataset.gauge!] ?? 0} 100`);
-      });
-      root.querySelectorAll<HTMLElement>('[data-rank]').forEach((ul) => {
-        const items = [...ul.children] as HTMLElement[];
-        const widths = items.map((li) => parseFloat(li.querySelector<HTMLElement>('.sheet-bar')?.style.width ?? '0'));
-        const max = Math.max(...widths);
-        items.forEach((li, i) => li.classList.toggle('is-top', max > 0 && widths[i] === max));
-      });
-      root.querySelectorAll<SVGCircleElement>('[data-donut]').forEach((el) => {
-        const d = donutDash(w[el.dataset.donut!] ?? 0, Number(el.dataset.seg));
-        el.setAttribute('stroke-dasharray', d.dash);
-        el.setAttribute('stroke-dashoffset', d.offset);
-      });
-      // Etiquetas de pendência zeradas ficam apagadas
-      root.querySelectorAll<HTMLElement>('[data-chip]').forEach((el) => {
-        el.classList.toggle('opacity-40', el.querySelector('[data-m]')?.textContent === '0');
-      });
-      root.querySelectorAll<HTMLElement>('[data-tip]').forEach((el) => {
-        el.title = t[el.dataset.tip!] ?? '';
-      });
+      tbodyPend.replaceChildren(
+        ...listaPendencias(base, s).map((x) => {
+          const tr = document.createElement('tr');
+          tr.append(
+            celula(x.nome),
+            celula(x.setor),
+            celula(x.pc),
+            celula(x.win ?? ''),
+            celula(x.laps ? 'Com LAPS' : 'Sem LAPS', x.laps ? 'nb-ok' : 'nb-ruim'),
+            celula(x.av ? 'Com antivírus' : 'Sem antivírus', x.av ? 'nb-ok' : 'nb-ruim'),
+            celula(pendencias(x)),
+          );
+          return tr;
+        }),
+      );
+
+      // Aviso de filtros (como no painel real) e o contador no botão
+      const nomes = emUso();
+      aviso.textContent = nomes.length ? `⚠ Filtros ativos: ${nomes.join(', ')}` : 'Sem filtros ativos – os números referem-se ao total';
+      aviso.classList.toggle('is-ativo', nomes.length > 0);
+      limpar.hidden = !nomes.length;
+      contador.hidden = !nomes.length;
+      contador.textContent = String(nomes.length);
+      abrir.classList.toggle('is-ativo', nomes.length > 0);
     };
 
-    // Painel de filtros: abre pelo botão, fecha no × ou com Esc
-    const setPanel = (open: boolean) => {
-      panel.hidden = !open;
-      openBtn.setAttribute('aria-expanded', String(open));
-      (open ? selects[0] : openBtn).focus();
+    // Celular e tablet: a barra lateral abre pelo botão Filtros e fecha no × ou com Esc
+    const setPainel = (aberto: boolean) => {
+      painel.classList.toggle('is-aberta', aberto);
+      abrir.setAttribute('aria-expanded', String(aberto));
+      (aberto ? campos[0] : abrir).focus();
     };
-    openBtn.addEventListener('click', () => setPanel(Boolean(panel.hidden)));
-    closeBtns.forEach((b) => b.addEventListener('click', () => setPanel(false)));
-    panel.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') setPanel(false);
-    });
+    abrir.addEventListener('click', () => setPainel(!painel.classList.contains('is-aberta')));
+    $('[data-fechar]').addEventListener('click', () => setPainel(false));
+    painel.addEventListener('keydown', (e) => e.key === 'Escape' && setPainel(false));
 
-    // Filtros: recalculam na hora, sem parar a animação dos colaboradores novos
-    selects.forEach((s) => s.addEventListener('change', render));
-    clearBtn.addEventListener('click', () => {
-      selects.forEach((s) => (s.value = ''));
+    campos.forEach((c) => c.addEventListener('change', render));
+    limpar.addEventListener('click', () => {
+      campos.forEach((c) => (c instanceof HTMLInputElement ? (c.checked = false) : (c.value = '')));
       render();
     });
     // O navegador pode restaurar uma escolha antiga ao voltar para a página
-    if (selects.some((s) => s.value)) render();
+    if (campos.some((c) => (c instanceof HTMLInputElement ? c.checked : c.value))) render();
 
     // Sem animação: mostra direto a planilha completa
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      fresh.forEach((r) => (r.hidden = false));
-      next = fresh.length;
+      novas.forEach((r) => (r.hidden = false));
+      proximo = novas.length;
       render();
       return;
     }
 
-    // Um passo: avisa o novo colaborador, insere a linha e atualiza o dashboard.
-    // Depois do último, espera e volta ao estado inicial para recomeçar.
-    const step = () => {
-      if (!visible) return;
-      if (next < fresh.length) {
-        const row = fresh[next];
-        toastName.textContent = row.cells[1].textContent;
-        toast.classList.add('is-on');
-        timer = window.setTimeout(() => {
-          // Só avança aqui: se a planilha sair da tela durante o aviso, a mesma linha é retomada
-          next++;
-          toast.classList.remove('is-on');
-          row.hidden = false;
-          row.classList.add('is-in');
-          updatedEl.textContent = `↻ Atualizado: ${row.cells[1].textContent} entrou na base`;
-          updatedEl.classList.add('text-accent');
+    // Um passo: avisa o colaborador novo, insere a linha e recalcula o painel.
+    // Depois do último, espera e volta ao estado inicial para recomeçar
+    const passo = () => {
+      if (!visivel) return;
+      if (proximo < novas.length) {
+        const linha = novas[proximo];
+        const nome = linha.cells[1].textContent ?? '';
+        avisoNome.textContent = nome;
+        avisoNovo.classList.add('is-on');
+        relogio = window.setTimeout(() => {
+          proximo++;
+          avisoNovo.classList.remove('is-on');
+          linha.hidden = false;
+          linha.classList.add('is-in');
+          atualizado.textContent = `↻ ${nome} entrou na planilha`;
           render();
-          timer = window.setTimeout(step, 3000);
+          relogio = window.setTimeout(passo, 3000);
         }, 1400);
       } else {
-        timer = window.setTimeout(() => {
-          fresh.forEach((r) => {
+        relogio = window.setTimeout(() => {
+          novas.forEach((r) => {
             r.hidden = true;
             r.classList.remove('is-in');
           });
-          next = 0;
-          updatedEl.textContent = updatedDefault;
-          updatedEl.classList.remove('text-accent');
+          proximo = 0;
+          atualizado.textContent = '';
           render();
-          timer = window.setTimeout(step, 1500);
+          relogio = window.setTimeout(passo, 1500);
         }, 3000);
       }
     };
 
-    // Só anima enquanto a planilha está na tela
+    // Só anima enquanto a simulação está na tela
     new IntersectionObserver(
-      ([entry]) => {
-        visible = entry.isIntersecting;
-        clearTimeout(timer);
-        toast.classList.remove('is-on');
-        if (visible) timer = window.setTimeout(step, 1200);
+      ([e]) => {
+        visivel = e.isIntersecting;
+        clearTimeout(relogio);
+        avisoNovo.classList.remove('is-on');
+        if (visivel) relogio = window.setTimeout(passo, 1200);
       },
-      // Limite baixo: com o dashboard, o bloco fica mais alto que a tela do celular
       { threshold: 0.15 },
     ).observe(root);
   }
 
-  document.addEventListener('astro:page-load', initSheet);
-  document.addEventListener('astro:before-swap', () => clearTimeout(timer));
+  document.addEventListener('astro:page-load', iniciar);
+  document.addEventListener('astro:before-swap', () => clearTimeout(relogio));
 </script>

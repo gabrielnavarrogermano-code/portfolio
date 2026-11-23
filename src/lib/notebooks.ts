@@ -1,410 +1,344 @@
-// Dados fictícios da planilha de controle de notebooks e cálculo do dashboard.
-// O mesmo cálculo roda no servidor (estado inicial, sem JS) e no navegador (animação).
+// Dados fictícios da planilha usuarios_office365 e o cálculo do painel (Licenças, Segurança e Custos).
+// As regras são as do painel real: conta ativa contada por e-mail, equipamento por nome do PC, antivírus pago a cada
+// 3 anos (no custo anual entra ÷ 3) e os preços das licenças. Nomes, setores e quantidades são inventados.
+// O mesmo cálculo roda no servidor (estado inicial, sem JS) e no navegador (animação e filtros).
 
-// Contas ativas por setor na planilha completa (soma = 100). "Sem setor" = conta com o setor em branco
-const SECTOR_SIZES: [string, number][] = [
-  ['Comercial', 13],
-  ['Produção', 12],
-  ['Garantia da Qualidade', 10],
-  ['Engenharia e Manutenção', 9],
-  ['Produção/CQ', 7],
-  ['TI', 6],
-  ['Financeiro', 5],
-  ['Logística', 5],
-  ['Marketing', 4],
-  ['Sócio', 3],
-  ['Biotério', 3],
+// ---------- Preços fictícios e redondos (R$ por ano; o antivírus é por equipamento, a cada 3 anos) ----------
+// Não são os preços pagos pela empresa: a simulação não pode dar pista de valores reais
+export const PRECO = { Standard: 950, Basic: 380, Adobe: 1400 } as const;
+export const AV_PRECO = 450;
+export const AV_ANOS = 3;
+// Simulação do preço do antivírus, na aba Custos
+export const AV_SIMULACAO = Array.from({ length: 9 }, (_, i) => 250 + i * 50);
+
+// ---------- Setores fictícios (contas por setor na planilha completa). "Sem setor" fica sempre por último ----------
+// Uma empresa menor e com outros setores que a real: nenhuma contagem pode lembrar os números verdadeiros
+export const SEM_SETOR = '⚠ Sem setor';
+const SETORES: [string, number][] = [
+  ['Vendas', 11],
+  ['Operações', 9],
+  ['Atendimento', 7],
+  ['Qualidade', 6],
+  ['Financeiro', 6],
+  ['Marketing', 5],
+  ['Jurídico', 4],
+  ['TI', 4],
+  ['Pessoas', 4],
   ['Compras', 3],
-  ['RH', 3],
-  ['Assuntos Regulatórios', 3],
-  ['PCP', 3],
-  ['Segurança da Informação', 2],
-  ['Facilities', 2],
-  ['Portaria', 2],
-  ['Recepção', 1],
-  ['Proprietário', 1],
-  ['Sem setor', 3],
+  ['Expedição', 3],
+  ['Diretoria', 2],
+  [SEM_SETOR, 1],
 ];
-export const NO_SECTOR = 'Sem setor';
+export const SETOR_NOMES = SETORES.map(([s]) => s);
 
-// Por que a conta não tem notebook corporativo
+// ---------- Tipos ----------
+export type Tipo = 'Usuário' | 'Conta administradora' | 'Dispositivo compartilhado';
+export type Win = 'Windows 11 PRO' | 'Windows 11 HOME' | 'Windows 10 PRO';
+export const WINDOWS: Win[] = ['Windows 10 PRO', 'Windows 11 HOME', 'Windows 11 PRO'];
 export const MOTIVOS = [
   ['particular', 'Computador particular'],
   ['naoTem', 'Não tem notebook próprio'],
-  ['none', 'Sem motivo informado'],
+  ['nenhum', 'Sem motivo informado'],
 ] as const;
-type Motivo = (typeof MOTIVOS)[number][0];
-export const SECTORS = SECTOR_SIZES.map(([s]) => s);
+export type Motivo = (typeof MOTIVOS)[number][0];
 
-export type Example = {
-  nome: string;
-  setor: string;
-  lic: 'Standard' | 'Basic';
-  pc: string; // '' = conta sem notebook corporativo
-  av?: 'Ativo' | 'Inativo';
-  laps?: 'Aplicado' | 'Pendente';
-  pat?: string; // '' = sem selo de patrimônio
-  win?: 'Pro' | 'Home';
-  motivo?: Motivo; // só para conta sem notebook
-};
-
-// Linhas que aparecem na tabela
-export const initial: Example[] = [
-  { nome: 'Ana Souza', setor: 'Financeiro', lic: 'Standard', pc: 'NTB-001', av: 'Ativo', laps: 'Aplicado', pat: 'PAT-0101', win: 'Pro' },
-  { nome: 'Bruno Lima', setor: 'Comercial', lic: 'Basic', pc: 'NTB-002', av: 'Ativo', laps: 'Aplicado', pat: 'PAT-0102', win: 'Pro' },
-  { nome: 'Carla Mendes', setor: 'Marketing', lic: 'Standard', pc: 'NTB-003', av: 'Ativo', laps: 'Pendente', pat: 'PAT-0103', win: 'Home' },
-  { nome: 'Diego Rocha', setor: 'Garantia da Qualidade', lic: 'Basic', pc: 'NTB-004', av: 'Inativo', laps: 'Aplicado', pat: 'PAT-0104', win: 'Pro' },
-  { nome: 'Elisa Prado', setor: 'RH', lic: 'Standard', pc: 'NTB-005', av: 'Ativo', laps: 'Aplicado', pat: '', win: 'Home' },
-  { nome: 'Fábio Martins', setor: 'Logística', lic: 'Basic', pc: '', motivo: 'particular' },
-  { nome: 'Gabriela Teixeira', setor: 'Assuntos Regulatórios', lic: 'Standard', pc: 'NTB-006', av: 'Ativo', laps: 'Aplicado', pat: 'PAT-0106', win: 'Pro' },
-  { nome: 'Igor Ramos', setor: 'Produção', lic: 'Basic', pc: 'NTB-007', av: 'Inativo', laps: 'Pendente', pat: 'PAT-0107', win: 'Home' },
-  { nome: 'Juliana Freitas', setor: 'Compras', lic: 'Standard', pc: 'NTB-008', av: 'Ativo', laps: 'Aplicado', pat: 'PAT-0108', win: 'Pro' },
-  { nome: 'Lucas Barbosa', setor: 'TI', lic: 'Standard', pc: 'NTB-009', av: 'Ativo', laps: 'Aplicado', pat: 'PAT-0109', win: 'Pro' },
-  { nome: 'Mariana Duarte', setor: 'Engenharia e Manutenção', lic: 'Basic', pc: 'NTB-010', av: 'Ativo', laps: 'Aplicado', pat: 'PAT-0110', win: 'Home' },
-  { nome: 'Otávio Pires', setor: 'Produção', lic: 'Basic', pc: '', motivo: 'naoTem' },
-];
-
-// Colaboradores que "chegam" do Microsoft 365 durante a animação (completam os 15 exemplos e as 100 linhas)
-export const incoming: Example[] = [
-  { nome: 'Patrícia Gomes', setor: 'Produção/CQ', lic: 'Standard', pc: 'NTB-011', av: 'Ativo', laps: 'Aplicado', pat: 'PAT-0111', win: 'Pro' },
-  { nome: 'Rafael Moreira', setor: 'Comercial', lic: 'Basic', pc: 'NTB-012', av: 'Ativo', laps: 'Pendente', pat: '', win: 'Pro' },
-  { nome: 'Sofia Cardoso', setor: 'Biotério', lic: 'Standard', pc: 'NTB-013', av: 'Inativo', laps: 'Aplicado', pat: 'PAT-0113', win: 'Home' },
-];
-
-// Linha resumida usada no cálculo. n = índice em `incoming` (-1 = já está na planilha)
+// Uma linha da planilha. n = ordem de chegada dos colaboradores novos (-1 = já estava na planilha)
 export type Rec = {
-  s: string;
-  l: 'Standard' | 'Basic';
-  pc: boolean;
-  av: boolean;
+  nome: string;
+  email: string;
+  setor: string;
+  funcao: string;
+  tipo: Tipo;
+  lic: 'Standard' | 'Basic';
+  adobe: boolean;
+  pc: string; // '' = sem equipamento da empresa
+  win: Win | null;
   laps: boolean;
-  selo: boolean;
-  win: 'Pro' | 'Home' | null;
-  motivo: Motivo | null;
-  emailOk: boolean; // e-mail no domínio da empresa
-  nomeOk: boolean; // nome de usuário preenchido
-  pcId?: string; // só nas linhas de exemplo, para conferir PC e selo repetidos
-  pat?: string;
+  av: boolean;
+  selo: string;
+  motivo: Motivo | null; // só para quem não tem equipamento
   n: number;
 };
 
-const toRec = (e: Example, n: number): Rec => ({
-  s: e.setor,
-  l: e.lic,
-  pc: !!e.pc,
-  av: e.av === 'Ativo',
-  laps: e.laps === 'Aplicado',
-  selo: !!e.pat,
-  win: e.pc ? (e.win ?? 'Pro') : null,
-  motivo: e.pc ? null : (e.motivo ?? 'none'),
-  emailOk: true,
-  nomeOk: true,
-  pcId: e.pc || undefined,
-  pat: e.pat || undefined,
+// ---------- Linhas de exemplo (as que aparecem na planilha) ----------
+type Ex = Omit<Rec, 'email' | 'n' | 'motivo' | 'win' | 'selo'> & { win?: Win; motivo?: Motivo; selo?: string };
+const ex = (e: Ex, n = -1): Rec => ({
+  ...e,
+  email: emailDe(e.nome),
+  win: e.pc ? (e.win ?? 'Windows 11 PRO') : null,
+  motivo: e.pc ? null : (e.motivo ?? 'nenhum'),
+  selo: e.pc ? (e.selo ?? `PAT-${e.pc.slice(-3)}`) : '',
   n,
 });
 
-// Completa as 100 linhas com contas fictícias (gerador fixo: o resultado é sempre o mesmo)
-function buildRecords(): Rec[] {
-  let seed = 7;
-  const rand = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
-  const recs = [...initial.map((e) => toRec(e, -1)), ...incoming.map((e, i) => toRec(e, i))];
-  for (const [s, size] of SECTOR_SIZES) {
-    const used = recs.filter((r) => r.s === s).length;
-    for (let i = used; i < size; i++) {
-      // Sócios costumam ter menos notebook corporativo
-      const pc = rand() < (s === 'Sócio' ? 0.4 : 0.8);
-      const m = rand();
+function emailDe(nome: string) {
+  const [p, ...r] = nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').split(' ');
+  return `${p}.${r.at(-1) ?? 'conta'}@empresa.com.br`;
+}
+
+const U = 'Usuário' as const;
+export const exemplos: Rec[] = [
+  ex({ nome: 'Ana Souza', setor: 'Financeiro', funcao: 'Analista financeira', tipo: U, lic: 'Standard', adobe: false, pc: 'NTB-101', laps: true, av: true }),
+  ex({ nome: 'Bruno Lima', setor: 'Vendas', funcao: 'Representante', tipo: U, lic: 'Standard', adobe: false, pc: '', laps: false, av: false, motivo: 'particular' }),
+  ex({ nome: 'Carla Mendes', setor: 'Marketing', funcao: 'Designer', tipo: U, lic: 'Standard', adobe: true, pc: 'NTB-103', win: 'Windows 11 HOME', laps: false, av: true }),
+  ex({ nome: 'Diego Rocha', setor: 'Operações', funcao: 'Supervisor', tipo: U, lic: 'Basic', adobe: false, pc: 'NTB-104', laps: true, av: false }),
+];
+export const chegando: Rec[] = [
+  ex({ nome: 'Patrícia Gomes', setor: 'Jurídico', funcao: 'Advogada', tipo: U, lic: 'Standard', adobe: true, pc: 'NTB-111', laps: true, av: true }, 0),
+  ex({ nome: 'Rafael Moreira', setor: 'Vendas', funcao: 'Vendedor', tipo: U, lic: 'Standard', adobe: false, pc: 'NTB-112', laps: false, av: true }, 1),
+  ex({ nome: 'Sofia Cardoso', setor: 'Expedição', funcao: 'Assistente de expedição', tipo: U, lic: 'Basic', adobe: false, pc: '', laps: false, av: false, motivo: 'naoTem' }, 2),
+];
+
+// ---------- O resto da planilha: gerador fixo (o resultado é sempre o mesmo) ----------
+const PRIMEIROS = ['Alice', 'Arthur', 'Beatriz', 'Caio', 'Camila', 'Daniel', 'Débora', 'Eduardo', 'Fernanda', 'Felipe', 'Gabriela', 'Gustavo', 'Helena', 'Henrique', 'Isabela', 'João', 'Júlia', 'Leonardo', 'Larissa', 'Marcelo', 'Marina', 'Mateus', 'Natália', 'Nicolas', 'Paula', 'Pedro', 'Renata', 'Rodrigo', 'Sabrina', 'Thiago', 'Vanessa', 'Vinícius'];
+const SOBRENOMES = ['Alves', 'Araújo', 'Batista', 'Campos', 'Cardoso', 'Castro', 'Costa', 'Dias', 'Farias', 'Fernandes', 'Lopes', 'Machado', 'Nunes', 'Oliveira', 'Pereira', 'Ribeiro', 'Santos', 'Silva', 'Vieira', 'Xavier'];
+
+function montar(): Rec[] {
+  let semente = 11;
+  const r = () => ((semente = (semente * 16807) % 2147483647) - 1) / 2147483646;
+  const recs = [...exemplos, ...chegando];
+  let k = 0;
+  let pcN = 200;
+  for (const [setor, total] of SETORES) {
+    for (let i = recs.filter((x) => x.setor === setor).length; i < total; i++) {
+      const nome = `${PRIMEIROS[(k * 7) % PRIMEIROS.length]} ${SOBRENOMES[(k * 3 + Math.floor(k / PRIMEIROS.length)) % SOBRENOMES.length]}`;
+      k++;
+      // Contas não pessoais: uma administradora no TI e um dispositivo compartilhado no Atendimento
+      const tipo: Tipo =
+        setor === 'TI' && i === 1 ? 'Conta administradora'
+        : setor === 'Atendimento' && i === 0 ? 'Dispositivo compartilhado'
+        : U;
+      const temPc = tipo === 'Dispositivo compartilhado' || (tipo === U && r() < (setor === 'Diretoria' ? 0.5 : 0.88));
+      const wr = r();
+      const win: Win = wr < 0.9 ? 'Windows 11 PRO' : wr < 0.97 ? 'Windows 11 HOME' : 'Windows 10 PRO';
+      const pro = win !== 'Windows 11 HOME';
+      const m = r();
+      const pc = temPc ? `NTB-${pcN++}` : '';
       recs.push({
-        s,
-        l: rand() < 0.75 ? 'Standard' : 'Basic',
+        nome: tipo === U ? nome : tipo === 'Conta administradora' ? 'Administrador' : `Estação ${setor}`,
+        email: tipo === U ? emailDe(nome) : tipo === 'Conta administradora' ? 'admin.ti@empresa.com.br' : `estacao.${setor.toLowerCase().normalize('NFD').replace(/[^a-z]/g, '')}@empresa.com.br`,
+        setor,
+        funcao: tipo === U ? '' : tipo,
+        tipo,
+        lic: tipo === 'Dispositivo compartilhado' ? 'Basic' : r() < 0.62 ? 'Standard' : 'Basic',
+        adobe: setor === 'Marketing' ? r() < 0.6 : setor === 'Jurídico' ? r() < 0.5 : false,
         pc,
-        av: pc && rand() < 0.97,
-        laps: pc && rand() < 0.8,
-        selo: pc && rand() < 0.96,
-        win: pc ? (rand() < 0.82 ? 'Pro' : 'Home') : null,
-        motivo: pc ? null : m < 0.47 ? 'particular' : m < 0.93 ? 'naoTem' : 'none',
-        emailOk: rand() > 0.03,
-        nomeOk: rand() > 0.02,
+        win: temPc ? win : null,
+        laps: temPc && (pro ? r() < 0.93 : r() < 0.3),
+        av: temPc && r() < 0.9,
+        selo: temPc ? `PAT-${pc.slice(-3)}` : '',
+        motivo: temPc ? null : m < 0.35 ? 'particular' : m < 0.85 ? 'naoTem' : 'nenhum',
         n: -1,
       });
     }
   }
   return recs;
 }
-export const records = buildRecords();
+export const registros = montar();
 
-// Ordem fixa dos setores nos gráficos (pela planilha completa), para as linhas não pularem durante a animação
-export const sectorOrder = [...SECTORS].sort(
-  (a, b) => records.filter((r) => r.s === b).length - records.filter((r) => r.s === a).length || SECTORS.indexOf(a) - SECTORS.indexOf(b),
+// Ordem fixa dos setores nos gráficos (pela planilha completa), para as barras não pularem durante a animação.
+// Setor com mais contas primeiro; "Sem setor" por último
+export const ordemSetores = [...SETOR_NOMES].sort((a, b) =>
+  a === SEM_SETOR ? 1 : b === SEM_SETOR ? -1 : registros.filter((x) => x.setor === b).length - registros.filter((x) => x.setor === a).length,
 );
 
-export const PEND_TOP = 6;
+// ---------- Filtros ----------
+// Setor vale em todas as abas; os demais, só na aba deles (como no painel real)
+export type Sel = { setor: string; lic: string[]; tipo: string[]; win: string[]; falta: string[]; av: string };
+export const SEL_VAZIA: Sel = { setor: '', lic: [], tipo: [], win: [], falta: [], av: '' };
 
-// Gráficos por setor: os 10 maiores setores (pela planilha completa) e o restante somado em "Outros"
-const TOP_SECTORS = 10;
-export const OTHERS = 'Outros';
-export const sectorGroups: [string, string[]][] = [
-  ...sectorOrder.slice(0, TOP_SECTORS).map((s): [string, string[]] => [s, [s]]),
-  [OTHERS, sectorOrder.slice(TOP_SECTORS)],
-];
-
-// Licenças comerciais do Kaspersky: valor fictício e fixo por licença (R$), uma por notebook.
-// Todas valem 3 anos e vencem juntas
-export const AV_PRICE = 300;
-export const AV_YEARS = 3;
-
-// Custos (valores fictícios): compra de cada notebook e assinatura anual do Microsoft 365 por conta
-export const NB_PRICE = 4500;
-export const LIC_PRICE = { Standard: 900, Basic: 420 } as const;
-
-// Partes das barras empilhadas de gasto por setor: aba Licenças (por tipo de licença) e aba Dispositivos (por tipo de gasto)
-export const LIC_PARTS = [
-  ['Standard', 'Standard'],
-  ['Basic', 'Basic'],
+export const FILTRO_LIC = [
+  ['Standard', 'Microsoft 365 Standard'],
+  ['Basic', 'Microsoft 365 Basic'],
+  ['Adobe', 'Adobe Acrobat Pro'],
+  ['Antivírus', 'Antivírus (Kaspersky)'],
 ] as const;
-export const DEV_PARTS = [
-  ['nb', 'Notebooks'],
-  ['av', 'Antivírus'],
+export const FILTRO_TIPO: Tipo[] = ['Usuário', 'Conta administradora', 'Dispositivo compartilhado'];
+export const FILTRO_FALTA = [
+  ['laps', 'Sem LAPS'],
+  ['av', 'Sem antivírus'],
+  ['home', 'Windows 11 HOME'],
 ] as const;
 
-// Pendências de uma linha (as mesmas das listas do dashboard; PC divergente e selo repetido dependem de outras linhas)
-const pendSeg = (r: Rec) => r.pc && (!r.laps || !r.av || r.win === 'Home');
-const pendCad = (r: Rec) => (r.pc && !r.selo) || !r.emailOk || !r.nomeOk || r.s === NO_SECTOR;
+const temLic = (x: Rec, v: string) => (v === 'Adobe' ? x.adobe : v === 'Antivírus' ? !!x.pc && x.av : x.lic === v);
+const falta = (x: Rec, v: string) => !!x.pc && (v === 'laps' ? !x.laps : v === 'av' ? !x.av : x.win === 'Windows 11 HOME');
+// Várias opções no mesmo filtro = linhas com qualquer uma delas
+const algum = (vals: string[], teste: (v: string) => boolean) => !vals.length || vals.some(teste);
 
-// Filtros da aba Dashboard: chave, título, opções [valor, texto] e o teste de cada linha
-type Filter = { key: string; label: string; options: [string, string][]; test: (r: Rec, v: string) => boolean };
-export const FILTERS: Filter[] = [
-  { key: 'win', label: 'Versão do Windows', options: [['Pro', 'Windows 11 Pro'], ['Home', 'Windows 11 Home']], test: (r, v) => r.win === v },
-  { key: 'lic', label: 'Licença principal', options: [['Standard', 'Standard'], ['Basic', 'Basic']], test: (r, v) => r.l === v },
-  { key: 'laps', label: 'Status LAPS', options: [['ok', 'Aplicado'], ['no', 'Pendente']], test: (r, v) => r.pc && r.laps === (v === 'ok') },
-  { key: 'av', label: 'Status antivírus', options: [['ok', 'Ativo'], ['no', 'Inativo']], test: (r, v) => r.pc && r.av === (v === 'ok') },
-  { key: 'pc', label: 'Equipamento', options: [['ok', 'Com notebook corp.'], ['no', 'Sem notebook corp.']], test: (r, v) => r.pc === (v === 'ok') },
-  { key: 'selo', label: 'Selo patrimônio', options: [['ok', 'Com selo'], ['no', 'Sem selo']], test: (r, v) => r.pc && r.selo === (v === 'ok') },
-  { key: 'setor', label: 'Setor', options: SECTORS.map((s) => [s, s]), test: (r, v) => r.s === v },
-  {
-    key: 'pend',
-    label: 'Pendência',
-    options: [['seg', 'De segurança'], ['cad', 'De cadastro'], ['none', 'Sem pendência']],
-    test: (r, v) => (v === 'seg' ? pendSeg(r) : v === 'cad' ? pendCad(r) : !pendSeg(r) && !pendCad(r)),
-  },
-];
+export const filtrar = {
+  lic: (rs: Rec[], s: Sel) => rs.filter((x) => (!s.setor || x.setor === s.setor) && algum(s.lic, (v) => temLic(x, v)) && algum(s.tipo, (v) => x.tipo === v)),
+  seg: (rs: Rec[], s: Sel) => rs.filter((x) => (!s.setor || x.setor === s.setor) && algum(s.win, (v) => x.win === v) && algum(s.falta, (v) => falta(x, v))),
+  cus: (rs: Rec[], s: Sel) => rs.filter((x) => !s.setor || x.setor === s.setor),
+};
 
-// Mantém só as linhas que passam em todos os filtros escolhidos ('' = Todos)
-export function applyFilters(rows: Rec[], sel: Record<string, string>) {
-  const active = FILTERS.filter((f) => sel[f.key]);
-  return rows.filter((r) => active.every((f) => f.test(r, sel[f.key])));
-}
+// Pendências de segurança de um equipamento, separadas por " · "
+export const pendencias = (x: Rec) =>
+  !x.pc ? '' : [!x.laps && 'Sem LAPS', !x.av && 'Sem antivírus', x.win === 'Windows 11 HOME' && 'Windows HOME'].filter(Boolean).join(' · ');
 
-// Listas de pendências do dashboard (chave usada no cálculo, texto da linha)
-export const PEND_SEG = [
-  ['laps', 'Equipamentos sem LAPS'],
-  ['av', 'Equipamentos sem antivírus'],
-  ['home', 'Equipamentos com Windows Home'],
-] as const;
-export const PEND_CAD = [
-  ['selo', 'Equipamentos sem selo de patrimônio'],
-  ['email', 'E-mails com usuário fora do domínio'],
-  ['nome', 'Registros sem nome de usuário'],
-  ['setor', 'Contas sem setor preenchido'],
-  ['div', 'PCs com dados divergentes entre linhas'],
-  ['dup', 'Selo usado em PCs diferentes'],
-] as const;
+// ---------- Formatação ----------
+const num = (v: number) => Math.round(v).toLocaleString('pt-BR');
+export const brl = (v: number) => `R$ ${num(v)}`;
+export const brl2 = (v: number) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const mil = (v: number) => `R$ ${(v / 1000).toFixed(1).replace('.', ',')} Mil`;
+const pct = (a: number, b: number) => (b ? (a / b) * 100 : 0);
+const pct1 = (a: number, b: number) => `${pct(a, b).toFixed(1).replace('.', ',')}%`;
+const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
 
-// Rosquinha: círculo de perímetro 100, então p% vira direto o tamanho do traço.
-// seg 0 = primeira categoria (a partir do topo), seg 1 = o restante; g abre uma pequena folga entre os dois.
-export function donutDash(p: number, seg: number) {
-  const g = p > 0 && p < 100 ? 1 : 0;
-  return seg === 0
-    ? { dash: `${Math.max(p - g, 0)} ${100 - p + g}`, offset: '0' }
-    : { dash: `${Math.max(100 - p - g, 0)} ${p + g}`, offset: String(-p) };
-}
+// Contagens sem repetição: conta por e-mail, equipamento por nome do PC
+const contas = (rs: Rec[]) => new Set(rs.map((x) => x.email)).size;
+const equips = (rs: Rec[]) => new Set(rs.filter((x) => x.pc).map((x) => x.pc)).size;
 
-// Textos (t) e larguras em % (w) de cada elemento do dashboard
-export function compute(rows: Rec[]) {
+// ---------- O cálculo do painel ----------
+// t = textos e w = larguras/alturas em % de cada elemento, com chaves por aba (lic:, seg:, cus:)
+export function calcular(base: Rec[], s: Sel) {
   const t: Record<string, string> = {};
   const w: Record<string, number> = {};
-  const pct = (a: number, b: number) => (b ? (a / b) * 100 : 0);
-  const pct1 = (a: number, b: number) => `${pct(a, b).toFixed(1).replace('.', ',')}%`;
-  // Barras de uma lista: largura relativa ao maior valor da própria lista
-  const bars = (prefix: string, vals: [string, number][]) => {
-    const max = Math.max(...vals.map(([, v]) => v), 1);
-    for (const [k, v] of vals) {
-      t[`${prefix}:${k}`] = String(v);
-      w[`${prefix}:${k}`] = pct(v, max);
+  const porSetor = (rs: Rec[]) => new Map(ordemSetores.map((st) => [st, rs.filter((x) => x.setor === st)]));
+
+  // ===== Licenças: só quantidades =====
+  {
+    const rs = filtrar.lic(base, s);
+    const std = rs.filter((x) => x.lic === 'Standard');
+    t['lic:contas'] = String(contas(rs));
+    t['lic:contas:sub'] = `${plural(rs.length, 'registro', 'registros')} nos filtros`;
+    t['lic:std'] = String(contas(std));
+    t['lic:basic'] = String(contas(rs.filter((x) => x.lic === 'Basic')));
+    t['lic:adobe'] = String(contas(rs.filter((x) => x.adobe)));
+    t['lic:av'] = String(equips(rs.filter((x) => x.av)));
+
+    // Licenças que podem ser revistas: Standard sem equipamento (poderiam ser Basic) e contas não pessoais pagas
+    const stdSemEq = std.filter((x) => !x.pc);
+    t['lic:rev'] = String(contas(stdSemEq));
+    t['lic:np'] = String(contas(rs.filter((x) => x.tipo !== 'Usuário')));
+    const maxMot = Math.max(...MOTIVOS.map(([k]) => stdSemEq.filter((x) => x.motivo === k).length), 1);
+    for (const [k] of MOTIVOS) {
+      const quem = stdSemEq.filter((x) => x.motivo === k);
+      t[`lic:mot:${k}`] = String(quem.length);
+      w[`lic:mot:${k}`] = pct(quem.length, maxMot);
+      t[`lic:mot:${k}:tip`] = quem.length ? quem.map((x) => `${x.nome} (${x.setor})`).join('\n') : 'Ninguém';
     }
-  };
 
-  // KPIs
-  const eq = rows.filter((r) => r.pc);
-  const semPc = rows.filter((r) => !r.pc);
-  const lapsOk = eq.filter((r) => r.laps).length;
-  const avOk = eq.filter((r) => r.av).length;
-  const semSelo = eq.filter((r) => !r.selo).length;
-  t.contas = String(rows.length);
-  t.equip = String(eq.length);
-  t.laps = pct1(lapsOk, eq.length);
-  t['laps:sub'] = `${lapsOk} de ${eq.length} notebooks`;
-  t.av = pct1(avOk, eq.length);
-  t['av:sub'] = `${avOk} de ${eq.length} notebooks`;
-  t.semPc = String(semPc.length);
-  t['semPc:sub'] = `de ${rows.length} contas ativas`;
-  t.semSelo = String(semSelo);
-
-  // Status de cada KPI com meta: good (meta batida), warn (atenção) ou crit (crítico).
-  // LAPS e antivírus: meta de 100%; abaixo de 85% é crítico. w guarda o % para o anel de progresso.
-  const metaSt = (v: number) => (v >= 100 ? 'good' : v >= 85 ? 'warn' : 'crit');
-  w.laps = pct(lapsOk, eq.length);
-  w.av = pct(avOk, eq.length);
-  t['laps:st'] = eq.length ? metaSt(w.laps) : 'good';
-  t['av:st'] = eq.length ? metaSt(w.av) : 'good';
-  t['semSelo:sub'] = `de ${eq.length} notebooks`;
-
-  // Contas ativas por licença
-  bars('lic', [
-    ['Standard', rows.filter((r) => r.l === 'Standard').length],
-    ['Basic', rows.filter((r) => r.l === 'Basic').length],
-  ]);
-
-  // Versão do Windows (rosquinha: % do Pro)
-  const pro = eq.filter((r) => r.win === 'Pro').length;
-  const home = eq.length - pro;
-  t['win:Pro'] = String(pro);
-  t['win:Home'] = String(home);
-  w['win:Pro'] = pct(pro, eq.length);
-  t['win:Pro:pct'] = `${Math.round(pct(pro, eq.length))}%`;
-  t['win:Home:pct'] = `${Math.round(pct(home, eq.length))}%`;
-
-  // Contas sem notebook corporativo, por motivo
-  for (const [k] of MOTIVOS) {
-    const n = semPc.filter((r) => r.motivo === k).length;
-    t[`mot:${k}`] = String(n);
-    t[`mot:${k}:pct`] = pct1(n, semPc.length);
+    // Licenças por setor: Standard, Basic e Adobe, empilhadas; largura relativa ao setor com mais licenças
+    const setores = porSetor(rs);
+    const tot = (l: Rec[]) => contas(l.filter((x) => x.lic === 'Standard')) + contas(l.filter((x) => x.lic === 'Basic')) + contas(l.filter((x) => x.adobe));
+    const maxS = Math.max(...[...setores.values()].map(tot), 1);
+    for (const [st, l] of setores) {
+      const v = { std: contas(l.filter((x) => x.lic === 'Standard')), basic: contas(l.filter((x) => x.lic === 'Basic')), adobe: contas(l.filter((x) => x.adobe)) };
+      const total = v.std + v.basic + v.adobe;
+      w[`lic:set:${st}`] = pct(total, maxS);
+      for (const [k, n] of Object.entries(v)) {
+        t[`lic:set:${st}:${k}`] = n ? String(n) : '';
+        w[`lic:set:${st}:${k}`] = pct(n, total);
+      }
+      t[`lic:set:${st}:tip`] = `${st}: ${plural(contas(l), 'conta ativa', 'contas ativas')} · Standard ${v.std} · Basic ${v.basic} · Adobe ${v.adobe}`;
+    }
   }
 
-  // Pendências de segurança e de cadastro
-  bars('ps', [
-    ['laps', eq.length - lapsOk],
-    ['av', eq.length - avOk],
-    ['home', home],
-  ]);
-  // PC repetido em linhas com dados que não batem, e selo usado em mais de um PC
-  const byPc = new Map<string, Set<string>>();
-  const byPat = new Map<string, Set<string>>();
-  for (const r of eq) {
-    if (r.pcId) byPc.set(r.pcId, (byPc.get(r.pcId) ?? new Set()).add(`${r.win}|${r.av}|${r.laps}|${r.pat}`));
-    if (r.pat && r.pcId) byPat.set(r.pat, (byPat.get(r.pat) ?? new Set()).add(r.pcId));
-  }
-  bars('pc', [
-    ['selo', semSelo],
-    ['email', rows.filter((r) => !r.emailOk).length],
-    ['nome', rows.filter((r) => !r.nomeOk).length],
-    ['setor', rows.filter((r) => r.s === NO_SECTOR).length],
-    ['div', [...byPc.values()].filter((v) => v.size > 1).length],
-    ['dup', [...byPat.values()].filter((v) => v.size > 1).length],
-  ]);
+  // ===== Segurança =====
+  {
+    const rs = filtrar.seg(base, s);
+    const pcs = new Map<string, Rec>();
+    for (const x of rs) if (x.pc && !pcs.has(x.pc)) pcs.set(x.pc, x);
+    const eq = [...pcs.values()];
+    const n = eq.length;
+    const conta = (f: (x: Rec) => boolean) => eq.filter(f).length;
+    const vals: Record<string, number> = {
+      laps: conta((x) => !x.laps),
+      av: conta((x) => !x.av),
+      home: conta((x) => x.win === 'Windows 11 HOME'),
+      w10: conta((x) => x.win === 'Windows 10 PRO'),
+      prolaps: conta((x) => x.win !== 'Windows 11 HOME' && !x.laps),
+      part: contas(rs.filter((x) => !x.pc && x.motivo === 'particular')),
+    };
+    for (const [k, v] of Object.entries(vals)) {
+      t[`seg:${k}`] = String(v);
+      t[`seg:${k}:st`] = v ? 'ruim' : 'bom';
+    }
+    t['seg:laps:sub'] = `cobertura ${pct1(n - vals.laps, n)} · meta 100%`;
+    t['seg:av:sub'] = `cobertura ${pct1(n - vals.av, n)} · meta 100%`;
 
-  // Setores com mais pendências de segurança: sem LAPS, sem antivírus ou Windows Home
-  const pend = new Map<string, { av: number; laps: number; home: number }>();
-  for (const r of eq) {
-    const p = pend.get(r.s) ?? { av: 0, laps: 0, home: 0 };
-    p.av += +!r.av;
-    p.laps += +!r.laps;
-    p.home += +(r.win === 'Home');
-    pend.set(r.s, p);
-  }
-  const top = [...pend]
-    .map(([s, p]) => ({ s, ...p, n: p.av + p.laps + p.home }))
-    .filter((p) => p.n > 0)
-    .sort((a, b) => b.n - a.n || SECTORS.indexOf(a.s) - SECTORS.indexOf(b.s))
-    .slice(0, PEND_TOP);
-  for (let i = 0; i < PEND_TOP; i++) {
-    const p = top[i];
-    t[`pend:${i}:name`] = p?.s ?? '';
-    t[`pend:${i}`] = p ? String(p.n) : '';
-    t[`pend:${i}:tip`] = p ? `LAPS ${p.laps} · Antivírus ${p.av} · Windows Home ${p.home}` : '';
-    // Detalhe por tipo, visível no ranking do celular (lá não existe "passar o mouse")
-    t[`pend:${i}:laps`] = String(p?.laps ?? 0);
-    t[`pend:${i}:av`] = String(p?.av ?? 0);
-    t[`pend:${i}:home`] = String(p?.home ?? 0);
-    // Gravidade do setor pela pior pendência: sem antivírus > sem LAPS > Windows Home
-    t[`pend:${i}:st`] = !p ? '' : p.av ? 'crit' : p.laps ? 'serious' : 'warn';
-    w[`pend:${i}`] = p ? pct(p.n, top[0].n) : 0;
-    // Partes da barra empilhada: quanto de cada tipo de pendência
-    for (const k of ['laps', 'av', 'home'] as const) w[`pend:${i}:${k}`] = p ? pct(p[k], p.n) : 0;
+    // Equipamentos por setor: com e sem pendência de segurança; altura relativa ao setor com mais equipamentos
+    const setores = porSetor(eq);
+    const maxS = Math.max(...[...setores.values()].map((l) => l.length), 1);
+    for (const [st, l] of setores) {
+      const com = l.filter((x) => pendencias(x)).length;
+      t[`seg:set:${st}:com`] = com ? String(com) : '';
+      t[`seg:set:${st}:sem`] = l.length - com ? String(l.length - com) : '';
+      w[`seg:set:${st}:com`] = pct(com, maxS);
+      w[`seg:set:${st}:sem`] = pct(l.length - com, maxS);
+      t[`seg:set:${st}:tip`] = l.length
+        ? `${st}: ${plural(l.length, 'equipamento', 'equipamentos')}\n` + l.map((x) => `${x.pc} · ${x.nome}${pendencias(x) ? ` · ${pendencias(x)}` : ''}`).join('\n')
+        : `${st}: sem equipamentos`;
+    }
   }
 
-  const brl = (v: number) => `R$ ${v.toLocaleString('pt-BR')}`;
-  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+  // ===== Custos: só valores em R$ =====
+  {
+    const rs = filtrar.cus(base, s);
+    const avPreco = s.av ? Number(s.av) : AV_PRECO;
+    const custo = (l: Rec[]) => {
+      const std = contas(l.filter((x) => x.lic === 'Standard')) * PRECO.Standard;
+      const basic = contas(l.filter((x) => x.lic === 'Basic')) * PRECO.Basic;
+      const adobe = contas(l.filter((x) => x.adobe)) * PRECO.Adobe;
+      const av = (equips(l.filter((x) => x.av)) * avPreco) / AV_ANOS;
+      return { std, basic, m365: std + basic, adobe, av, total: std + basic + adobe + av };
+    };
+    const c = custo(rs);
+    const ativas = contas(rs);
+    t['cus:total'] = brl(c.total);
+    t['cus:mes'] = brl(c.total / 12);
+    t['cus:conta'] = brl(ativas ? c.total / ativas : 0);
+    t['cus:avc'] = brl(equips(rs.filter((x) => x.av)) * avPreco);
+    t['cus:avc:sub'] = `licença de 3 anos · ${brl(avPreco)} por equipamento`;
 
-  // Aba Licenças: gasto com Microsoft 365 em 12 meses, no total e por tipo de licença
-  const licCost = (rs: Rec[]) => ({
-    Standard: rs.filter((r) => r.l === 'Standard').length * LIC_PRICE.Standard,
-    Basic: rs.filter((r) => r.l === 'Basic').length * LIC_PRICE.Basic,
-  });
-  const lc = licCost(rows);
-  t['m365'] = brl(lc.Standard + lc.Basic);
-  t['m365:sub'] = `${plural(rows.length, 'licença', 'licenças')} · 12 meses`;
-  for (const [k] of LIC_PARTS) t[`lic:${k}:cost`] = `${brl(lc[k])}/ano`;
-  t['pc:total'] = String(PEND_CAD.reduce((a, [k]) => a + Number(t[`pc:${k}`]), 0));
-  t['pc:total:st'] = t['pc:total'] === '0' ? 'good' : 'warn';
-  // Semáforo de cada pendência de cadastro
-  for (const [k] of PEND_CAD) t[`pc:${k}:st`] = t[`pc:${k}`] === '0' ? 'good' : 'warn';
+    // Para onde vai o dinheiro: rosca com Standard, Adobe, antivírus e Basic
+    for (const k of ['std', 'adobe', 'av', 'basic'] as const) {
+      t[`cus:don:${k}`] = mil(c[k]);
+      t[`cus:don:${k}:pct`] = `${Math.round(pct(c[k], c.total))}%`;
+      w[`cus:don:${k}`] = pct(c[k], c.total);
+    }
 
-  // Aba Dispositivos: compra dos notebooks e licenças de antivírus (3 anos)
-  const dc = { nb: eq.length * NB_PRICE, av: avOk * AV_PRICE };
-  t['dev'] = brl(dc.nb + dc.av);
-  t['dev:sub'] = `notebooks e antivírus de ${plural(eq.length, 'equipamento', 'equipamentos')}`;
-  t['dev:nb:sub'] = `${plural(eq.length, 'notebook', 'notebooks')} × ${brl(NB_PRICE)}`;
-  t['dev:av:sub'] = `${plural(avOk, 'licença', 'licenças')} × ${brl(AV_PRICE)} · ${AV_YEARS} anos`;
-  const maxDev = Math.max(dc.nb, dc.av, 1);
-  for (const [k] of DEV_PARTS) {
-    t[`dev:${k}`] = brl(dc[k]);
-    t[`dev:${k}:pct`] = pct1(dc[k], dc.nb + dc.av);
-    w[`dev:${k}`] = pct(dc[k], maxDev);
-  }
-
-  // Por setor: contas, dispositivos e os dois gastos
-  // Notebooks com alguma pendência de segurança (sem LAPS, sem antivírus ou Windows Home)
-  const seg = eq.filter(pendSeg).length;
-  t.seg = String(seg);
-  t['seg:sub'] = `de ${plural(eq.length, 'notebook', 'notebooks')}`;
-  // Até 10% dos notebooks com pendência é atenção; acima disso, crítico
-  t['seg:st'] = !seg ? 'good' : seg <= eq.length * 0.1 ? 'warn' : 'crit';
-
-  const bySector = sectorGroups.map(([s, group]) => {
-    const sr = rows.filter((r) => group.includes(r.s));
-    const se = sr.filter((r) => r.pc);
-    const av = se.filter((r) => r.av).length;
-    return { s, sr, c: sr.length, d: se.length, av, lic: licCost(sr), dev: { nb: se.length * NB_PRICE, av: av * AV_PRICE } };
-  });
-  const sum = (o: Record<string, number>) => Object.values(o).reduce((a, v) => a + v, 0);
-  // Escala das barras só pelos 10 maiores setores: "Outros" soma vários setores e aparece como texto, sem barra
-  const bigs = bySector.filter((x) => x.s !== OTHERS);
-  const maxC = Math.max(...bigs.map((x) => x.c), 1);
-  const maxLic = Math.max(...bigs.map((x) => sum(x.lic)), 1);
-  const maxDevS = Math.max(...bigs.map((x) => sum(x.dev)), 1);
-  for (const { s, sr, c, d, av, lic, dev } of bySector) {
-    // "Outros" mostra quantos setores estão somados nele
-    const name = s === OTHERS ? `${OTHERS} (${sectorGroups.at(-1)![1].length} setores)` : s;
-    t[`set:${s}:c`] = String(c);
-    t[`set:${s}:d`] = String(d);
-    t[`set:${s}:tip`] = `${name}: ${c} contas · ${d} notebooks` + (c > d ? ` · faltam ${c - d}` : '');
-    w[`set:${s}:c`] = pct(c, maxC);
-    w[`set:${s}:d`] = pct(d, c); // notebooks dentro da barra de contas
-
-    // Barras empilhadas: total relativo ao setor que mais gasta, dividido pelas partes
-    const std = sr.filter((r) => r.l === 'Standard').length;
-    t[`lcs:${s}`] = brl(sum(lic));
-    t[`lcs:${s}:tip`] = `${name}: ${plural(c, 'licença', 'licenças')} (${std} Standard · ${c - std} Basic) = ${brl(sum(lic))}/ano`;
-    w[`lcs:${s}`] = pct(sum(lic), maxLic);
-    for (const [k] of LIC_PARTS) w[`lcs:${s}:${k}`] = pct(lic[k], sum(lic));
-    t[`dvs:${s}`] = brl(sum(dev));
-    t[`dvs:${s}:tip`] = `${name}: ${brl(sum(dev))} · ${plural(d, 'notebook', 'notebooks')} ${brl(dev.nb)} · ${plural(av, 'antivírus', 'antivírus')} ${brl(dev.av)}`;
-    w[`dvs:${s}`] = pct(sum(dev), maxDevS);
-    for (const [k] of DEV_PARTS) w[`dvs:${s}:${k}`] = pct(dev[k], sum(dev));
+    // Por setor: custo anual empilhado (M365, Adobe e antivírus) e custo por conta ativa
+    const setores = porSetor(rs);
+    const custos = new Map([...setores].map(([st, l]) => [st, custo(l)]));
+    const maxS = Math.max(...[...custos.values()].map((x) => x.total), 1);
+    const porConta = new Map([...setores].map(([st, l]) => [st, contas(l) ? custos.get(st)!.total / contas(l) : 0]));
+    const maxC = Math.max(...porConta.values(), 1);
+    for (const [st, l] of setores) {
+      const x = custos.get(st)!;
+      w[`cus:set:${st}`] = pct(x.total, maxS);
+      for (const k of ['m365', 'adobe', 'av'] as const) {
+        // O valor só vai escrito na parte que tem espaço para ele
+        t[`cus:set:${st}:${k}`] = x[k] && pct(x[k], maxS) > 24 ? mil(x[k]) : '';
+        w[`cus:set:${st}:${k}`] = pct(x[k], x.total);
+      }
+      t[`cus:set:${st}:tip`] = `${st}: ${brl(x.total)} por ano · M365 ${brl(x.m365)} · Adobe ${brl(x.adobe)} · antivírus ${brl(x.av)}`;
+      const pc = porConta.get(st)!;
+      t[`cus:cc:${st}`] = pc ? brl(pc) : '';
+      w[`cus:cc:${st}`] = pct(pc, maxC);
+      t[`cus:cc:${st}:tip`] = `${st}: ${brl(x.total)} por ano ÷ ${plural(contas(l), 'conta ativa', 'contas ativas')} = ${brl(pc)} por conta`;
+    }
   }
 
   return { t, w };
 }
 
+// Lista "Equipamentos com pendência de segurança" (aba Segurança), um equipamento por linha
+export function listaPendencias(base: Rec[], s: Sel) {
+  const vistos = new Set<string>();
+  return filtrar
+    .seg(base, s)
+    .filter((x) => x.pc && pendencias(x) && !vistos.has(x.pc) && vistos.add(x.pc))
+    .sort((a, b) => ordemSetores.indexOf(a.setor) - ordemSetores.indexOf(b.setor));
+}
+
+// Rosca: círculo de perímetro 100; cada fatia começa onde a anterior terminou, com uma folga pequena entre elas
+export function rosca(fatias: number[]) {
+  let ini = 0;
+  return fatias.map((p) => {
+    const g = p > 1 ? 0.6 : 0;
+    const d = { dash: `${Math.max(p - g, 0)} ${100 - p + g}`, offset: String(-ini) };
+    ini += p;
+    return d;
+  });
+}
