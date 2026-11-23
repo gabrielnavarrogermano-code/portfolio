@@ -2,8 +2,8 @@
 import { site } from '../data/site';
 import { idiomaDe, textos } from '../i18n';
 
-// Rodapé: a mesma linha de eixo das seções, onde o fio termina. Os links ficam aqui porque a página do projeto não
-// tem a seção de contato.
+// Rodapé enxuto: o nome e o ano de um lado, os links e o "voltar ao topo" do outro. Os links ficam aqui porque a
+// página do projeto não tem a seção de contato.
 const tx = textos[idiomaDe(Astro.url)].rodape;
 const links = [
   { label: tx.email, href: `mailto:${site.email}` },
@@ -12,49 +12,59 @@ const links = [
 ];
 ---
 
-<footer class="secao rodape" data-secao>
-  <span class="fio" data-fio-a aria-hidden="true"></span>
+<footer class="rodape">
   <div class="secao-largura">
-    <div class="eixo" data-eixo>
-      <span class="eixo-ponto" aria-hidden="true"></span>
-      <span>© {site.ano} {site.name}</span>
-      <span class="eixo-pontos max-sm:hidden" aria-hidden="true"></span>
-      <ul class="flex gap-5 max-sm:hidden">
+    <div class="rodape-linha">
+      <p>© {site.ano} {site.name}</p>
+      <nav aria-label="Links">
         {
           links.map((l) => (
-            <li>
-              <a href={l.href} class="transition-colors hover:text-heading" {...(l.external ? { target: '_blank', rel: 'noopener' } : {})}>
-                {l.label} ↗
-              </a>
-            </li>
+            <a href={l.href} {...(l.external ? { target: '_blank', rel: 'noopener' } : {})}>
+              {l.label}
+            </a>
           ))
         }
-      </ul>
-      <button type="button" data-to-top class="eixo-forte ml-auto cursor-pointer uppercase transition-colors hover:text-accent">
-        {tx.topo}
-      </button>
+        <button type="button" data-to-top>{tx.topo}</button>
+      </nav>
     </div>
-    <ul class="mt-5 flex gap-5 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:hidden">
-      {
-        links.map((l) => (
-          <li>
-            <a href={l.href} {...(l.external ? { target: '_blank', rel: 'noopener' } : {})}>{l.label} ↗</a>
-          </li>
-        ))
-      }
-    </ul>
   </div>
 </footer>
 
 <style>
   .rodape {
-    padding-block: 4rem 4.5rem;
+    padding-block: 5rem 4rem;
   }
 
-  @media (min-width: 56rem) {
-    .rodape {
-      padding-block: 16svh 4.5rem;
-    }
+  .rodape-linha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--color-line);
+    font-size: 0.9375rem;
+    color: var(--color-muted);
+  }
+
+  .rodape-linha nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1.4rem;
+  }
+
+  .rodape-linha a,
+  .rodape-linha button {
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+    transition: color 0.25s ease;
+  }
+
+  .rodape-linha a:hover,
+  .rodape-linha button:hover {
+    color: var(--color-heading);
   }
 </style>
 

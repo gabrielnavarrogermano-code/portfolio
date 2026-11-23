@@ -4,10 +4,9 @@ import { Image } from 'astro:assets';
 import Secao from './Secao.astro';
 import { idiomaDe, caminho, textos } from '../i18n';
 
-// ( 02 ) Projetos: uma seção por projeto, no molde de todas.
-// À esquerda, o resumo e o antes → depois (no celular, o print vem primeiro, logo depois do título) (a linha do "depois" se desenha em vermelho); no painel, o print do
-// dashboard (no hover, troca para a outra página dele) e a ficha: contexto, etapa e ferramentas.
-// Os números do projeto ficam no estudo de caso, para não repetir aqui.
+// Projetos: uma seção por projeto. O título e o resumo, o print largo (no hover troca para a outra página do
+// dashboard) e, embaixo, o fio deita e vira a seta que vai do "antes" ao "depois"; o fio da seção termina nela.
+// No fim, o contexto numa frase e o botão do estudo de caso. Os números ficam no estudo de caso.
 const idioma = idiomaDe(Astro.url);
 const tx = textos[idioma].projetos;
 // Os projetos no idioma da página (o inglês fica em src/content/projetos-en)
@@ -16,122 +15,62 @@ const projetos = (await getCollection(idioma === 'en' ? 'projetosEn' : 'projetos
 
 <div id="projetos">
   {
-    projetos.map((p, i) => (
-      <Secao
-        num={String(i + 2).padStart(2, '0')}
-        rotulo={tx.rotulo}
-        rotuloDir={projetos.length > 1 ? tx.deTotal(i + 1, projetos.length) : tx.naPratica}
-        titulo={p.data.title}
-        tituloLongo={p.data.title.length > 24}
-        dadosPrimeiro
-      >
-        <Fragment slot="negocio">
-          <p class="serif-grande">{p.data.summary}</p>
-          {p.data.before && p.data.after && (
-            <div class="pj-ba">
-              <div>
-                <small>{tx.antes}</small>
-                <p>{p.data.before}</p>
-              </div>
-              <div class="pj-depois">
-                <small>{tx.depois}</small>
-                <p>{p.data.after}</p>
-              </div>
-            </div>
-          )}
-          <p class="mt-7">
-            <a href={caminho(idioma, `projeto:${p.id}`)} class="btn btn-cheio">
-              {tx.ler} <span class="seta" aria-hidden="true">→</span>
-            </a>
-          </p>
-        </Fragment>
-
-        <a slot="dados" href={caminho(idioma, `projeto:${p.id}`)} data-active class="pj-print group" aria-label={tx.abrir(p.data.title)}>
+    projetos.map((p) => (
+      <Secao titulo={p.data.title} sub={p.data.summary}>
+        <a href={caminho(idioma, `projeto:${p.id}`)} data-active data-abre class="pj-prancha" aria-label={tx.abrir(p.data.title)}>
           {p.data.cover && (
-            <Image src={p.data.cover} alt="" widths={[640, 1024]} sizes="(min-width: 896px) 34rem, 100vw" format="webp" class="pj-img" />
+            <Image src={p.data.cover} alt="" widths={[768, 1280, 1920]} sizes="(min-width: 72rem) 67rem, 100vw" format="webp" class="pj-img" />
           )}
           {p.data.coverHover && (
-            <Image src={p.data.coverHover} alt="" widths={[640, 1024]} sizes="(min-width: 896px) 34rem, 100vw" format="webp" class="pj-img pj-img-hover" />
+            <Image src={p.data.coverHover} alt="" widths={[768, 1280, 1920]} sizes="(min-width: 72rem) 67rem, 100vw" format="webp" class="pj-img pj-img-hover" />
           )}
           {p.data.coverHover && <span class="pj-dica" aria-hidden="true">{tx.dica}</span>}
         </a>
 
-        <dl slot="dados" class="pj-ficha">
-          {p.data.context && (
-            <>
-              <dt>{tx.contexto}</dt>
-              <dd>{p.data.context}</dd>
-            </>
-          )}
-          <dt>{tx.etapa}</dt>
-          <dd>{p.data.kind}</dd>
-          <dt>{tx.ferramentas}</dt>
-          <dd>{p.data.tools.join(' · ')}</dd>
-        </dl>
+        {p.data.before && p.data.after && (
+          <div class="pj-seta" data-abre data-fio-fim>
+            <div class="pj-antes">
+              <h3>{tx.antes}</h3>
+              <p>{p.data.before}</p>
+            </div>
+            <div class="pj-depois">
+              <h3>{tx.depois}</h3>
+              <p>{p.data.after}</p>
+            </div>
+          </div>
+        )}
+
+        <div class="pj-rodape">
+          <p>{tx.ficha(p.data.context, p.data.kind, p.data.tools)}</p>
+          <a href={caminho(idioma, `projeto:${p.id}`)} class="btn btn-cheio">{tx.ler}</a>
+        </div>
       </Secao>
     ))
   }
 </div>
 
 <style>
-  /* Antes → depois: o "depois" ganha uma linha vermelha que se desenha quando os lados aparecem */
-  .pj-ba {
-    display: grid;
-    gap: 0.9rem;
-    margin-top: 1.6rem;
-  }
-
-  .pj-ba > div {
+  /* O print: o trabalho em si, em cores, na largura toda; aparece crescendo um pouco */
+  .pj-prancha {
     position: relative;
-    padding-left: 1.1rem;
-  }
-
-  .pj-ba > div::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: var(--color-line);
-  }
-
-  .pj-ba .pj-depois::before {
-    background: var(--color-accent);
-    transform-origin: top;
-    transition: transform 0.8s cubic-bezier(0.65, 0, 0.2, 1) 0.6s;
-  }
-
-  :global(html.fio-js .secao:not(.aberto-lados)) .pj-depois::before {
-    transform: scaleY(0);
-  }
-
-  .pj-ba small {
-    font-family: var(--font-mono);
-    font-size: 0.65625rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--color-muted);
-  }
-
-  .pj-ba .pj-depois small {
-    color: var(--color-accent);
-  }
-
-  .pj-ba p {
-    margin-top: 0.25rem;
-    line-height: 1.5;
-  }
-
-  /* O print: o trabalho em si, em cores; no hover troca para a outra página do dashboard */
-  .pj-print {
-    position: relative;
+    z-index: 2;
     display: block;
-    aspect-ratio: 16 / 9.4;
+    aspect-ratio: 16 / 9;
+    margin-top: 3.2rem;
     overflow: hidden;
-    border: 1px solid var(--color-line);
-    border-radius: 0.75rem;
+    border: 1.5px solid var(--color-line);
+    border-radius: 0.9rem;
     background: #fff;
+  }
+
+  :global(html.fio-js) .pj-prancha:not(:global(.aberto)) {
+    transform: scale(0.96);
+  }
+
+  .pj-prancha {
+    transition:
+      opacity 0.8s ease,
+      transform 1.1s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
   .pj-img {
@@ -141,41 +80,31 @@ const projetos = (await getCollection(idioma === 'en' ? 'projetosEn' : 'projetos
     height: 100%;
     object-fit: cover;
     object-position: left top;
-    transition:
-      opacity 0.6s ease,
-      transform 1.2s cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition: opacity 0.6s ease;
   }
 
   .pj-img-hover {
     opacity: 0;
   }
 
-  .pj-print:hover .pj-img,
-  .pj-print.is-active .pj-img {
-    transform: scale(1.03);
-  }
-
-  .pj-print:hover .pj-img-hover,
-  .pj-print.is-active .pj-img-hover {
+  .pj-prancha:hover .pj-img-hover,
+  .pj-prancha:global(.is-active) .pj-img-hover {
     opacity: 1;
   }
 
   .pj-dica {
     position: absolute;
-    left: 0.6rem;
-    bottom: 0.6rem;
-    padding: 0.3rem 0.6rem;
+    left: 0.8rem;
+    bottom: 0.8rem;
+    padding: 0.3rem 0.8rem;
     border-radius: 9999px;
-    background: rgb(20 25 55 / 0.85);
+    background: var(--color-navy);
+    font-size: 0.875rem;
     color: var(--color-sunset);
-    font-family: var(--font-mono);
-    font-size: 0.625rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
     transition: opacity 0.3s ease;
   }
 
-  .pj-print:hover .pj-dica {
+  .pj-prancha:hover .pj-dica {
     opacity: 0;
   }
 
@@ -185,22 +114,129 @@ const projetos = (await getCollection(idioma === 'en' ? 'projetosEn' : 'projetos
     }
   }
 
-  /* A ficha: rótulo em mono e o valor ao lado */
-  .pj-ficha {
+  /* A seta: uma linha que se desenha da esquerda para a direita, com a ponta no fim, ligando antes → depois */
+  .pj-seta {
+    position: relative;
     display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.55rem 1.1rem;
-    margin-top: 1.2rem;
-    font-size: 0.875rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    margin-top: 3rem;
+    padding-top: 2.2rem;
   }
 
-  .pj-ficha dt {
-    padding-top: 0.15rem;
-    font-family: var(--font-mono);
-    font-size: 0.65625rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
+  .pj-seta::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1.5px;
+    background: var(--color-heading);
+    transform-origin: left;
+    transition: transform 1.1s cubic-bezier(0.65, 0, 0.2, 1);
+  }
+
+  .pj-seta::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    right: -1px;
+    width: 11px;
+    height: 11px;
+    border-top: 1.5px solid var(--color-heading);
+    border-right: 1.5px solid var(--color-heading);
+    transform: rotate(45deg);
+    transition: opacity 0.3s ease 1s;
+  }
+
+  :global(html.fio-js) .pj-seta:not(:global(.aberto))::before {
+    transform: scaleX(0);
+  }
+
+  :global(html.fio-js) .pj-seta:not(:global(.aberto))::after {
+    opacity: 0;
+  }
+
+  /* A seta aparece com a linha, não subindo: tira o deslocamento padrão do [data-abre] */
+  :global(html.fio-js) .pj-seta:not(:global(.aberto)) {
+    opacity: 1;
+    transform: none;
+  }
+
+  .pj-seta > div {
+    transition: opacity 0.6s ease;
+  }
+
+  .pj-antes {
+    transition-delay: 0.2s !important;
+  }
+
+  .pj-depois {
+    text-align: right;
+    transition-delay: 0.9s !important;
+  }
+
+  :global(html.fio-js) .pj-seta:not(:global(.aberto)) > div {
+    opacity: 0;
+  }
+
+  .pj-seta h3 {
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    font-weight: 700;
+    letter-spacing: 0;
     color: var(--color-muted);
+  }
+
+  .pj-depois h3 {
+    color: var(--color-accent);
+  }
+
+  .pj-seta p {
+    margin-top: 0.35rem;
+    font-size: 1.25rem;
+    line-height: 1.5;
+  }
+
+  .pj-antes p {
+    color: var(--color-muted);
+  }
+
+  /* O contexto numa frase e o botão */
+  .pj-rodape {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    margin-top: 2.6rem;
+    padding-top: 1.6rem;
+    border-top: 1px solid var(--color-line);
+  }
+
+  .pj-rodape p {
+    max-width: 40rem;
+    font-size: 1rem;
+    color: var(--color-muted);
+  }
+
+  @media (max-width: 47.99rem) {
+    .pj-prancha {
+      margin-top: 2.2rem;
+    }
+
+    .pj-seta {
+      grid-template-columns: 1fr;
+      gap: 1.6rem;
+    }
+
+    .pj-depois {
+      text-align: left;
+    }
+
+    .pj-seta p {
+      font-size: 1.125rem;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

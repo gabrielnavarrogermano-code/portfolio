@@ -1,48 +1,23 @@
 ---
 import Letras from './Letras.astro';
-import { idiomaDe, textos } from '../i18n';
 
-// O molde de toda seção, o mesmo da capa (estilos no global.css, "O molde das seções"):
-// a linha de eixo com o número e os rótulos, o título em Tektur e os dois lados:
-// - slot "negocio": o lado humano, no papel;
-// - slot "dados": a evidência, no painel: papel com borda azul, a faixa Neon Navy no topo e os títulos em azul.
-// Os dois segmentos do fio (lib/fio.ts) ficam aqui: um chega na linha de eixo, o outro passa entre os lados.
-// dadosPrimeiro: no celular (lados empilhados), o painel vem antes do texto (ex.: o print do projeto).
+// O molde de toda seção (estilos no global.css, "O molde das seções"): o título em Tektur centralizado no eixo do
+// fio, a frase de apoio (opcional) e, no slot, a forma própria da seção. O fio da seção (lib/fio.ts) vai do topo
+// dela até o elemento marcado com data-fio-fim (ou até o fim da seção, se não houver).
 interface Props {
   id?: string;
-  num: string;
-  rotulo: string;
-  rotuloDir: string;
   titulo: string;
-  tituloLongo?: boolean;
-  rotuloDados?: string;
-  dadosPrimeiro?: boolean;
+  sub?: string;
 }
 
-const rotulos = textos[idiomaDe(Astro.url)].secao;
-const { id, num, rotulo, rotuloDir, titulo, tituloLongo = false, rotuloDados = rotulos.dados, dadosPrimeiro = false } = Astro.props;
+const { id, titulo, sub } = Astro.props;
 ---
 
 <section id={id} class="secao" data-secao>
-  <span class="fio" data-fio-a aria-hidden="true"></span>
-  <span class="fio" data-fio-b aria-hidden="true"></span>
+  <span class="fio" data-fio aria-hidden="true"></span>
   <div class="secao-largura">
-    <div class="eixo" data-eixo>
-      <span class="eixo-num">( {num} )</span>
-      <span>{rotulo}</span>
-      <span class="eixo-pontos" aria-hidden="true"></span>
-      <span class="eixo-forte">{rotuloDir}</span>
-    </div>
-    <h2 class:list={['secao-titulo', tituloLongo && 'is-longo']}><Letras texto={titulo} /></h2>
-    <div class:list={['lados', dadosPrimeiro && 'dados-primeiro']} data-lados>
-      <div class="negocio">
-        <p class="rotulo-lado">{rotulos.negocio}</p>
-        <slot name="negocio" />
-      </div>
-      <div class="painel">
-        <p class="rotulo-lado">{rotuloDados}</p>
-        <slot name="dados" />
-      </div>
-    </div>
+    <h2 class="secao-titulo"><Letras texto={titulo} /></h2>
+    {sub && <p class="secao-sub">{sub}</p>}
+    <slot />
   </div>
 </section>

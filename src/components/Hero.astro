@@ -77,7 +77,7 @@ const tx = textos[idiomaDe(Astro.url)].capa;
             {tx.negocioTexto}
           </p>
           <div class="capa-acoes capa-acoes-neg hero-load mt-5 flex items-center gap-2" style="--k: 4">
-            <a href="#contato" class="btn btn-cheio">{tx.contato} <span class="seta" aria-hidden="true">→</span></a>
+            <a href="#contato" class="btn btn-cheio">{tx.contato}</a>
             {
               temCurriculo && (
                 <a href={site.curriculo} download={site.curriculoNome} class="btn btn-linha capa-cv" aria-label={tx.curriculoRotulo}>

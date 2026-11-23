@@ -18,26 +18,30 @@ export default defineConfig({
       options: { experimental: { variableAxis: { wdth: [[75, 100]] } } },
       fallbacks: ['sans-serif'],
     },
+    // Serifa: só na palavra "negócio" da capa
     {
       provider: fontProviders.google(),
       name: 'Instrument Serif',
       cssVariable: '--ff-serif',
       weights: [400],
-      styles: ['normal', 'italic'],
+      styles: ['normal'],
       fallbacks: ['serif'],
     },
+    // O texto do site inteiro: desenhada pelo Braille Institute para ser lida com facilidade por qualquer pessoa
     {
       provider: fontProviders.google(),
-      name: 'Geist',
-      cssVariable: '--ff-geist',
-      weights: ['400 700'],
+      name: 'Atkinson Hyperlegible Next',
+      cssVariable: '--ff-texto',
+      weights: ['200 800'],
+      styles: ['normal', 'italic'],
       fallbacks: ['sans-serif'],
     },
+    // A versão mono dela: só onde há número de verdade (KPIs, fórmulas, os exemplos)
     {
       provider: fontProviders.google(),
-      name: 'Geist Mono',
-      cssVariable: '--ff-geist-mono',
-      weights: [400, 500],
+      name: 'Atkinson Hyperlegible Mono',
+      cssVariable: '--ff-mono',
+      weights: ['400 700'],
       fallbacks: ['monospace'],
     },
   ],

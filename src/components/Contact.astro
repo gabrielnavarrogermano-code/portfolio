@@ -4,125 +4,132 @@ import { temCurriculo } from '../lib/curriculo';
 import Secao from './Secao.astro';
 import { idiomaDe, textos } from '../i18n';
 
-// ( 0N ) Contato: à esquerda, o convite e o botão que copia o e-mail; no painel, os canais como linhas de uma tabela.
-interface Props {
-  num: string;
-}
-const { num } = Astro.props;
-
+// Contato: o fim do fio. O fio desce até o e-mail, grande e centralizado, e a linha embaixo dele se desenha
+// quando o fio chega; clicar copia o e-mail. Embaixo, os outros canais numa linha simples.
 const tx = textos[idiomaDe(Astro.url)].contato;
+const [usuario, dominio] = site.email.split('@');
 const canais = [
-  { k: tx.email, v: site.email, href: `mailto:${site.email}`, icon: '→' },
-  { k: 'LinkedIn', v: site.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com/, '').replace(/\/$/, ''), href: site.linkedin, icon: '↗', external: true },
-  { k: 'GitHub', v: site.github.replace(/^https?:\/\/(www\.)?github\.com\//, ''), href: site.github, icon: '↗', external: true },
-  ...(temCurriculo ? [{ k: tx.curriculo, v: 'PDF', href: site.curriculo, icon: '↓', download: true }] : []),
+  { label: 'LinkedIn', href: site.linkedin, external: true },
+  { label: 'GitHub', href: site.github, external: true },
+  ...(temCurriculo ? [{ label: tx.curriculo, href: site.curriculo, download: true }] : []),
 ];
 ---
 
-<Secao id="contato" num={num} rotulo={tx.rotulo} rotuloDir={tx.rotuloDir} titulo={tx.titulo}>
-  <Fragment slot="negocio">
-    <p class="serif-grande" set:html={tx.frase} />
-    <div class="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2">
-      <button type="button" data-copy={site.email} data-txt-copiar={tx.copiar} data-txt-copiado={tx.copiado} data-txt-erro={tx.erro} class="btn btn-cheio cursor-pointer" aria-describedby="ct-status">
-        <span data-copy-label>{tx.copiar}</span> <span class="seta" aria-hidden="true">→</span>
-      </button>
-      <p id="ct-status" class="font-mono text-[11px] tracking-[0.15em] text-muted uppercase" aria-live="polite" data-copy-status></p>
-    </div>
-  </Fragment>
-
-  <ul slot="dados" class="ct-canais">
-    {
-      canais.map((c) => (
-        <li>
-          <a
-            href={c.href}
-            {...(c.external ? { target: '_blank', rel: 'noopener' } : {})}
-            {...(c.download ? { download: site.curriculoNome } : {})}
-          >
-            <span class="ct-k">{c.k}</span>
-            <span class="ct-v">{c.v.includes('@') ? <>{c.v.split('@')[0]}@<wbr />{c.v.split('@')[1]}</> : c.v}</span>
-            <span class="ct-s" aria-hidden="true">{c.icon}</span>
-          </a>
-        </li>
-      ))
-    }
-  </ul>
+<Secao id="contato" titulo={tx.titulo} sub={tx.frase}>
+  <div class="ct-corpo">
+    <button
+      type="button"
+      class="ct-email"
+      data-copy={site.email}
+      data-txt-copiado={tx.copiado}
+      data-txt-erro={tx.erro}
+      data-abre
+      data-fio-fim
+      aria-label={`${tx.copiarRotulo}: ${site.email}`}
+    >
+      {usuario}@<wbr />{dominio}
+    </button>
+    <span class="ct-aviso" aria-live="polite" data-copy-status></span>
+    <ul class="ct-canais">
+      {
+        canais.map((c) => (
+          <li>
+            <a
+              href={c.href}
+              class="btn btn-linha"
+              {...('external' in c && c.external ? { target: '_blank', rel: 'noopener' } : {})}
+              {...('download' in c && c.download ? { download: site.curriculoNome } : {})}
+            >
+              {c.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
 </Secao>
 
 <style>
+  .ct-corpo {
+    position: relative;
+    z-index: 2;
+    margin-top: 3rem;
+    text-align: center;
+  }
+
+  /* O e-mail grande; a linha embaixo é o fim do fio e se desenha do começo ao fim quando ele chega */
+  .ct-email {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+    padding-bottom: 0.5rem;
+    font-size: clamp(1.15rem, 4.4vw, 3.3rem);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+    color: var(--color-heading);
+    cursor: pointer;
+    transition: color 0.25s ease;
+  }
+
+  .ct-email::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: var(--color-heading);
+    transform-origin: left;
+    transition:
+      transform 1s cubic-bezier(0.65, 0, 0.2, 1),
+      background-color 0.25s ease;
+  }
+
+  :global(html.fio-js) .ct-email:not(:global(.aberto))::after {
+    transform: scaleX(0);
+  }
+
+  /* O e-mail aparece com a linha, sem subir */
+  :global(html.fio-js) .ct-email:not(:global(.aberto)) {
+    transform: none;
+  }
+
+  .ct-email:hover {
+    color: var(--color-navy);
+  }
+
+  .ct-email:hover::after {
+    background: var(--color-accent);
+  }
+
+  .ct-aviso {
+    display: block;
+    min-height: 1.6rem;
+    margin-top: 0.8rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-accent);
+  }
+
   .ct-canais {
-    list-style: none;
-    padding: 0;
-  }
-
-  .ct-canais li + li {
-    border-top: 1px solid var(--color-line);
-  }
-
-  .ct-canais a {
-    display: grid;
-    grid-template-columns: 6.5rem minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem 0.25rem;
-    border-radius: 0.6rem;
-    transition:
-      background-color 0.25s ease,
-      padding 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-
-  .ct-canais a:hover,
-  .ct-canais a:focus-visible {
-    background: rgb(20 25 55 / 0.05);
-    padding-left: 0.75rem;
-  }
-
-  .ct-k {
-    font-family: var(--font-mono);
-    font-size: 0.65625rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--color-muted);
-  }
-
-  .ct-v {
-    overflow-wrap: break-word;
-    color: var(--color-heading);
-  }
-
-  .ct-s {
-    color: var(--color-astro);
-    transition:
-      transform 0.25s ease,
-      color 0.25s ease;
-  }
-
-  .ct-canais a:hover .ct-s {
-    transform: translateX(3px);
-    color: var(--color-heading);
-  }
-
-  @media (max-width: 30rem) {
-    .ct-canais a {
-      grid-template-columns: minmax(0, 1fr) auto;
-    }
-
-    .ct-k {
-      grid-column: 1 / -1;
-    }
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-top: 1.2rem;
   }
 </style>
 
 <script>
-  // Copiar o e-mail: o botão avisa por 2 segundos e volta
+  // Copiar o e-mail: o aviso aparece embaixo por 2 segundos
   let cleanup: (() => void) | undefined;
 
   document.addEventListener('astro:page-load', () => {
     cleanup?.();
     const btn = document.querySelector<HTMLButtonElement>('[data-copy]');
-    const label = btn?.querySelector<HTMLElement>('[data-copy-label]');
     const status = document.querySelector<HTMLElement>('[data-copy-status]');
-    if (!btn || !label || !status) return;
+    if (!btn || !status) return;
     const controller = new AbortController();
     let timer = 0;
 
@@ -132,13 +139,11 @@ const canais = [
         clearTimeout(timer);
         try {
           await navigator.clipboard.writeText(btn.dataset.copy ?? '');
-          label.textContent = btn.dataset.txtCopiado ?? '';
-          status.textContent = '';
+          status.textContent = btn.dataset.txtCopiado ?? '';
         } catch {
           status.textContent = btn.dataset.txtErro ?? '';
         }
         timer = window.setTimeout(() => {
-          label.textContent = btn.dataset.txtCopiar ?? '';
           status.textContent = '';
         }, 2000);
       },

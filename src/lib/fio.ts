@@ -1,25 +1,22 @@
 // O fio que liga o site (estilos no global.css, "O molde das seções").
-// A ponta do fio fica a 62% da altura da tela. Conforme a rolagem, cada segmento se desenha até onde a ponta chegou:
-// se a pessoa para, ele para; se volta, ele recua. Quando a ponta passa pela linha de eixo de uma seção, a seção se
-// abre (aberto-eixo: linha e título); quando passa pelo começo dos lados, os lados aparecem (aberto-lados).
-// - Fio e caneta (o ponto vermelho na ponta) só no computador, com movimento e com a capa na página (html.fio-ligado).
-// - No celular, as seções abrem do mesmo jeito, sem o fio.
-// - Com movimento reduzido, tudo já aparece aberto (o CSS só esconde com html.fio-js).
+// A ponta do fio fica a 62% da altura da tela (e desce até o pé dela no fim da página). Conforme a rolagem, o fio
+// de cada seção se desenha até onde a ponta chegou: se a pessoa para, ele para; se volta, ele recua. Quando a
+// ponta passa pelo título, a seção abre (.aberta); passando por um [data-abre], ele aparece (.aberto); passando
+// por um ponto da linha do tempo [data-no], ele acende (.aceso).
+// - Fio e caneta (o ponto vermelho na ponta) só em telas largas, com movimento e com a capa na página.
+// - No celular, as peças abrem do mesmo jeito, sem o fio.
+// - Com movimento reduzido, tudo já aparece (o CSS só esconde com html.fio-js).
 
 type Secao = {
   el: HTMLElement;
-  a: HTMLElement | null;
-  b: HTMLElement | null;
-  eixo: HTMLElement;
-  lados: HTMLElement | null;
-  topo: number;
-  yEixo: number;
-  yLados: number;
-  fim: number;
-  abertoEixo: boolean;
-  abertoLados: boolean;
-  fa: number;
-  fb: number;
+  fio: HTMLElement | null;
+  titulo: HTMLElement | null;
+  sub: HTMLElement | null;
+  fim: HTMLElement | null;
+  abre: HTMLElement[];
+  nos: HTMLElement[];
+  m: { topo: number; fim: number; titulo: number; vao: [number, number]; abre: number[]; nos: number[] } | null;
+  f: number;
 };
 
 const PONTA = 0.62;
@@ -44,32 +41,38 @@ export function iniciarFio() {
 
   const secoes: Secao[] = els.map((el) => ({
     el,
-    a: el.querySelector('[data-fio-a]'),
-    b: el.querySelector('[data-fio-b]'),
-    eixo: el.querySelector<HTMLElement>('[data-eixo]') ?? el,
-    lados: el.querySelector('[data-lados]'),
-    topo: 0, yEixo: 0, yLados: 0, fim: 0,
-    abertoEixo: false, abertoLados: false, fa: -1, fb: -1,
+    fio: el.querySelector('[data-fio]'),
+    titulo: el.querySelector('.secao-titulo'),
+    sub: el.querySelector('.secao-sub'),
+    fim: el.querySelector('[data-fio-fim]'),
+    abre: [...el.querySelectorAll<HTMLElement>('[data-abre]')],
+    nos: [...el.querySelectorAll<HTMLElement>('[data-no]')],
+    m: null,
+    f: -1,
   }));
 
-  let vh = innerHeight, inicio = 0, fimFio = 0, quadro = 0, ligado = false;
+  let vh = innerHeight, quadro = 0, ligado = false;
+  const topo = (e: HTMLElement) => e.getBoundingClientRect().top + scrollY;
 
   const medir = () => {
     vh = innerHeight;
     ligado = temCapa && largo.matches;
     root.classList.toggle('fio-ligado', ligado);
     for (const s of secoes) {
-      const r = s.el.getBoundingClientRect();
-      s.topo = r.top + scrollY;
-      s.fim = r.bottom + scrollY;
-      s.yEixo = s.eixo.getBoundingClientRect().top + scrollY;
-      s.yLados = s.lados ? s.lados.getBoundingClientRect().top + scrollY : s.fim;
-      if (s.a) Object.assign(s.a.style, { top: '0px', height: `${Math.max(0, s.yEixo - s.topo)}px` });
-      if (s.b) Object.assign(s.b.style, { top: `${s.yLados - s.topo - 20}px`, height: `${Math.max(0, s.fim - s.yLados + 20)}px` });
-      s.fa = s.fb = -1;
+      const t = topo(s.el);
+      // o fio termina no fim marcado (o e-mail do contato termina na linha de baixo dele)
+      const fim = s.fim ? topo(s.fim) + (s.fim.dataset.fioFim === 'base' ? s.fim.offsetHeight : 0) : t + s.el.offsetHeight;
+      // o vão do título (e da frase de apoio), com uma folga de 18 px em cima e embaixo
+      const ultimo = s.sub ?? s.titulo;
+      const vao: [number, number] = s.titulo && ultimo ? [topo(s.titulo) - 18, topo(ultimo) + ultimo.offsetHeight + 18] : [0, 0];
+      if (s.fio) {
+        s.fio.style.height = `${Math.max(0, fim - t)}px`;
+        s.fio.style.setProperty('--vao-de', `${vao[0] - t}px`);
+        s.fio.style.setProperty('--vao-ate', `${vao[1] - t}px`);
+      }
+      s.m = { topo: t, fim, titulo: s.titulo ? topo(s.titulo) : t, vao, abre: s.abre.map(topo), nos: s.nos.map(topo) };
+      s.f = -1;
     }
-    inicio = secoes[0].topo;
-    fimFio = secoes[secoes.length - 1].yEixo;
     pedir();
   };
 
@@ -79,33 +82,32 @@ export function iniciarFio() {
 
   const aplicar = () => {
     quadro = 0;
-    // perto do fim da página, a ponta desce até o pé da tela, para o fio alcançar o rodapé
-    const max = document.documentElement.scrollHeight - vh;
-    const fimK = faixa(scrollY, max - vh * 0.6, max);
-    const frac = PONTA + (0.96 - PONTA) * fimK;
+    // perto do fim da página, a ponta desce até o pé da tela, para alcançar o que está lá embaixo
+    const max = root.scrollHeight - vh;
+    const fimK = faixa(scrollY, max - vh * 0.5, max);
+    const frac = PONTA + (0.92 - PONTA) * fimK;
     const ponta = scrollY + vh * frac;
     if (caneta) caneta.style.transform = fimK ? `translateY(${((frac - PONTA) * vh).toFixed(1)}px)` : '';
-    let desenhando = ligado && ponta > inicio && ponta < fimFio;
+    let desenhando = false;
     for (const s of secoes) {
-      if (ligado) {
-        const fa = faixa(ponta, s.topo, s.yEixo);
-        if (s.a && fa !== s.fa) { s.fa = fa; s.a.style.transform = `scaleY(${fa})`; }
-        const fb = faixa(ponta, s.yLados - 20, s.fim);
-        if (s.b && fb !== s.fb) { s.fb = fb; s.b.style.transform = `scaleY(${fb})`; }
-        if (ponta > s.yEixo + 10 && ponta < s.yLados - 20) desenhando = false; // atrás do título, a caneta some
+      const m = s.m;
+      if (!m) continue;
+      if (ligado && s.fio) {
+        const f = faixa(ponta, m.topo, m.fim);
+        if (f !== s.f) { s.f = f; s.fio.style.setProperty('--resto', `${((1 - f) * 100).toFixed(2)}%`); }
+        // a caneta só aparece desenhando, e some enquanto a ponta atravessa o vão do título
+        if (f > 0 && f < 1 && !(ponta > m.vao[0] && ponta < m.vao[1])) desenhando = true;
       }
-      // com folga para voltar sem piscar
-      const eixo = s.abertoEixo ? ponta > s.yEixo - 60 : ponta > s.yEixo;
-      const lados = s.abertoLados ? ponta > s.yLados - 60 : ponta > s.yLados + 30;
-      if (eixo !== s.abertoEixo) { s.abertoEixo = eixo; s.el.classList.toggle('aberto-eixo', eixo); }
-      if (lados !== s.abertoLados) { s.abertoLados = lados; s.el.classList.toggle('aberto-lados', lados); }
+      s.el.classList.toggle('aberta', ponta > m.titulo - 40);
+      s.abre.forEach((e, k) => e.classList.toggle('aberto', ponta > m.abre[k] + 20));
+      s.nos.forEach((e, k) => e.classList.toggle('aceso', ponta > m.nos[k] + 6));
     }
-    caneta?.classList.toggle('is-ligada', desenhando);
+    caneta?.classList.toggle('is-ligada', ligado && desenhando);
   };
 
   root.classList.add('fio-js');
   medir();
-  // as alturas mudam quando as fontes e as imagens chegam: mede de novo
+  // as alturas mudam quando as fontes e as imagens chegam (e quando um princípio abre): mede de novo
   document.fonts?.ready.then(medir);
   const ro = new ResizeObserver(() => medir());
   ro.observe(document.body);

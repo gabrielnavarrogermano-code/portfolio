@@ -2,20 +2,16 @@
 import Secao from './Secao.astro';
 import { idiomaDe, textos } from '../i18n';
 
-// ( 0N ) Como eu trabalho: 4 princípios de negócio.
-// À esquerda, a lista dos princípios (abas): o ativo abre e mostra o título e a frase. No painel, a demonstração
-// animada do raciocínio dele, feita com exemplos de negócio (marcados como exemplo).
+// Como eu trabalho: 4 princípios de negócio, e a única seção dividida em dois lados (o fio passa entre eles),
+// porque é a que a pessoa usa: escolhe um princípio e vê o exemplo.
+// À esquerda, a lista dos princípios (abas): o ativo abre e mostra o título e a frase. À direita, o card do exemplo:
+// a demonstração animada do raciocínio, feita com exemplos de negócio.
 // - Em telas estreitas (celular), o card de cada princípio vai para dentro dele: tocou, abre o texto e o card juntos,
-//   logo embaixo (o script move os cards; em telas largas eles voltam para o painel da direita).
+//   logo embaixo (o script move os cards; em telas largas eles voltam para o card do exemplo, à direita).
 // - Na primeira vez que a seção aparece, passa sozinho por 01 → 04 e volta ao 01 (para quando a pessoa interage);
 //   no celular, não, para a página não mudar de altura sozinha enquanto a pessoa lê.
 // - Sem JS, todos os princípios ficam abertos e as demonstrações, uma embaixo da outra.
 // - Com movimento reduzido, as demonstrações já aparecem no estado final.
-interface Props {
-  num: string;
-}
-const { num } = Astro.props;
-
 const idioma = idiomaDe(Astro.url);
 const tx = textos[idioma].trabalho;
 const principles = tx.principios;
@@ -28,9 +24,10 @@ const quadrants = tx.d4.quadrantes;
 ---
 
 <div id="habilidades" data-principles>
-  <Secao num={num} rotulo={tx.rotulo} rotuloDir={tx.rotuloDir} titulo={tx.titulo} rotuloDados={tx.rotuloDados}>
+  <Secao titulo={tx.titulo}>
+    <div class="pp-divide">
     <!-- Os princípios: abas na vertical; a ativa abre o título e a frase -->
-    <ol slot="negocio" role="tablist" aria-label={tx.lista} aria-orientation="vertical" class="pp-lista">
+    <ol role="tablist" aria-label={tx.lista} aria-orientation="vertical" class="pp-lista">
       {
         principles.map((p, i) => (
           <li class:list={['pp-item', i === 0 && 'is-active']}>
@@ -44,7 +41,6 @@ const quadrants = tx.d4.quadrantes;
               tabindex={i === 0 ? 0 : -1}
               class="pp-tab"
             >
-              <span class="pp-num">0{i + 1}</span>
               <span class="pp-curto">{p.short}</span>
               <span class="pp-marca" aria-hidden="true"></span>
             </button>
@@ -59,8 +55,11 @@ const quadrants = tx.d4.quadrantes;
       }
     </ol>
 
-    <!-- As demonstrações: com JS, empilhadas no mesmo lugar (a altura não pula ao trocar) e só a ativa aparece -->
-    <div slot="dados" class="pp-panels">
+    <!-- O card do exemplo: a faixa azul com o rótulo e as demonstrações, empilhadas no mesmo lugar (a altura não pula
+         ao trocar) e só a ativa aparece. No celular, cada demonstração vai para dentro do princípio dela. -->
+    <div class="pp-exemplo" data-abre>
+    <span class="pp-cab" aria-hidden="true">{tx.exemplo}</span>
+    <div class="pp-panels">
       {
         principles.map((_, i) => (
           <div
@@ -74,18 +73,18 @@ const quadrants = tx.d4.quadrantes;
             {i === 0 && (
               <div aria-hidden="true">
                 <p class="d-tag">{tx.d1.pedidoTag}</p>
-                <p class="d-pop mt-3 font-serif text-2xl leading-[1.1] text-fg/50">
+                <p class="d-pop mt-2 text-2xl leading-[1.15] font-semibold text-fg/50">
                   <span class="d-strike" style="--s: 0.9s">{tx.d1.pedido}</span>
                 </p>
                 <p class="d-pop d-tag mt-7 flex items-center gap-3" style="--d: 1.2s">
                   {tx.d1.perguntaTag} <span class="h-px flex-1 bg-navy/10" />
                 </p>
-                <p class="d-pop mt-3 font-serif text-[1.75rem] leading-[1.1] text-heading text-balance" style="--d: 1.4s">
+                <p class="d-pop mt-2 text-[1.6rem] leading-[1.2] font-semibold text-heading text-balance" style="--d: 1.4s">
                   {tx.d1.perguntaAntes}<em class="d-destaque">{tx.d1.perguntaDestaque}</em>{tx.d1.perguntaDepois}
                 </p>
-                <ul class="mt-6 flex flex-wrap gap-2 font-mono text-[11px]">
+                <ul class="mt-5 flex flex-wrap gap-2 text-[0.9375rem]">
                   {measures.map((m, k) => (
-                    <li class="d-pop rounded-full border border-navy/15 px-2.5 py-1 text-fg/80" style={`--d: ${2.1 + k * 0.2}s`}>
+                    <li class="d-pop rounded-full border-[1.5px] border-navy/20 px-3 py-1 text-heading" style={`--d: ${2.1 + k * 0.2}s`}>
                       {m}
                     </li>
                   ))}
@@ -96,8 +95,8 @@ const quadrants = tx.d4.quadrantes;
             {i === 1 && (
               <div aria-hidden="true">
                 <p class="d-tag">{tx.d2.tag}</p>
-                <p class="mt-3 font-display text-6xl leading-[0.85] font-black text-heading">
-                  <span class="text-3xl">{tx.d2.moeda}</span> {tx.d2.valor}
+                <p class="mt-2 font-mono text-5xl leading-none font-bold tracking-tight text-heading">
+                  <span class="text-2xl">{tx.d2.moeda}</span> {tx.d2.valor}
                 </p>
                 <dl class="mt-6 border-t border-navy/10 text-sm">
                   <div class="d-pop flex items-center justify-between gap-4 border-b border-navy/10 py-3" style="--d: 0.6s">
@@ -124,13 +123,13 @@ const quadrants = tx.d4.quadrantes;
             {i === 2 && (
               <div aria-hidden="true">
                 <p class="d-tag">{tx.d3.tecnicoTag}</p>
-                <p class="d-pop mt-3 font-mono text-lg text-fg/50">
+                <p class="d-pop mt-2 font-mono text-lg text-fg/50">
                   <span class="d-strike" style="--s: 0.9s">{tx.d3.tecnico}</span>
                 </p>
                 <p class="d-pop d-tag mt-7 flex items-center gap-3" style="--d: 1.2s">
                   {tx.d3.quemDecideTag} <span class="h-px flex-1 bg-navy/10" />
                 </p>
-                <p class="d-pop mt-3 font-serif text-[1.75rem] leading-[1.1] text-heading text-balance" style="--d: 1.4s">
+                <p class="d-pop mt-2 text-[1.6rem] leading-[1.2] font-semibold text-heading text-balance" style="--d: 1.4s">
                   <em class="d-destaque">{tx.d3.destaque}</em>{tx.d3.frase}
                 </p>
                 <div class="mt-6 grid max-w-[17rem] grid-cols-12 gap-1.5">
@@ -147,24 +146,26 @@ const quadrants = tx.d4.quadrantes;
             {i === 3 && (
               <div aria-hidden="true">
                 <p class="d-tag">{tx.d4.tag}</p>
-                <p class="mt-4 font-mono text-[10px] tracking-[0.15em] text-muted uppercase">{tx.d4.impacto}</p>
+                <p class="mt-3 text-sm text-muted">↑ {tx.d4.impacto}</p>
                 <div class="mt-2 grid grid-cols-2 border-b border-l border-navy/25">
                   {quadrants.map((q, k) => (
                     <div
                       class:list={['d-pop m-1 rounded-lg border p-3', q.win ? 'd-win' : 'border-navy/10']}
                       style={`--d: ${0.4 + k * 0.3}s`}
                     >
-                      <p class:list={['text-xs leading-snug sm:text-sm', q.win ? 'd-win-texto' : 'text-fg/70']}>{q.task}</p>
-                      <p class:list={['mt-2 font-mono text-[10px] tracking-[0.1em] uppercase', q.win ? 'd-win-tag' : 'text-muted']}>{q.tag}</p>
+                      <p class:list={['text-sm leading-snug', q.win ? 'd-win-texto' : 'text-heading']}>{q.task}</p>
+                      <p class:list={['mt-1.5 text-[0.8125rem]', q.win ? 'd-win-tag' : 'text-muted']}>{q.tag}</p>
                     </div>
                   ))}
                 </div>
-                <p class="mt-2 text-right font-mono text-[10px] tracking-[0.15em] text-muted uppercase">{tx.d4.esforco}</p>
+                <p class="mt-2 text-right text-sm text-muted">{tx.d4.esforco} →</p>
               </div>
             )}
           </div>
         ))
       }
+    </div>
+    </div>
     </div>
   </Secao>
 </div>
@@ -184,6 +185,43 @@ const quadrants = tx.d4.quadrantes;
     border-bottom: 1px solid var(--color-line);
   }
 
+  /* Os dois lados, com o fio passando no meio (o vão de 5rem fica no centro da página) */
+  .pp-divide {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0 5rem;
+    margin-top: 3.6rem;
+  }
+
+  @media (max-width: 55.99rem) {
+    .pp-divide {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2rem;
+      margin-top: 2.4rem;
+    }
+  }
+
+  /* O card do exemplo: papel com borda azul e a faixa Neon Navy no topo com o rótulo */
+  .pp-exemplo {
+    --color-heading: var(--color-navy);
+    --color-line: rgb(20 25 55 / 0.14);
+    position: relative;
+    padding: 4rem 1.8rem 2rem;
+    border-radius: 1rem;
+    background: linear-gradient(var(--color-navy) 0 2.7rem, var(--color-sunset) 2.7rem);
+    box-shadow: inset 0 0 0 1.5px rgb(20 25 55 / 0.35);
+    color: var(--color-fg);
+  }
+
+  .pp-cab {
+    position: absolute;
+    top: 0.75rem;
+    left: 1.8rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--color-sunset);
+  }
+
   .pp-tab {
     display: flex;
     align-items: baseline;
@@ -194,18 +232,9 @@ const quadrants = tx.d4.quadrantes;
     cursor: pointer;
   }
 
-  .pp-num {
-    flex: none;
-    width: 1.4rem;
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    color: var(--color-astro);
-    transition: color 0.3s ease;
-  }
-
   .pp-curto {
     font-family: var(--font-display);
-    font-size: 1.55rem;
+    font-size: 1.7rem;
     font-weight: 800;
     font-stretch: 75%;
     font-variation-settings: 'wdth' 75;
@@ -218,10 +247,6 @@ const quadrants = tx.d4.quadrantes;
   .pp-tab:hover .pp-curto,
   .pp-item.is-active .pp-curto {
     color: var(--color-heading);
-  }
-
-  .pp-item.is-active .pp-num {
-    color: var(--color-accent);
   }
 
   /* A marca vermelha do princípio ativo */
@@ -255,28 +280,28 @@ const quadrants = tx.d4.quadrantes;
 
   .pp-corpo > div {
     overflow: hidden;
-    padding-left: 2.3rem;
   }
 
   .pp-titulo {
-    font-family: var(--font-serif);
-    font-size: 1.6rem;
-    font-weight: 400;
-    line-height: 1.15;
+    font-family: var(--font-sans);
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1.25;
     letter-spacing: 0;
     color: var(--color-heading);
   }
 
   .pp-texto {
-    margin: 0.4rem 0 1.15rem;
+    margin: 0.35rem 0 1.2rem;
+    font-size: 1.0625rem;
     line-height: 1.55;
     color: var(--color-muted);
   }
 
   /* ---------- Celular: o card dentro do princípio ----------
-     O painel da direita some (os cards foram para dentro dos princípios) e cada card ganha o mesmo visual do painel:
+     O card do exemplo da direita some (as demonstrações foram para dentro dos princípios) e cada uma ganha o mesmo visual:
      papel com borda azul e a faixa Neon Navy no topo com o rótulo. */
-  [data-principles].is-celular :global(.painel) {
+  [data-principles].is-celular .pp-exemplo {
     display: none;
   }
 
@@ -294,22 +319,11 @@ const quadrants = tx.d4.quadrantes;
   .pp-corpo .pp-panel::before {
     content: attr(data-rotulo);
     position: absolute;
-    top: 0.8rem;
+    top: 0.6rem;
     left: 1.1rem;
-    font-family: var(--font-mono);
-    font-size: 0.65625rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
+    font-size: 0.9375rem;
+    font-weight: 600;
     color: var(--color-sunset);
-  }
-
-  [data-principles].is-celular .pp-corpo > div {
-    padding-left: 0;
-  }
-
-  [data-principles].is-celular .pp-titulo,
-  [data-principles].is-celular .pp-texto {
-    padding-left: 2.3rem;
   }
 
   /* ---------- Painéis das demonstrações ---------- */
@@ -344,14 +358,11 @@ const quadrants = tx.d4.quadrantes;
   }
 
   /* ---------- Demonstrações ----------
-     No painel: rótulos em mono, números em Tektur e frases em serifa, em azul-marinho; o destaque é o vermelho.
+     No card do exemplo: rótulos e frases na Atkinson, números na versão mono dela, em azul-marinho; o destaque é o vermelho.
      Sem a classe is-play, tudo fica no estado final (sem JS ou com movimento reduzido).
      Com is-play, cada peça roda a sua animação uma vez, com o atraso --d. */
   .d-tag {
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
+    font-size: 0.9375rem;
     color: var(--color-muted);
   }
 
@@ -362,6 +373,7 @@ const quadrants = tx.d4.quadrantes;
 
   /* Destaque das frases: o vermelho, como no resto do site */
   .d-destaque {
+    font-style: normal;
     color: var(--color-accent);
   }
 
@@ -500,7 +512,7 @@ const quadrants = tx.d4.quadrantes;
     const controller = new AbortController();
     const { signal } = controller;
 
-    // Celular: cada card vai para dentro do princípio dele; tela larga: todos voltam para o painel da direita
+    // Celular: cada demonstração vai para dentro do princípio dela; tela larga: todas voltam para o card do exemplo
     const posicionar = () => {
       const celular = estreita.matches;
       root.classList.toggle('is-celular', celular);
@@ -617,7 +629,7 @@ const quadrants = tx.d4.quadrantes;
         if (!visible) return clearTimeout(autoTimer);
         if (!started) {
           started = true;
-          // espera o painel encher (ver o fio) para a demonstração rodar já visível
+          // espera o card do exemplo aparecer (ver o fio) para a demonstração rodar já visível
           const i = active;
           window.setTimeout(() => i === active && play(panels[i]), 900);
         }
@@ -625,7 +637,7 @@ const quadrants = tx.d4.quadrantes;
       },
       { threshold: 0.35 },
     );
-    const alvo = root.querySelector<HTMLElement>('[data-lados]') ?? root;
+    const alvo = root.querySelector<HTMLElement>('.pp-divide') ?? root;
     io.observe(alvo);
 
     cleanup = () => {

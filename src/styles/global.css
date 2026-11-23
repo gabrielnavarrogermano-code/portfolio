@@ -2,10 +2,10 @@
 
 @theme {
   /* As --ff-* vêm do <Font> do Layout (fontes configuradas em astro.config.mjs, servidas pelo próprio site) */
-  --font-sans: var(--ff-geist), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--ff-tektur), var(--ff-geist), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--ff-geist-mono), ui-monospace, SFMono-Regular, monospace;
-  --font-serif: var(--ff-serif), ui-serif, Georgia, serif; /* segunda voz: as frases em destaque */
+  --font-sans: var(--ff-texto), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--ff-tektur), var(--ff-texto), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--ff-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-serif: var(--ff-serif), ui-serif, Georgia, serif; /* só a palavra "negócio" da capa */
 
   /* Paleta Pantone, a mesma da capa no site inteiro: o papel (Sunset) de fundo e o quase preto (Nebulosity) no texto.
      Cada cor tem um papel só:
@@ -328,12 +328,13 @@ html.capa-carregando #inicio .letra {
 }
 
 /* ======================================================================
-   O molde das seções (o mesmo da capa) e o fio que liga o site
-   Cada seção: a linha de eixo no topo (rótulos em mono), o título em Tektur e os dois lados, "negócio" no papel
-   e "dados" num painel (papel com borda azul e uma faixa Neon Navy no topo), com o fio passando entre eles. O script (lib/fio.ts) desenha o fio preso à
-   rolagem e abre cada seção quando a ponta dele chega: a linha de eixo se abre do centro para as pontas, as letras
-   do título sobem, o texto aparece e o painel enche de baixo para cima, como uma barra.
-   Sem JS ou com movimento reduzido, tudo aparece pronto (as regras de "fechado" só valem com html.fio-js).
+   O molde das seções e o fio que liga o site
+   Cada seção tem o título em Tektur centralizado no eixo do fio e uma forma própria (Prazer: linha do tempo;
+   Projetos: a seta antes → depois; Como eu trabalho: dois lados; Contato: o e-mail sublinhado pelo fim do fio).
+   O script (lib/fio.ts) desenha o fio de cada seção preso à rolagem, do topo até o elemento [data-fio-fim], e
+   abre as peças quando a ponta do fio passa por elas: o título (.aberta), cada [data-abre] (.aberto) e cada ponto
+   da linha do tempo [data-no] (.aceso). Sem JS ou com movimento reduzido, tudo aparece pronto (as regras de
+   "fechado" só valem com html.fio-js).
    ====================================================================== */
 .secao {
   position: relative;
@@ -342,7 +343,7 @@ html.capa-carregando #inicio .letra {
 
 @media (min-width: 56rem) {
   .secao {
-    padding-block: 11svh 5svh;
+    padding-block: 12svh 6svh;
   }
 }
 
@@ -359,186 +360,41 @@ html.capa-carregando #inicio .letra {
   }
 }
 
-/* Linha de eixo */
-.eixo {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.875rem;
-  padding-top: 0.7rem;
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-}
-
-.eixo::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto;
-  height: 1px;
-  background: var(--color-heading);
-  transition: transform 0.8s cubic-bezier(0.65, 0, 0.2, 1);
-}
-
-.eixo > * {
-  transition: opacity 0.5s ease 0.45s;
-}
-
-.eixo-pontos {
-  flex: 1;
-  height: 1px;
-  background: repeating-linear-gradient(90deg, var(--color-dove) 0 2px, transparent 2px 7px);
-}
-
-.eixo-forte {
-  color: var(--color-heading);
-}
-
-.eixo-num {
-  padding: 0.2rem 0.5rem;
-  border-radius: 9999px;
-  background: var(--color-accent);
-  color: var(--color-bg);
-  letter-spacing: 0.08em;
-}
-
-.eixo-ponto {
-  flex: none;
-  width: 7px;
-  height: 7px;
-  border-radius: 9999px;
-  background: var(--color-accent);
-}
-
-/* Título */
+/* Título: Tektur estreita, centralizado no eixo (o fio tem um vão recortado na altura dele: ver .fio) */
 .secao-titulo {
-  margin-top: 1.6rem;
-  font-size: clamp(2.8rem, 7.6vw, 7.25rem);
+  position: relative;
+  z-index: 2;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  padding: 0.15em 0.2em 0;
+  font-size: clamp(2.8rem, 7.4vw, 7rem);
   font-weight: 900;
   font-stretch: 75%;
   font-variation-settings: 'wdth' 75;
   line-height: 0.86;
   letter-spacing: -0.01em;
+  text-align: center;
   text-transform: uppercase;
   text-wrap: balance;
   color: var(--color-heading);
 }
 
-.secao-titulo.is-longo {
-  font-size: clamp(2.4rem, 5.6vw, 5.25rem);
+.secao-titulo .letra {
+  --base: 0.1s;
 }
 
-/* Os dois lados */
-.lados {
-  display: grid;
-  gap: 1.75rem;
-  margin-top: 2rem;
-}
-
-/* Lados empilhados (celular): o painel pode vir antes do texto */
-@media (max-width: 55.99rem) {
-  .lados.dados-primeiro .painel {
-    order: -1;
-  }
-}
-
-@media (min-width: 56rem) {
-  .lados {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 0 4rem;
-    margin-top: 3rem;
-  }
-}
-
-.rotulo-lado {
-  margin-bottom: 1rem;
-  font-family: var(--font-mono);
-  font-size: 0.65625rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--color-astro);
-}
-
-.negocio {
-  transition:
-    opacity 0.7s ease 0.1s,
-    transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) 0.1s;
-}
-
-/* O painel: o papel com uma borda azul e uma faixa Neon Navy no topo com o rótulo "dados", como o cabeçalho de
-   uma tabela; os títulos ficam em azul-marinho. O fundo é um ::before que enche de baixo para cima (a faixa é a
-   última coisa a aparecer); o conteúdo entra depois, um bloco por vez */
-.painel {
-  --color-heading: var(--color-navy);
-  --color-line: rgb(20 25 55 / 0.14);
+/* A frase de apoio, logo abaixo do título */
+.secao-sub {
   position: relative;
-  isolation: isolate;
-  padding: 3.75rem 1.5rem 1.9rem;
-  color: var(--color-fg);
-  background: none;
-}
-
-.painel > .rotulo-lado {
-  position: absolute;
-  top: 0.95rem;
-  left: 1.5rem;
-  margin: 0;
-  color: var(--color-sunset);
-}
-
-@media (min-width: 56rem) {
-  .painel {
-    padding: 4rem 2.1rem 2.25rem;
-  }
-
-  .painel > .rotulo-lado {
-    left: 2.1rem;
-  }
-}
-
-.painel::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: 1.25rem;
-  background: linear-gradient(var(--color-navy) 0 2.6rem, var(--color-sunset) 2.6rem);
-  box-shadow: inset 0 0 0 1px rgb(20 25 55 / 0.35);
-  transition: clip-path 0.9s cubic-bezier(0.65, 0, 0.2, 1) 0.2s;
-}
-
-.painel > * {
-  transition:
-    opacity 0.55s ease,
-    transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-
-.painel > :nth-child(2) { --j: 1; }
-.painel > :nth-child(3) { --j: 2; }
-.painel > :nth-child(4) { --j: 3; }
-.painel > :nth-child(n + 5) { --j: 4; }
-
-.secao.aberto-lados .painel > * {
-  transition-delay: calc(0.75s + var(--j, 0) * 0.08s);
-}
-
-/* Texto em serifa do lado "negócio" */
-.serif-grande {
-  font-family: var(--font-serif);
-  font-size: clamp(1.35rem, 2.05vw, 1.75rem);
-  line-height: 1.32;
+  z-index: 2;
+  max-width: 34rem;
+  margin: 1.1rem auto 0;
+  font-size: 1.125rem;
+  line-height: 1.55;
+  text-align: center;
   color: var(--color-muted);
-}
-
-.serif-grande b {
-  font-weight: 400;
-  color: var(--color-heading);
-}
-
-.serif-grande em {
-  color: var(--color-accent);
+  transition: opacity 0.6s ease 0.5s;
 }
 
 /* Botões */
@@ -546,10 +402,10 @@ html.capa-carregando #inicio .letra {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
+  padding: 0.75rem 1.3rem;
   border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 600;
   white-space: nowrap;
   transition:
     background-color 0.25s ease,
@@ -567,7 +423,7 @@ html.capa-carregando #inicio .letra {
 }
 
 .btn-linha {
-  border: 1px solid var(--color-line);
+  border: 1.5px solid var(--color-line);
   color: var(--color-heading);
 }
 
@@ -576,24 +432,24 @@ html.capa-carregando #inicio .letra {
   color: var(--color-navy);
 }
 
-.btn .seta {
-  transition: transform 0.25s ease;
-}
-
-.btn:hover .seta {
-  transform: translateX(3px);
-}
-
-/* O fio: segmentos entre as seções (A: do topo até a linha de eixo) e entre os lados (B: dos lados até o fim) */
+/* O fio: um segmento por seção, no centro, que se desenha até onde a ponta chegou (o recorte de baixo, --resto,
+   vem do script). Ele tem um vão na altura do título e da frase (--vao-de a --vao-ate), para não passar por cima
+   das letras. Recorte e máscara não mexem no layout: só na pintura. */
 .fio {
   display: none;
   position: absolute;
+  top: 0;
   left: 50%;
-  width: 1px;
-  margin-left: -0.5px;
+  width: 1.5px;
+  margin-left: -0.75px;
   background: var(--color-heading);
-  transform-origin: top;
-  transform: scaleY(0);
+  clip-path: inset(0 0 var(--resto, 100%) 0);
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0 var(--vao-de, 0px),
+    transparent var(--vao-de, 0px) var(--vao-ate, 0px),
+    #000 var(--vao-ate, 0px)
+  );
   pointer-events: none;
   z-index: 1;
 }
@@ -612,9 +468,9 @@ html.fio-ligado .fio-caneta {
   left: 50%;
   top: 62svh;
   z-index: 40;
-  width: 9px;
-  height: 9px;
-  margin: -4.5px 0 0 -4.5px;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
   border-radius: 9999px;
   background: var(--color-accent);
   opacity: 0;
@@ -627,38 +483,22 @@ html.fio-ligado .fio-caneta.is-ligada {
 }
 
 /* Estado "fechado": só com o script rodando (html.fio-js), para nada ficar escondido sem ele */
-html.fio-js .secao:not(.aberto-eixo) .eixo::before {
-  transform: scaleX(0);
-}
-
-html.fio-js .secao:not(.aberto-eixo) .eixo > * {
-  opacity: 0;
-}
-
-html.fio-js .secao:not(.aberto-eixo) .secao-titulo .letra {
+html.fio-js .secao:not(.aberta) .secao-titulo .letra {
   opacity: 0;
   transform: translateY(0.55em) rotate(12deg);
 }
 
-html.fio-js .secao:not(.aberto-lados) .negocio {
+html.fio-js .secao:not(.aberta) .secao-sub {
   opacity: 0;
-  transform: translateY(18px);
 }
 
-html.fio-js .secao:not(.aberto-lados) .painel::before {
-  clip-path: inset(100% 0 0 0 round 1.25rem);
+[data-abre] {
+  transition:
+    opacity 0.7s ease,
+    transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
-html.fio-js .secao:not(.aberto-lados) .painel > * {
+html.fio-js [data-abre]:not(.aberto) {
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(14px);
 }
-
-.painel::before {
-  clip-path: inset(0 0 0 0 round 1.25rem);
-}
-
-.secao-titulo .letra {
-  --base: 0.2s;
-}
-
