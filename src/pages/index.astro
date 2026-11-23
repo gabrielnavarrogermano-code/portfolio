@@ -7,18 +7,22 @@ import Skills from '../components/Skills.astro';
 import Projects from '../components/Projects.astro';
 import Contact from '../components/Contact.astro';
 import Footer from '../components/Footer.astro';
+import { getCollection } from 'astro:content';
+
+// Todas as seções seguem o molde da capa e são ligadas pelo fio (lib/fio.ts). A numeração continua depois dos projetos.
+const totalProjetos = (await getCollection('projetos')).length;
+const num = (n: number) => String(n).padStart(2, '0');
 ---
 
 <Layout>
   <Nav />
   <main>
-    <!-- A capa é um palco: a apresentação e a trajetória são as cenas 2 e 3 dele -->
-    <Hero>
-      <Presentation />
-    </Hero>
+    <Hero />
+    <Presentation />
     <Projects />
-    <Skills />
-    <Contact />
+    <Skills num={num(totalProjetos + 2)} />
+    <Contact num={num(totalProjetos + 3)} />
   </main>
   <Footer />
+  <span class="fio-caneta" data-fio-caneta aria-hidden="true"></span>
 </Layout>

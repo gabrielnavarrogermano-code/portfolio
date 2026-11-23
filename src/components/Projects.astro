@@ -1,323 +1,206 @@
 ---
 import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
-import SectionTitle from './SectionTitle.astro';
-import BgWord from './BgWord.astro';
+import Secao from './Secao.astro';
 
-import { records, compute } from '../lib/notebooks';
-
+// ( 02 ) Projetos: uma seção por projeto, no molde de todas.
+// À esquerda, o resumo e o antes → depois (a linha do "depois" se desenha em vermelho); no painel, o print do
+// dashboard (no hover, troca para a outra página dele) e a ficha: contexto, etapa e ferramentas.
+// Os números do projeto ficam no estudo de caso, para não repetir aqui.
 const projetos = (await getCollection('projetos')).sort((a, b) => a.data.order - b.data.order);
-
-// KPIs do dashboard de notebooks, calculados com as mesmas 100 linhas da simulação do estudo de caso.
-// No card, os números contam e as barras enchem até a meta quando o painel chega na tela.
-const { t, w } = compute(records);
-const kpis: Record<string, { label: string; value: string; sub: string; pct?: number; st: string }[]> = {
-  notebooks: [
-    { label: '% LAPS', value: t.laps, sub: t['laps:sub'], pct: w.laps, st: t['laps:st'] },
-    { label: '% Antivírus', value: t.av, sub: t['av:sub'], pct: w.av, st: t['av:st'] },
-    { label: 'Pendências', value: t.seg, sub: t['seg:sub'], st: t['seg:st'] },
-  ],
-};
 ---
 
-<section id="projetos" class="render-later relative isolate mx-auto max-w-5xl px-6 pb-16 [contain-intrinsic-size:auto_1100px] sm:pb-24">
-  <BgWord word="PROJETOS" />
-  <SectionTitle title="Na prática" />
-
-  <div class="mt-12 space-y-16">
-    {
-      projetos.map((p, i) => (
-        <article>
-          <!-- Título do projeto acima do card: primeiro o nome, depois o trabalho -->
-          <h3 class="pc-title max-w-4xl font-display leading-[0.95] font-black text-heading uppercase">
-            {p.data.title}
-          </h3>
-          <!-- Ferramentas em etiquetas pequenas, logo abaixo do nome -->
-          <ul class="mt-4 mb-6 flex flex-wrap gap-2" aria-label="Ferramentas">
-            {p.data.tools.map((t) => (
-              <li class="rounded-full border border-line px-3 py-1 font-mono text-[11px] text-muted sm:text-xs">{t}</li>
-            ))}
-          </ul>
-
-          <!-- Card: uma faixa escura no topo com o número e o tipo; abaixo, o print do dashboard em cores, limpo (o título fica
-               fora, acima do card, para não cobrir o trabalho); no hover aproxima e troca para a outra página do dashboard -->
-          <a
-            href={`/projetos/${p.id}/`}
-            data-active
-            class="project-card group relative block overflow-hidden rounded-2xl border border-line bg-ink"
-          >
-            <div class="relative aspect-[4/3] sm:aspect-[16/10]">
-              {p.data.cover && (
-                <Image
-                  src={p.data.cover}
-                  alt=""
-                  widths={[640, 1024, 1600]}
-                  sizes="(min-width: 1024px) 976px, 100vw"
-                  format="webp"
-                  class="pc-img absolute inset-x-0 top-16 bottom-0 h-[calc(100%-4rem)] w-full object-cover object-left-top sm:top-20 sm:h-[calc(100%-5rem)]"
-                />
-              )}
-              {p.data.coverHover && (
-                <Image
-                  src={p.data.coverHover}
-                  alt=""
-                  widths={[640, 1024, 1600]}
-                  sizes="(min-width: 1024px) 976px, 100vw"
-                  format="webp"
-                  class="pc-img-hover absolute inset-x-0 top-16 bottom-0 h-[calc(100%-4rem)] w-full object-cover object-left-top sm:top-20 sm:h-[calc(100%-5rem)]"
-                />
-              )}
-              <div class="absolute inset-x-0 top-0 flex items-center justify-between gap-4 p-5 font-mono text-[11px] tracking-[0.15em] text-heading uppercase sm:p-7 sm:text-xs">
-                <span class="rounded-full border border-heading/30 bg-ink/60 px-3 py-1 backdrop-blur-sm">( 0{i + 1} )</span>
-                <span class="rounded-full border border-heading/30 bg-ink/60 px-3 py-1 backdrop-blur-sm">{p.data.kind}</span>
-              </div>
-
-              <!-- Um pedaço vivo do dashboard por cima do print: os KPIs de segurança contam e as barras enchem até a meta -->
-              {p.data.demo && kpis[p.data.demo] && (
-                <div data-reveal class="pc-kpis absolute inset-x-3 bottom-3 rounded-xl border border-heading/15 bg-ink/85 p-3 backdrop-blur-md sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[25rem] sm:p-5">
-                  <p class="flex items-center gap-2 font-mono text-[10px] tracking-[0.15em] text-muted uppercase">
-                    <span class="pc-live size-1.5 flex-none rounded-full bg-accent" aria-hidden="true" />
-                    Segurança · dados fictícios
-                  </p>
-                  <dl class="mt-2 grid grid-cols-3 gap-3 sm:mt-3 sm:gap-4">
-                    {kpis[p.data.demo].map((k) => (
-                      <div>
-                        <dt class="font-mono text-[10px] tracking-[0.1em] text-muted uppercase">{k.label}</dt>
-                        <dd data-count class="mt-1 font-display text-xl leading-none font-black tabular-nums text-heading sm:text-3xl">{k.value}</dd>
-                        <dd class="mt-1.5 text-[11px] leading-tight text-muted max-sm:hidden">{k.sub}</dd>
-                        {k.pct !== undefined && (
-                          <dd class="relative mt-2 h-1 rounded-full bg-white/10" aria-hidden="true">
-                            <span class:list={['pc-bar absolute inset-y-0 left-0 rounded-full', `st-${k.st}`]} style={`width: ${k.pct}%`} />
-                          </dd>
-                        )}
-                      </div>
-                    ))}
-                  </dl>
-                </div>
-              )}
-            </div>
-          </a>
-
-          <!-- Abaixo do card: o antes → depois em uma linha (o "antes" apagado, o "depois" aceso; a seta se desenha
-               quando a linha aparece) e o link para o estudo de caso -->
+<div id="projetos">
+  {
+    projetos.map((p, i) => (
+      <Secao
+        num={String(i + 2).padStart(2, '0')}
+        rotulo="Projetos"
+        rotuloDir={projetos.length > 1 ? `Na prática · ${i + 1} de ${projetos.length}` : 'Na prática'}
+        titulo={p.data.title}
+        tituloLongo={p.data.title.length > 24}
+      >
+        <Fragment slot="negocio">
+          <p class="serif-grande">{p.data.summary}</p>
           {p.data.before && p.data.after && (
-            <div data-reveal class="pc-ba mt-8 grid items-center gap-x-8 gap-y-3 md:grid-cols-[minmax(0,1fr)_4rem_minmax(0,1fr)]">
-              <p>
-                <span class="block font-mono text-[11px] tracking-[0.15em] text-muted uppercase">Antes</span>
-                <span class="mt-1.5 block leading-relaxed text-fg/55">{p.data.before}</span>
-              </p>
-              <span class="pc-arrow relative h-5 w-px justify-self-start md:h-px md:w-full" aria-hidden="true">
-                <span class="pc-arrow-line absolute inset-0 bg-accent" />
-              </span>
-              <p>
-                <span class="block font-mono text-[11px] tracking-[0.15em] text-accent uppercase">Depois</span>
-                <span class="mt-1.5 block leading-relaxed text-heading">{p.data.after}</span>
-              </p>
+            <div class="pj-ba">
+              <div>
+                <small>Antes</small>
+                <p>{p.data.before}</p>
+              </div>
+              <div class="pj-depois">
+                <small>Depois</small>
+                <p>{p.data.after}</p>
+              </div>
             </div>
           )}
-
-          <div data-reveal data-active class="pc-next group relative mt-8 flex items-center gap-4 border-y border-line py-6 sm:gap-8 sm:py-7">
-            <a href={`/projetos/${p.id}/`} class="pc-next-link flex-1 font-sans leading-tight font-semibold text-heading transition-colors">
-              Ler estudo de caso
+          <p class="mt-7">
+            <a href={`/projetos/${p.id}/`} class="btn btn-cheio">
+              Ler estudo de caso <span class="seta" aria-hidden="true">→</span>
             </a>
-            <span class="pc-next-icon pointer-events-none grid size-12 flex-none place-items-center rounded-full border border-line text-lg text-heading transition" aria-hidden="true">→</span>
-          </div>
-        </article>
-      ))
-    }
-  </div>
-</section>
+          </p>
+        </Fragment>
+
+        <a slot="dados" href={`/projetos/${p.id}/`} data-active class="pj-print group" aria-label={`Abrir o estudo de caso: ${p.data.title}`}>
+          {p.data.cover && (
+            <Image src={p.data.cover} alt="" widths={[640, 1024]} sizes="(min-width: 896px) 34rem, 100vw" format="webp" class="pj-img" />
+          )}
+          {p.data.coverHover && (
+            <Image src={p.data.coverHover} alt="" widths={[640, 1024]} sizes="(min-width: 896px) 34rem, 100vw" format="webp" class="pj-img pj-img-hover" />
+          )}
+          {p.data.coverHover && <span class="pj-dica" aria-hidden="true">Passe o mouse: outra página do dashboard</span>}
+        </a>
+
+        <dl slot="dados" class="pj-ficha">
+          {p.data.context && (
+            <>
+              <dt>Contexto</dt>
+              <dd>{p.data.context}</dd>
+            </>
+          )}
+          <dt>Etapa</dt>
+          <dd>{p.data.kind}</dd>
+          <dt>Ferramentas</dt>
+          <dd>{p.data.tools.join(' · ')}</dd>
+        </dl>
+      </Secao>
+    ))
+  }
+</div>
 
 <style>
-  /* Linha "Ler estudo de caso": a linha inteira é clicável e acende em lima, como no contato */
-  /* Tamanho médio (Geist): o título do projeto, logo acima, é que fica grande */
-  .pc-next-link {
-    font-size: clamp(1.35rem, 2.8vw, 2rem);
+  /* Antes → depois: o "depois" ganha uma linha vermelha que se desenha quando os lados aparecem */
+  .pj-ba {
+    display: grid;
+    gap: 0.9rem;
+    margin-top: 1.6rem;
   }
 
-  .pc-next-link::after {
+  .pj-ba > div {
+    position: relative;
+    padding-left: 1.1rem;
+  }
+
+  .pj-ba > div::before {
     content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--color-line);
+  }
+
+  .pj-ba .pj-depois::before {
+    background: var(--color-accent);
+    transform-origin: top;
+    transition: transform 0.8s cubic-bezier(0.65, 0, 0.2, 1) 0.6s;
+  }
+
+  :global(html.fio-js .secao:not(.aberto-lados)) .pj-depois::before {
+    transform: scaleY(0);
+  }
+
+  .pj-ba small {
+    font-family: var(--font-mono);
+    font-size: 0.65625rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .pj-ba .pj-depois small {
+    color: var(--color-accent);
+  }
+
+  .pj-ba p {
+    margin-top: 0.25rem;
+    line-height: 1.5;
+  }
+
+  /* O print: o trabalho em si, em cores; no hover troca para a outra página do dashboard */
+  .pj-print {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 9.4;
+    overflow: hidden;
+    border: 1px solid var(--color-line);
+    border-radius: 0.75rem;
+    background: #fff;
+  }
+
+  .pj-img {
     position: absolute;
     inset: 0;
-  }
-
-  .pc-next {
-    transition: background-color 0.3s ease;
-  }
-
-  .pc-next:hover,
-  .pc-next:focus-within {
-    background-color: rgb(255 255 255 / 0.025);
-  }
-
-  .pc-next:hover .pc-next-link,
-  .pc-next:focus-within .pc-next-link,
-  .pc-next.is-active .pc-next-link {
-    color: var(--color-link);
-  }
-
-  .pc-next:hover .pc-next-icon,
-  .pc-next:focus-within .pc-next-icon,
-  .pc-next.is-active .pc-next-icon {
-    border-color: var(--color-heading);
-    background-color: var(--color-heading);
-    color: var(--color-ink);
-  }
-
-  .pc-next-link:focus-visible {
-    outline: none;
-  }
-
-  .pc-next:has(.pc-next-link:focus-visible) {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 4px;
-  }
-
-  /* Seta do antes → depois: uma linha lima com a ponta; desce no celular e vai para a direita no computador */
-  .pc-arrow-line::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    bottom: -1px;
-    width: 7px;
-    height: 7px;
-    border-right: 1px solid var(--color-accent);
-    border-bottom: 1px solid var(--color-accent);
-    transform: translateX(-50%) rotate(45deg);
-  }
-
-  .pc-arrow-line {
-    transform-origin: top;
-  }
-
-  .pc-ba.is-in .pc-arrow-line {
-    animation: pc-draw-y 0.7s cubic-bezier(0.65, 0, 0.2, 1) 0.45s both;
-  }
-
-  @keyframes pc-draw-y {
-    from {
-      transform: scaleY(0);
-    }
-  }
-
-  @media (min-width: 48rem) {
-    .pc-arrow-line {
-      transform-origin: left;
-    }
-
-    .pc-arrow-line::after {
-      left: auto;
-      right: -1px;
-      bottom: 50%;
-      transform: translateY(50%) rotate(-45deg);
-    }
-
-    .pc-ba.is-in .pc-arrow-line {
-      animation-name: pc-draw-x;
-    }
-  }
-
-  @keyframes pc-draw-x {
-    from {
-      transform: scaleX(0);
-    }
-  }
-
-  .pc-title {
-    font-size: clamp(1.6rem, 3.6vw, 2.75rem);
-    font-stretch: 75%;
-    font-variation-settings: 'wdth' 75;
-    text-wrap: balance;
-  }
-
-  /* Painel de KPIs: a barra enche até o valor quando o painel aparece (depois que o número começa a contar) */
-  .pc-bar {
-    transform-origin: left;
-    transition: transform 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) 0.35s;
-  }
-
-  .pc-kpis.is-hidden .pc-bar {
-    transform: scaleX(0);
-  }
-
-  .st-good {
-    background: var(--color-good);
-  }
-
-  .st-warn {
-    background: var(--color-warn);
-  }
-
-  .st-crit {
-    background: var(--color-crit);
-  }
-
-  /* O "ao vivo": a bolinha pulsa devagar */
-  .pc-live {
-    animation: pc-live 2.4s ease-in-out infinite;
-  }
-
-  @keyframes pc-live {
-    50% {
-      opacity: 0.35;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .pc-live {
-      animation: none;
-    }
-  }
-
-  .pc-img,
-  .pc-img-hover {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: left top;
     transition:
-      opacity 0.7s ease,
-      transform 1.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+      opacity 0.6s ease,
+      transform 1.2s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
-  /* O print aparece em cores e sem degradê por cima: é o trabalho em si, não um fundo */
-  .pc-img-hover {
+  .pj-img-hover {
     opacity: 0;
   }
 
-  /* Só em quem tem mouse: a troca para a outra página do dashboard, com uma leve aproximação */
-  @media (hover: hover) and (pointer: fine) {
-    .pc-img {
-      transform: scale(1.02);
-    }
+  .pj-print:hover .pj-img,
+  .pj-print.is-active .pj-img {
+    transform: scale(1.03);
+  }
 
-    .pc-img-hover {
-      transform: scale(1.02);
-    }
+  .pj-print:hover .pj-img-hover,
+  .pj-print.is-active .pj-img-hover {
+    opacity: 1;
+  }
 
-    .project-card:hover .pc-img {
-      transform: scale(1.05);
-    }
+  .pj-dica {
+    position: absolute;
+    left: 0.6rem;
+    bottom: 0.6rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 9999px;
+    background: rgb(20 25 55 / 0.85);
+    color: var(--color-sunset);
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition: opacity 0.3s ease;
+  }
 
-    .project-card:hover .pc-img-hover {
-      opacity: 1;
-      transform: scale(1.05);
+  .pj-print:hover .pj-dica {
+    opacity: 0;
+  }
+
+  @media (hover: none) {
+    .pj-dica {
+      display: none;
     }
   }
 
-  /* No toque: quando o card passa pelo meio da tela, troca para a outra página do dashboard */
-  @media (hover: none) {
-    .project-card.is-active .pc-img {
-      transform: scale(1.04);
-    }
+  /* A ficha: rótulo em mono e o valor ao lado */
+  .pj-ficha {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.55rem 1.1rem;
+    margin-top: 1.2rem;
+    font-size: 0.875rem;
+  }
 
-    .project-card.is-active .pc-img-hover {
-      opacity: 1;
-      transform: scale(1.02);
-    }
+  .pj-ficha dt {
+    padding-top: 0.15rem;
+    font-family: var(--font-mono);
+    font-size: 0.65625rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--color-muted);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .pc-img,
-    .pc-img-hover {
+    .pj-img {
       transition-duration: 0.01ms;
     }
   }
 </style>
-

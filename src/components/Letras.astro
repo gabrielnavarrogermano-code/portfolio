@@ -37,7 +37,7 @@ const palavras = texto.split(' ').map((palavra) => [...palavra].map((letra) => (
     );
 
     document.querySelectorAll<HTMLElement>('[data-letras]').forEach((el) => {
-      if (el.closest('#inicio')) return; // a capa tem o próprio carregamento
+      if (el.closest('#inicio, [data-secao]')) return; // a capa e as seções têm a própria entrada (Hero e lib/fio.ts)
       if (el.getBoundingClientRect().top < window.innerHeight * 0.9) return;
       el.classList.add('is-armed');
       io?.observe(el);

@@ -1,196 +1,153 @@
 ---
 import { site } from '../data/site';
 import { temCurriculo } from '../lib/curriculo';
-import SectionTitle from './SectionTitle.astro';
-import BgWord from './BgWord.astro';
+import Secao from './Secao.astro';
 
-// Contato com um elemento só em destaque: o e-mail grande, que copia ao clicar.
-// Os outros canais ficam em links pequenos embaixo. O e-mail é dividido antes do @ para quebrar em duas linhas
-// no celular; o script ajusta o tamanho para ocupar a largura da seção.
-const [usuario, dominio] = site.email.split('@');
+// ( 0N ) Contato: à esquerda, o convite e o botão que copia o e-mail; no painel, os canais como linhas de uma tabela.
+interface Props {
+  num: string;
+}
+const { num } = Astro.props;
+
 const canais = [
-  { label: 'Abrir no e-mail', href: `mailto:${site.email}`, icon: '→' },
-  { label: 'LinkedIn', href: site.linkedin, icon: '↗', external: true },
-  { label: 'GitHub', href: site.github, icon: '↗', external: true },
-  ...(temCurriculo ? [{ label: 'Currículo', href: site.curriculo, icon: '↓', download: true }] : []),
+  { k: 'E-mail', v: site.email, href: `mailto:${site.email}`, icon: '→' },
+  { k: 'LinkedIn', v: site.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com/, '').replace(/\/$/, ''), href: site.linkedin, icon: '↗', external: true },
+  { k: 'GitHub', v: site.github.replace(/^https?:\/\/(www\.)?github\.com\//, ''), href: site.github, icon: '↗', external: true },
+  ...(temCurriculo ? [{ k: 'Currículo', v: 'PDF', href: site.curriculo, icon: '↓', download: true }] : []),
 ];
 ---
 
-<section id="contato" class="render-later relative isolate mx-auto max-w-5xl px-6 pb-16 [contain-intrinsic-size:auto_700px] sm:pb-24">
-  <BgWord word="CONTATO" />
-  <SectionTitle title="Vamos conversar?" />
-
-  <div data-reveal class="mt-10 sm:mt-14">
-    <button
-      type="button"
-      data-copy={site.email}
-      class="ct-email group block w-full cursor-pointer text-left"
-      aria-describedby="ct-status"
-    >
-      <span class="sr-only">Copiar o e-mail </span>
-      <span data-fit class="ct-fit block font-display leading-[0.95] font-black text-heading transition-colors">
-        <span class="ct-line">{usuario}</span><span class="ct-line text-muted transition-colors">@{dominio}</span>
-      </span>
-    </button>
-    <p id="ct-status" class="mt-4 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs" aria-live="polite">
-      <span data-copy-status>
-        ( <span class="ct-hint-touch">Toque</span><span class="ct-hint-mouse">Clique</span> para copiar )
-      </span>
+<Secao id="contato" num={num} rotulo="Contato" rotuloDir="Disponível" titulo="Vamos conversar?">
+  <Fragment slot="negocio">
+    <p class="serif-grande">
+      Se você tem <b>planilhas soltas</b> e decisões esperando por elas, me conta o
+      problema. <em>A gente começa pela pergunta.</em>
     </p>
-  </div>
+    <div class="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <button type="button" data-copy={site.email} class="btn btn-cheio cursor-pointer" aria-describedby="ct-status">
+        <span data-copy-label>Copiar e-mail</span> <span class="seta" aria-hidden="true">→</span>
+      </button>
+      <p id="ct-status" class="font-mono text-[11px] tracking-[0.15em] text-muted uppercase" aria-live="polite" data-copy-status></p>
+    </div>
+  </Fragment>
 
-  <ul data-reveal class="mt-12 flex flex-wrap gap-x-8 gap-y-3 border-t border-line pt-6 sm:mt-16">
+  <ul slot="dados" class="ct-canais">
     {
       canais.map((c) => (
         <li>
           <a
             href={c.href}
-            class="group inline-flex items-center gap-2 text-lg font-medium text-heading transition-colors hover:text-link sm:text-xl"
             {...(c.external ? { target: '_blank', rel: 'noopener' } : {})}
             {...(c.download ? { download: site.curriculoNome } : {})}
           >
-            {c.label}
-            <span class="text-muted transition-transform group-hover:translate-x-0.5" aria-hidden="true">{c.icon}</span>
+            <span class="ct-k">{c.k}</span>
+            <span class="ct-v">{c.v.includes('@') ? <>{c.v.split('@')[0]}@<wbr />{c.v.split('@')[1]}</> : c.v}</span>
+            <span class="ct-s" aria-hidden="true">{c.icon}</span>
           </a>
         </li>
       ))
     }
   </ul>
-</section>
+</Secao>
 
 <style>
-  /* Tektur estreita, como o nome da capa. Sem JS: um tamanho fixo que quebra onde precisar */
-  .ct-fit {
-    font-size: clamp(2rem, 9vw, 5rem);
-    font-stretch: 75%;
-    font-variation-settings: 'wdth' 75;
-    letter-spacing: -0.01em;
-    overflow-wrap: anywhere;
+  .ct-canais {
+    list-style: none;
+    padding: 0;
   }
 
-  /* Celular: usuário em uma linha e @domínio na outra. Computador: tudo em uma linha */
-  .ct-line {
-    display: block;
+  .ct-canais li + li {
+    border-top: 1px solid var(--color-line);
   }
 
-  @media (min-width: 48rem) {
-    .ct-line {
-      display: inline;
+  .ct-canais a {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 0.25rem;
+    border-radius: 0.6rem;
+    transition:
+      background-color 0.25s ease,
+      padding 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .ct-canais a:hover,
+  .ct-canais a:focus-visible {
+    background: rgb(20 25 55 / 0.05);
+    padding-left: 0.75rem;
+  }
+
+  .ct-k {
+    font-family: var(--font-mono);
+    font-size: 0.65625rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .ct-v {
+    overflow-wrap: break-word;
+    color: var(--color-heading);
+  }
+
+  .ct-s {
+    color: var(--color-astro);
+    transition:
+      transform 0.25s ease,
+      color 0.25s ease;
+  }
+
+  .ct-canais a:hover .ct-s {
+    transform: translateX(3px);
+    color: var(--color-heading);
+  }
+
+  @media (max-width: 30rem) {
+    .ct-canais a {
+      grid-template-columns: minmax(0, 1fr) auto;
     }
-  }
 
-  /* Hover, foco e copiado: o e-mail inteiro acende */
-  .ct-email:hover .ct-fit,
-  .ct-email:focus-visible .ct-fit,
-  .ct-email.is-copied .ct-fit,
-  .ct-email:hover .ct-line,
-  .ct-email:focus-visible .ct-line,
-  .ct-email.is-copied .ct-line {
-    color: var(--color-accent);
-  }
-
-  .ct-email:focus-visible {
-    outline-offset: 8px;
-  }
-
-  .ct-hint-mouse {
-    display: none;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .ct-hint-touch {
-      display: none;
-    }
-
-    .ct-hint-mouse {
-      display: inline;
+    .ct-k {
+      grid-column: 1 / -1;
     }
   }
 </style>
 
 <script>
-  // 1. O e-mail ocupa a largura da seção: mede o texto num tamanho conhecido e escala até caber.
-  // 2. Clicar copia o e-mail; o aviso troca por 2 segundos e volta.
-  const MAX_PX = 150; // teto do tamanho, para o e-mail não ficar enorme em telas muito largas
+  // Copiar o e-mail: o botão avisa por 2 segundos e volta
   let cleanup: (() => void) | undefined;
-
-  const fit = (el: HTMLElement) => {
-    const box = el.parentElement;
-    if (!box) return;
-    const lines = [...el.querySelectorAll<HTMLElement>('.ct-line')];
-    el.style.fontSize = '100px';
-    el.style.overflowWrap = 'normal';
-    el.style.whiteSpace = 'nowrap';
-    // Em uma linha (computador), a largura é a soma; em duas (celular), a da linha mais larga
-    const inline = getComputedStyle(lines[0]).display === 'inline';
-    const widths = lines.map((l) => {
-      const r = document.createRange();
-      r.selectNodeContents(l);
-      return r.getBoundingClientRect().width;
-    });
-    const w = inline ? widths.reduce((a, b) => a + b, 0) : Math.max(...widths);
-    // Seção ainda não desenhada (content-visibility): volta ao tamanho do CSS e tenta de novo quando aparecer
-    if (!w || !box.clientWidth) {
-      el.style.fontSize = el.style.overflowWrap = el.style.whiteSpace = '';
-      return;
-    }
-    const size = Math.min(MAX_PX, (100 * box.clientWidth) / w * 0.98);
-    el.style.fontSize = `${size.toFixed(1)}px`;
-  };
 
   document.addEventListener('astro:page-load', () => {
     cleanup?.();
-    const el = document.querySelector<HTMLElement>('[data-fit]');
     const btn = document.querySelector<HTMLButtonElement>('[data-copy]');
+    const label = btn?.querySelector<HTMLElement>('[data-copy-label]');
     const status = document.querySelector<HTMLElement>('[data-copy-status]');
+    if (!btn || !label || !status) return;
     const controller = new AbortController();
-    let ro: ResizeObserver | undefined;
-    let io: IntersectionObserver | undefined;
     let timer = 0;
 
-    if (el?.parentElement) {
-      fit(el);
-      document.fonts?.ready.then(() => fit(el));
-      // Só a largura importa: a altura muda com o próprio ajuste e não deve disparar outro
-      let lastWidth = 0;
-      ro = new ResizeObserver(([entry]) => {
-        const width = Math.round(entry.contentRect.width);
-        if (width === lastWidth) return;
-        lastWidth = width;
-        fit(el);
-      });
-      ro.observe(el.parentElement);
-      // A seção é desenhada só perto da tela: mede de novo quando ela chega
-      io = new IntersectionObserver(([entry]) => entry.isIntersecting && fit(el), { rootMargin: '300px 0px' });
-      io.observe(el);
-    }
-
-    if (btn && status) {
-      const original = status.innerHTML;
-      btn.addEventListener(
-        'click',
-        async () => {
-          clearTimeout(timer);
-          try {
-            await navigator.clipboard.writeText(btn.dataset.copy ?? '');
-            status.textContent = '( Copiado ✓ )';
-            btn.classList.add('is-copied');
-          } catch {
-            status.textContent = '( Não deu para copiar: use “Abrir no e-mail” )';
-          }
-          timer = window.setTimeout(() => {
-            status.innerHTML = original;
-            btn.classList.remove('is-copied');
-          }, 2000);
-        },
-        { signal: controller.signal },
-      );
-    }
+    btn.addEventListener(
+      'click',
+      async () => {
+        clearTimeout(timer);
+        try {
+          await navigator.clipboard.writeText(btn.dataset.copy ?? '');
+          label.textContent = 'Copiado ✓';
+          status.textContent = '';
+        } catch {
+          status.textContent = 'Não deu para copiar: use o e-mail ao lado';
+        }
+        timer = window.setTimeout(() => {
+          label.textContent = 'Copiar e-mail';
+          status.textContent = '';
+        }, 2000);
+      },
+      { signal: controller.signal },
+    );
 
     cleanup = () => {
       controller.abort();
-      ro?.disconnect();
-      io?.disconnect();
       clearTimeout(timer);
     };
   });

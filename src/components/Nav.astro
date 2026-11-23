@@ -11,7 +11,7 @@ const links = [
 
 <header class="fixed inset-x-0 top-0 z-50 px-4 pt-4">
   <nav
-    class="on-black relative mx-auto flex max-w-5xl items-center justify-between overflow-hidden rounded-full border border-line/80 bg-ink/95 py-2 pr-2 pl-5"
+    class="relative mx-auto flex max-w-5xl items-center justify-between overflow-hidden rounded-full border border-line bg-bg/90 py-2 pr-2 pl-5 backdrop-blur-md"
   >
     <a href="/" class="font-display font-semibold tracking-tight text-heading">
       gabriel<span class="text-accent">.</span>dados
@@ -33,21 +33,21 @@ const links = [
       </button>
       <a
         href="/#contato"
-        class="hidden rounded-full bg-ice px-4 py-2.5 text-sm font-medium text-bg transition-colors hover:bg-link-strong hover:text-white sm:inline-flex"
+        class="hidden rounded-full bg-red px-4 py-2.5 text-sm font-medium text-sunset transition-colors hover:bg-navy sm:inline-flex"
       >
         Contato
       </a>
     </div>
 
     <div class="pointer-events-none absolute inset-x-8 bottom-0 h-px" aria-hidden="true">
-      <div id="read-progress" class="read-progress h-full bg-heading/60"></div>
+      <div id="read-progress" class="read-progress h-full bg-accent"></div>
     </div>
   </nav>
 </header>
 
 <!-- Menu em tela cheia: desce como uma cortina e os links sobem um por um.
      Fica fora do header para cobrir também a barra. -->
-<div id="site-menu" class="site-menu on-black fixed inset-0 z-[70] flex flex-col bg-ink" role="dialog" aria-modal="true" aria-label="Menu">
+<div id="site-menu" class="site-menu on-navy fixed inset-0 z-[70] flex flex-col bg-bg" role="dialog" aria-modal="true" aria-label="Menu">
   <div class="mx-auto flex w-full max-w-5xl items-center justify-between px-6 pt-7 sm:pt-8">
     <a href="/" class="menu-fade font-display font-semibold tracking-tight text-heading">
       gabriel<span class="text-accent">.</span>dados
@@ -145,9 +145,11 @@ const links = [
     transition: opacity 0.6s ease 0.45s;
   }
 
-  /* Seção em que a pessoa está: o nome fica lima */
+  /* Seção em que a pessoa está: o nome fica sublinhado (no azul, o destaque é o próprio Sunset) */
   .menu-link[aria-current='location'] .menu-link-text {
-    color: var(--color-accent);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.12em;
   }
 
   :global(html.menu-open) body {

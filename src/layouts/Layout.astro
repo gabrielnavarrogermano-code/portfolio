@@ -56,9 +56,11 @@ const image = new URL('/og.png', Astro.site);
     <script>
       import '../lib/smooth-scroll';
       import { initScrollEffects } from '../lib/reveal';
+      import { iniciarFio } from '../lib/fio';
 
       document.addEventListener('astro:page-load', () => {
         initScrollEffects();
+        iniciarFio(); // o fio que liga as seções e as abre conforme a rolagem
 
         // Desenha uma seção adiada por vez quando o navegador está ocioso, para não travar ao chegar nela rolando
         const later = [...document.querySelectorAll('.render-later')];

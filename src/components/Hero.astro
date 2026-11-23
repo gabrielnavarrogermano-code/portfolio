@@ -6,174 +6,130 @@ import { temCurriculo } from '../lib/curriculo';
 import Letras from './Letras.astro';
 ---
 
-<!-- Antes de pintar: esconde os blocos da capa para eles encherem como um dashboard (capa-carregando) e, no
-     computador, já monta o palco (palco-ativo), para as cenas não aparecerem em bloco e depois pularem de lugar.
-     Quem pediu menos movimento vê a capa pronta e as cenas em blocos normais. -->
+<!-- Antes de pintar: esconde os blocos da capa para eles encherem como um dashboard (capa-carregando) e, em telas
+     largas, já monta o palco (palco-ativo), para a capa não aparecer em bloco e depois pular de lugar.
+     Quem pediu menos movimento vê a capa pronta, sem palco. -->
 <script is:inline>
   (function () {
     try {
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       document.documentElement.classList.add('capa-carregando');
-      if (matchMedia('(min-width: 48rem)').matches) document.documentElement.classList.add('palco-ativo');
+      if (matchMedia('(min-width: 56rem)').matches) document.documentElement.classList.add('palco-ativo');
     } catch (e) {}
   })();
 </script>
 
-<!-- O palco: no computador (com movimento), a capa fica presa na tela enquanto a rolagem passa por três cenas, com
-     a foto sempre em cena, mudando de lugar e de enquadramento, e o texto de cada cena se escrevendo em volta dela:
-     1. a capa; 2. "Prazer, Gabriel", com a foto fechada no rosto; 3. a trajetória, com a foto num recorte estreito.
-     No fim, a foto vira pó e o pó abre caminho para os projetos. As cenas 2 e 3 vêm da Presentation (o slot).
-     No celular, com movimento reduzido ou sem JS, tudo fica em blocos normais, um embaixo do outro. -->
-<section id="inicio" data-capa class="hero-ice trilho relative isolate">
-  <!-- Destino do link "Apresentação" no palco: o script põe na altura da rolagem em que a cena 2 está montada -->
-  <span data-ancora-palco class="palco-ancora" aria-hidden="true"></span>
+<!-- A capa. Em telas largas, com movimento, ela fica presa na tela enquanto a rolagem passa pelo trilho: os textos
+     saem, a foto se desfaz em pó e o pó vira o fio que liga o resto do site (lib/po.ts e lib/fio.ts).
+     No celular, com movimento reduzido ou sem JS, é um bloco normal, com a foto parada. -->
+<section id="inicio" data-capa class="trilho relative isolate">
   <div data-palco class="palco">
-  <!-- Luz de estúdio: um brilho quente e suave atrás do personagem da cena (o script a leva junto com ele) -->
-  <div class="palco-luz" aria-hidden="true"></div>
-  <!-- A capa: fundo claro e sólido, o nome gigante atrás e você recortado na frente, saindo da borda de baixo.
-       Nos lados, pouco texto: à esquerda o negócio e o contato; à direita os dados e as redes.
-       No celular, tudo em coluna: o nome em três linhas, você embaixo dele e os dois lados depois. -->
-  <div class="capa-conteudo capa-clara">
-  <!-- Linha de rótulos no topo -->
-  <div data-capa-some class="capa-topo mx-auto w-full max-w-6xl px-6">
-    <!-- A linha de cima é o eixo do "dashboard": se desenha da esquerda para a direita quando a capa carrega -->
-    <div class="hero-axis relative flex items-center justify-between gap-4 pt-3 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">
-      <!-- O que procuro: a bolinha funciona como um status, "disponível" (pisca como um indicador ao vivo) -->
-      <p class="hero-load flex items-center gap-2" style="--k: 0">
-        <span class="hero-dot relative size-1.5 flex-none rounded-full bg-accent" aria-hidden="true"></span>
-        Buscando oportunidades em Dados & BI
-      </p>
-      <p class="hero-load whitespace-nowrap" style="--k: 1"><span class="max-sm:hidden">Portfólio </span><span class="text-heading tabular-nums">( <span data-year>{site.anoEmDois}</span> )</span></p>
-    </div>
-  </div>
+    <div class="capa-conteudo">
+      <!-- Linha de eixo no topo: a mesma de todas as seções -->
+      <div data-capa-some class="capa-topo mx-auto w-full max-w-6xl px-6">
+        <div class="hero-axis relative flex items-center justify-between gap-4 pt-3 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">
+          <!-- O que procuro: a bolinha é um status, "disponível" (pisca como um indicador ao vivo) -->
+          <p class="hero-load flex items-center gap-2" style="--k: 0">
+            <span class="hero-dot relative size-1.5 flex-none rounded-full bg-live" aria-hidden="true"></span>
+            Buscando oportunidades em Dados & BI
+          </p>
+          <p class="hero-load whitespace-nowrap" style="--k: 1"><span class="max-sm:hidden">Portfólio </span><span class="text-heading tabular-nums">( <span data-year>{site.anoEmDois}</span> )</span></p>
+        </div>
+      </div>
 
-  <!-- O nome gigante, atrás de você (a cabeça passa na frente de parte das letras). Entra letra por letra -->
-  <h1 data-capa-some class="capa-nome">
-    <span class="sr-only">{site.name}, Análise de Dados & BI</span>
-    <span class="capa-nome-texto" aria-hidden="true">
-      <span class="hero-name-line"><Letras texto="Gabriel" atraso={0.35} /></span>
-      <span class="hero-name-line"><Letras texto="Navarro" atraso={0.5} /></span>
-      <span class="hero-name-line"><Letras texto="Germano" atraso={0.65} /></span>
-    </span>
-  </h1>
+      <!-- O nome gigante, atrás de você. Entra letra por letra -->
+      <h1 data-capa-some class="capa-nome">
+        <span class="sr-only">{site.name}, Análise de Dados & BI</span>
+        <span class="capa-nome-texto" aria-hidden="true">
+          <span class="hero-name-line"><Letras texto="Gabriel" atraso={0.35} /></span>
+          <span class="hero-name-line"><Letras texto="Navarro" atraso={0.5} /></span>
+          <span class="hero-name-line"><Letras texto="Germano" atraso={0.65} /></span>
+        </span>
+      </h1>
 
-  <!-- Você, recortado, em preto e branco, saindo da borda de baixo -->
-  <!-- O granulado do site aplicado só dentro do seu contorno, para a foto parecer do mesmo material da página -->
-  <svg class="sr-only" width="0" height="0" aria-hidden="true">
-    <filter id="capa-grao" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
-      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" result="ruido" />
-      <feColorMatrix in="ruido" type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 0.12" result="cinza" />
-      <feComposite in="cinza" in2="SourceAlpha" operator="in" result="grao" />
-      <feMerge>
-        <feMergeNode in="SourceGraphic" />
-        <feMergeNode in="grao" />
-      </feMerge>
-    </filter>
-  </svg>
-  <div data-retrato class="retrato">
-    <figure class="retrato-moldura">
-      <Image
-        src={foto}
-        alt="Foto de Gabriel Navarro Germano"
-        widths={[480, 928]}
-        sizes="(min-width: 768px) 50rem, 90vw"
-        format="webp"
-        loading="eager"
-        fetchpriority="high"
-        class="retrato-foto"
-      />
-    </figure>
-  </div>
+      <!-- O granulado do site aplicado só dentro do seu contorno, para a foto parecer do mesmo material da página -->
+      <svg class="sr-only" width="0" height="0" aria-hidden="true">
+        <filter id="capa-grao" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" result="ruido" />
+          <feColorMatrix in="ruido" type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 0.12" result="cinza" />
+          <feComposite in="cinza" in2="SourceAlpha" operator="in" result="grao" />
+          <feMerge>
+            <feMergeNode in="SourceGraphic" />
+            <feMergeNode in="grao" />
+          </feMerge>
+        </filter>
+      </svg>
 
-  <!-- Os dois lados, na frente de tudo -->
-  <div class="capa-lados mx-auto w-full max-w-6xl px-6">
-    <div data-lado-texto="negocio" data-capa-some class="capa-lado">
-      <p class="font-serif text-[2.6rem] leading-none text-heading sm:text-6xl"><Letras texto="negócio" atraso={0.3} /></p>
-      <p class="hero-load mt-3 max-w-[17rem] text-sm leading-relaxed text-fg/80 sm:text-base" style="--k: 2">
-        Começo pela decisão que o número precisa ajudar a tomar, não pelo gráfico.
-      </p>
-      <div class="hero-load mt-5 flex items-center gap-2 max-md:flex-wrap" style="--k: 4">
-        <a
-          href="#contato"
-          class="group inline-flex items-center gap-2 rounded-full bg-heading px-5 py-2 font-medium sm:px-6 sm:py-3 whitespace-nowrap text-bg transition hover:bg-link-strong hover:text-white"
-        >
-          Entre em contato
-          <span class="transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
-        </a>
-        {
-          temCurriculo && (
-            <a
-              href={site.curriculo}
-              download={site.curriculoNome}
-              class="inline-flex items-center justify-center gap-2 rounded-full border border-line font-medium max-sm:size-10 sm:px-5 sm:py-3 text-heading transition hover:border-heading"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4" aria-hidden="true">
-                <path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14" stroke-linecap="round" stroke-linejoin="round" />
+      <!-- Você, recortado, em preto e branco, saindo da borda de baixo -->
+      <div data-retrato class="retrato">
+        <figure class="retrato-moldura">
+          <Image
+            src={foto}
+            alt="Foto de Gabriel Navarro Germano"
+            widths={[480, 928]}
+            sizes="(min-width: 768px) 50rem, 90vw"
+            format="webp"
+            loading="eager"
+            fetchpriority="high"
+            class="retrato-foto"
+          />
+          <!-- A cópia da foto que o pó apaga (lib/po.ts): só aparece quando a foto começa a se desfazer -->
+          <canvas data-po-foto class="retrato-foto retrato-copia" aria-hidden="true"></canvas>
+        </figure>
+      </div>
+
+      <!-- Os dois lados: negócio e dados -->
+      <div class="capa-lados mx-auto w-full max-w-6xl px-6">
+        <div data-capa-some class="capa-lado">
+          <p class="font-serif text-[2.6rem] leading-none text-heading sm:text-6xl"><Letras texto="negócio" atraso={0.3} /></p>
+          <p class="hero-load mt-3 max-w-[17rem] text-sm leading-relaxed text-muted sm:text-base" style="--k: 2">
+            Começo pela decisão que o número precisa ajudar a tomar, não pelo gráfico.
+          </p>
+          <div class="hero-load mt-5 flex items-center gap-2 max-md:flex-wrap" style="--k: 4">
+            <a href="#contato" class="btn btn-cheio">Entre em contato <span class="seta" aria-hidden="true">→</span></a>
+            {
+              temCurriculo && (
+                <a href={site.curriculo} download={site.curriculoNome} class="btn btn-linha">
+                  <span aria-hidden="true">↓</span> Currículo
+                </a>
+              )
+            }
+          </div>
+        </div>
+
+        <div data-capa-some class="capa-lado capa-lado-dados md:text-right">
+          <p class="capa-dados font-display leading-none text-heading uppercase"><Letras texto="Dados" atraso={0.45} /></p>
+          <p class="hero-load mt-3 max-w-[17rem] text-sm leading-relaxed text-muted sm:text-base md:ml-auto" style="--k: 3">
+            Excel, Power BI e ETL para transformar planilhas soltas em dashboards que a equipe usa.
+          </p>
+          <div class="hero-load mt-5 flex items-center gap-2 md:justify-end" style="--k: 5">
+            <a href={site.linkedin} target="_blank" rel="noopener" aria-label="LinkedIn" class="capa-redondo">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
+                <path
+                  d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13ZM7.12 20.45H3.56V9h3.56v11.45ZM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0Z"
+                ></path>
               </svg>
-              <span class="max-sm:sr-only">Currículo</span>
             </a>
-          )
-        }
+            <a href={site.github} target="_blank" rel="noopener" aria-label="GitHub" class="capa-redondo">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
+                <path
+                  d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57v-2.02c-3.34.73-4.04-1.6-4.04-1.6-.55-1.4-1.34-1.77-1.34-1.77-1.08-.74.09-.73.09-.73 1.2.09 1.83 1.24 1.83 1.24 1.07 1.83 2.8 1.3 3.49 1 .1-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22v3.29c0 .31.21.69.82.57A12 12 0 0 0 12 .3Z"
+                ></path>
+              </svg>
+            </a>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div data-lado-texto="dados" data-capa-some class="capa-lado md:text-right">
-      <p class="capa-dados font-display leading-none text-heading uppercase"><Letras texto="Dados" atraso={0.45} /></p>
-      <p class="hero-load mt-3 max-w-[17rem] text-sm leading-relaxed text-fg/80 sm:text-base md:ml-auto" style="--k: 3">
-        Excel, Power BI e ETL para transformar planilhas soltas em dashboards que a equipe usa.
-      </p>
-      <div class="hero-load mt-5 flex items-center gap-2 md:justify-end" style="--k: 5">
-        <a
-          href={site.linkedin}
-          target="_blank"
-          rel="noopener"
-          aria-label="LinkedIn"
-          class="inline-flex size-10 flex-none sm:size-12 items-center justify-center rounded-full border border-line text-heading transition hover:border-heading"
-        >
-          <svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
-            <path
-              d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13ZM7.12 20.45H3.56V9h3.56v11.45ZM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0Z"
-            ></path>
-          </svg>
-        </a>
-        <a
-          href={site.github}
-          target="_blank"
-          rel="noopener"
-          aria-label="GitHub"
-          class="inline-flex size-10 flex-none sm:size-12 items-center justify-center rounded-full border border-line text-heading transition hover:border-heading"
-        >
-          <svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
-            <path
-              d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57v-2.02c-3.34.73-4.04-1.6-4.04-1.6-.55-1.4-1.34-1.77-1.34-1.77-1.08-.74.09-.73.09-.73 1.2.09 1.83 1.24 1.83 1.24 1.07 1.83 2.8 1.3 3.49 1 .1-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22v3.29c0 .31.21.69.82.57A12 12 0 0 0 12 .3Z"
-            ></path>
-          </svg>
-        </a>
-      </div>
-    </div>
-  </div>
-  </div>
-
-  <!-- Cenas 2 e 3 -->
-  <slot />
+    <!-- O pó (por cima da capa) e o fio que ele forma no centro, que continua nas seções -->
+    <canvas data-po class="po" aria-hidden="true"></canvas>
+    <span data-fio-capa class="fio-capa" aria-hidden="true"></span>
   </div>
 </section>
 
 <style>
   /* ---------- A capa ---------- */
-  /* Fundo claro e sólido, com as cores do site invertidas (texto escuro). O fundo fica num ::before, para o palco
-     apagá-lo aos poucos ao sair da capa (--capa-fundo, de 1 a 0): a passagem para as cenas escuras fica contínua */
-  .capa-clara {
-    --color-bg: #e7e5e0;
-    --color-heading: #141311;
-    --color-fg: #2b2925;
-    --color-muted: #5f5b53;
-    --color-line: #cbc7be;
-    --color-accent: #4d7c0f; /* o status "disponível": o lima some no claro, vira um verde-oliva */
-    --color-link: #2445c4;
-    --color-link-strong: #2445c4;
-  }
-
   .capa-conteudo {
     position: relative;
     isolation: isolate;
@@ -184,21 +140,12 @@ import Letras from './Letras.astro';
     padding-top: 5rem;
   }
 
-  .capa-conteudo::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background: var(--color-bg);
-    opacity: var(--capa-fundo, 1);
-  }
-
   .capa-topo {
     position: relative;
     z-index: 3;
   }
 
-  /* Celular: em coluna. O nome em três linhas, os dois lados e, por último, você saindo da borda de baixo da capa */
+  /* Celular: em coluna. O nome em três linhas, os dois lados e, por último, você saindo da borda de baixo */
   .capa-nome {
     position: relative;
     z-index: 0;
@@ -214,7 +161,6 @@ import Letras from './Letras.astro';
     order: 3;
     width: min(26rem, 100%);
     aspect-ratio: 928 / 1140; /* a proporção da foto recortada */
-    touch-action: pan-y; /* no celular, encostar desintegra e arrastar na vertical rola a página */
   }
 
   .capa-lados {
@@ -226,16 +172,14 @@ import Letras from './Letras.astro';
     padding-block: 2.5rem 1.5rem;
   }
 
-  /* Computador: o nome atravessa a tela atrás de você; você sai da borda de baixo, no centro; os lados embaixo,
-     um em cada ponta, com o meio livre para você */
   @media (min-width: 40rem) {
     .capa-conteudo {
       padding-top: 7rem;
     }
   }
 
-  /* Tudo se mede pela altura da foto (--foto-altura): o nome fica sempre logo acima da sua cabeça e os lados na
-     altura do seu peito, em qualquer altura de tela */
+  /* Telas largas: tudo se mede pela altura da foto (--foto-altura): o nome fica logo acima da sua cabeça e os
+     lados na altura do seu peito, um em cada ponta, com o meio livre para você */
   @media (min-width: 48rem) {
     .capa-conteudo {
       --foto-altura: min(68svh, 46rem);
@@ -245,7 +189,7 @@ import Letras from './Letras.astro';
 
     .capa-nome {
       position: absolute;
-      bottom: calc(var(--foto-altura) - 0.25rem); /* o topo da foto tem uma folga acima do cabelo: o nome encosta nela */
+      bottom: calc(var(--foto-altura) - 0.25rem);
       left: 0;
       right: 0;
       display: flex;
@@ -269,12 +213,12 @@ import Letras from './Letras.astro';
       left: 0;
       right: 0;
       bottom: calc(var(--foto-altura) * 0.2);
-      grid-template-columns: 1fr minmax(14rem, 22rem) 1fr; /* o meio só precisa da largura do seu corpo */
-      align-items: end; /* os dois lados terminam na mesma linha */
+      grid-template-columns: 1fr minmax(14rem, 22rem) 1fr;
+      align-items: end;
       padding-block: 0;
     }
 
-    .capa-lado[data-lado-texto='dados'] {
+    .capa-lado-dados {
       grid-column: 3;
     }
   }
@@ -293,18 +237,30 @@ import Letras from './Letras.astro';
     }
   }
 
-  .capa-lado {
+  .capa-redondo {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid var(--color-line);
+    border-radius: 9999px;
+    color: var(--color-heading);
     transition:
-      opacity 0.4s ease,
-      filter 0.45s ease,
-      translate 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+      border-color 0.25s ease,
+      color 0.25s ease;
   }
 
-  /* Você: a foto sem fundo, inteira (sem moldura) */
+  .capa-redondo:hover {
+    border-color: var(--color-navy);
+    color: var(--color-navy);
+  }
+
+  /* Você: a foto sem fundo, inteira (sem moldura); as laterais e a base somem no fundo */
   .retrato-moldura {
     position: absolute;
     inset: 0;
-    /* as laterais e a base somem no fundo: você sai do fundo, em vez de ser cortado pela borda */
     mask-image:
       linear-gradient(to right, transparent, #000 14%, #000 86%, transparent),
       linear-gradient(to top, transparent, #000 16%);
@@ -322,76 +278,70 @@ import Letras from './Letras.astro';
     filter: grayscale(1) contrast(1.08) url(#capa-grao);
   }
 
-  /* ---------- O palco (computador, com movimento) ---------- */
-  /* O trilho é a distância de rolagem que o palco dura; o palco fica preso na tela enquanto isso.
-     O que é da capa (os textos e a foto) some quando a rolagem sai dela, enquanto o fundo claro escurece. */
-  .palco-ancora {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 1px;
-    height: 1px;
+  /* A cópia da foto troca com a <img> só quando a foto começa a se desfazer */
+  .retrato-copia {
+    opacity: 0;
   }
 
+  .retrato:global(.po-ativo) .retrato-copia {
+    opacity: 1;
+  }
+
+  .retrato:global(.po-ativo) img.retrato-foto {
+    opacity: 0;
+  }
+
+  /* O pó e o fio da capa: só no palco */
+  .po,
+  .fio-capa {
+    display: none;
+  }
+
+  /* ---------- O palco (telas largas, com movimento) ---------- */
   :global(html.palco-ativo) .trilho {
-    height: 460svh;
+    height: 230svh;
   }
 
   :global(html.palco-ativo) .palco {
     position: sticky;
     top: 0;
     height: 100svh;
+    min-height: 40rem;
     overflow: clip;
   }
 
-  :global(html.palco-ativo) .capa-conteudo {
-    height: 100svh;
+  :global(html.palco-ativo) .po {
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 4;
+    pointer-events: none;
+  }
+
+  :global(html.palco-ativo) .fio-capa {
+    display: block;
+    position: absolute;
+    left: 50%;
+    top: 58%;
+    bottom: 0;
+    width: 1px;
+    margin-left: -0.5px;
+    background: var(--color-heading);
+    transform: scaleY(0);
+    transform-origin: top;
+    z-index: 4;
   }
 
   [data-capa-some] {
-    transition:
-      filter 0.45s ease,
-      translate 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-
-  .palco.fora-da-capa [data-capa-some] {
-    filter: opacity(0);
-    translate: 0 -1.5rem;
-    pointer-events: none;
-  }
-
-  /* A foto some junto (só a opacidade: o translate dela é o que a centraliza) */
-  .retrato {
-    transition: opacity 0.6s ease;
-  }
-
-  .palco.fora-da-capa .retrato {
-    opacity: 0;
-  }
-
-  /* A luz de estúdio: atrás de tudo, no meio do palco (aparece nas cenas escuras; na capa, o fundo claro a cobre). Um azul-marinho
-     fechado: dá cor ao preto sem aparecer em nenhum texto (na capa, a única cor nas letras é o lima do "dados").
-     Larga e fraca: o texto, fora do centro dela, não perde contraste */
-  .palco-luz {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    opacity: var(--luz-forca, 1);
-    background: radial-gradient(
-      circle min(50rem, 80vw) at var(--luz-x, 50%) var(--luz-y, 45%),
-      rgb(32 52 128 / 0.32),
-      rgb(32 52 128 / 0.1) 45%,
-      transparent 78%
-    );
+    will-change: opacity, transform;
   }
 
   /* ---------- Nome ---------- */
-  /* Tektur no peso máximo e na largura mais estreita: um nome alto e apertado. Medido na Tektur 900 estreita,
-     GABRIEL = 3,45em, NAVARRO = 3,894em e GERMANO = 3,79em.
-     - Computador, uma linha atravessando a tela atrás de você: 3,45 + 0,18 + 3,894 + 0,18 + 3,79 = 11,494em;
-       com 100vw / 12,3, ocupa ~93% da largura da janela
-     - Celular, três linhas: a mais larga é NAVARRO, 3,894em; com 100cqi / 4,3, ocupa ~90% da largura */
+  /* Tektur no peso máximo e na largura mais estreita: um nome alto e apertado.
+     - Computador, uma linha atravessando a tela atrás de você: com 100vw / 12,3, ocupa ~93% da largura
+     - Celular, três linhas: a mais larga é NAVARRO; com 100cqi / 4,3, ocupa ~90% da largura */
   .capa-nome-texto {
     display: flex;
     flex-direction: column;
@@ -411,11 +361,10 @@ import Letras from './Letras.astro';
     .capa-nome-texto {
       flex-direction: row;
       gap: 0.18em;
-      font-size: min(100vw / 12.3, 13svh); /* em telas baixas, diminui um pouco para não encostar na linha de cima */
+      font-size: min(100vw / 12.3, 13svh);
     }
   }
 
-  /* As letras de cada palavra sobem de trás de uma linha invisível quando a capa carrega (componente Letras) */
   .hero-name-line {
     display: block;
     overflow: hidden;
@@ -429,9 +378,7 @@ import Letras from './Letras.astro';
     clip-path: inset(-1rem -1rem -1rem -1rem);
     transition:
       clip-path 0.75s cubic-bezier(0.65, 0, 0.2, 1) calc(0.25s + var(--k, 0) * 0.09s),
-      opacity 0.4s ease calc(0.25s + var(--k, 0) * 0.09s),
-      filter 0.45s ease,
-      translate 0.6s cubic-bezier(0.2, 0.7, 0.2, 1); /* o sumiço ao sair da capa, no palco */
+      opacity 0.4s ease calc(0.25s + var(--k, 0) * 0.09s);
   }
 
   /* O eixo: a linha de cima se desenha antes dos blocos */
@@ -440,7 +387,7 @@ import Letras from './Letras.astro';
     position: absolute;
     inset: 0 0 auto;
     height: 1px;
-    background: var(--color-line);
+    background: var(--color-heading);
     transform-origin: left;
     transition: transform 0.9s cubic-bezier(0.65, 0, 0.2, 1);
   }
@@ -451,7 +398,7 @@ import Letras from './Letras.astro';
     position: absolute;
     inset: 0;
     border-radius: 9999px;
-    background: var(--color-accent);
+    background: var(--color-live);
     opacity: 0;
   }
 
@@ -492,6 +439,8 @@ import Letras from './Letras.astro';
 </style>
 
 <script>
+  import { iniciarPo } from '../lib/po';
+
   let controller: AbortController | undefined;
 
   // O ano conta até o atual, como um KPI
@@ -515,94 +464,17 @@ import Letras from './Letras.astro';
     requestAnimationFrame(step);
   };
 
-  // ---------- O palco ----------
-  // A rolagem pelo trilho (0 a 1) é uma linha do tempo:
-  //   capa · a capa some e o fundo escurece · "Prazer" · trajetória · a luz apaga e o palco solta.
-  // A luz de estúdio fica no meio do palco, atrás das cenas.
-  const TEMPO = { capaSai: 0.06, prazerChega: 0.26, prazerSai: 0.44, trajetoriaChega: 0.62, saidaComeca: 0.8, saidaAcaba: 0.96 };
-
-  const iniciarPalco = (capa: HTMLElement, signal: AbortSignal) => {
-    const root = document.documentElement;
-    const palco = capa.querySelector<HTMLElement>('[data-palco]');
-    const cenaPrazer = capa.querySelector<HTMLElement>('[data-cena="prazer"]');
-    const cenaTrajetoria = capa.querySelector<HTMLElement>('[data-cena="trajetoria"]');
-    const ancora = capa.querySelector<HTMLElement>('[data-ancora]');
-    const ancoraPalco = capa.querySelector<HTMLElement>('[data-ancora-palco]');
-    if (!palco || !cenaPrazer || !cenaTrajetoria) return;
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    const telaGrande = matchMedia('(min-width: 48rem)');
-    let ativo = false;
-    let percurso = 1; // quantos px de rolagem o palco dura
-    let quadro = 0;
-
-    const limpar = () => {
-      palco.classList.remove('fora-da-capa');
-      cenaPrazer.classList.remove('is-ativa');
-      cenaTrajetoria.classList.remove('is-ativa');
-      palco.style.removeProperty('--luz-forca');
-      palco.style.removeProperty('--capa-fundo');
-    };
-
-    const faixa = (s: number, de: number, ate: number) => Math.min(1, Math.max(0, (s - de) / (ate - de)));
-    const suave = (t: number) => t * t * (3 - 2 * t);
-
-    const aplicar = () => {
-      quadro = 0;
-      if (!ativo) return;
-      const s = Math.min(1, Math.max(0, -capa.getBoundingClientRect().top / percurso));
-      const T = TEMPO;
-      palco.classList.toggle('fora-da-capa', s > T.capaSai * 0.5);
-      cenaPrazer.classList.toggle('is-ativa', s > T.prazerChega - 0.06 && s < T.prazerSai + 0.02);
-      cenaTrajetoria.classList.toggle('is-ativa', s > T.trajetoriaChega - 0.06);
-      // O fundo claro da capa escurece aos poucos até o das cenas; na saída, a luz apaga
-      palco.style.setProperty('--capa-fundo', String(1 - suave(faixa(s, T.capaSai, T.prazerChega))));
-      palco.style.setProperty('--luz-forca', String(1 - faixa(s, T.saidaComeca, T.saidaAcaba)));
-    };
-    const pedir = () => {
-      if (!quadro) quadro = requestAnimationFrame(aplicar);
-    };
-
-    const medir = () => {
-      ativo = telaGrande.matches;
-      root.classList.toggle('palco-ativo', ativo);
-      // O link "Apresentação" do menu: no palco, vai para a rolagem em que a cena 2 está montada
-      (ativo ? ancora : ancoraPalco)?.removeAttribute('id');
-      (ativo ? ancoraPalco : ancora)?.setAttribute('id', 'apresentacao');
-      if (!ativo) {
-        limpar();
-        return;
-      }
-      percurso = Math.max(1, capa.offsetHeight - window.innerHeight);
-      const margem = parseFloat(getComputedStyle(root).scrollPaddingTop) || 0;
-      if (ancoraPalco) ancoraPalco.style.top = `${percurso * ((TEMPO.prazerChega + TEMPO.prazerSai) / 2) + margem}px`;
-      aplicar();
-    };
-
-    medir();
-    window.addEventListener('scroll', pedir, { passive: true, signal });
-    telaGrande.addEventListener('change', medir, { signal });
-    const ro = new ResizeObserver(() => medir());
-    ro.observe(palco);
-    signal.addEventListener('abort', () => {
-      ro.disconnect();
-      limpar();
-    });
-  };
-
   document.addEventListener('astro:page-load', () => {
     controller?.abort();
     controller = new AbortController();
-    const { signal } = controller;
 
     const capa = document.querySelector<HTMLElement>('[data-capa]');
     if (!capa) return;
     const root = document.documentElement;
-    const animar = root.classList.contains('capa-carregando');
 
-    iniciarPalco(capa, signal); // o palco: as cenas trocando com a rolagem
+    iniciarPo(capa, controller.signal); // a foto que vira pó, e o pó que vira o fio
 
-    if (animar) {
+    if (root.classList.contains('capa-carregando')) {
       // Dois quadros: garante que o estado escondido foi pintado antes de soltar as transições
       requestAnimationFrame(() =>
         requestAnimationFrame(() => {

@@ -1,0 +1,44 @@
+---
+import Letras from './Letras.astro';
+
+// O molde de toda seção, o mesmo da capa (estilos no global.css, "O molde das seções"):
+// a linha de eixo com o número e os rótulos, o título em Tektur e os dois lados:
+// - slot "negocio": o lado humano, no papel;
+// - slot "dados": a evidência, no painel: papel com borda azul, a faixa Neon Navy no topo e os títulos em azul.
+// Os dois segmentos do fio (lib/fio.ts) ficam aqui: um chega na linha de eixo, o outro passa entre os lados.
+interface Props {
+  id?: string;
+  num: string;
+  rotulo: string;
+  rotuloDir: string;
+  titulo: string;
+  tituloLongo?: boolean;
+  rotuloDados?: string;
+}
+
+const { id, num, rotulo, rotuloDir, titulo, tituloLongo = false, rotuloDados = 'dados' } = Astro.props;
+---
+
+<section id={id} class="secao" data-secao>
+  <span class="fio" data-fio-a aria-hidden="true"></span>
+  <span class="fio" data-fio-b aria-hidden="true"></span>
+  <div class="secao-largura">
+    <div class="eixo" data-eixo>
+      <span class="eixo-num">( {num} )</span>
+      <span>{rotulo}</span>
+      <span class="eixo-pontos" aria-hidden="true"></span>
+      <span class="eixo-forte">{rotuloDir}</span>
+    </div>
+    <h2 class:list={['secao-titulo', tituloLongo && 'is-longo']}><Letras texto={titulo} /></h2>
+    <div class="lados" data-lados>
+      <div class="negocio">
+        <p class="rotulo-lado">negócio</p>
+        <slot name="negocio" />
+      </div>
+      <div class="painel">
+        <p class="rotulo-lado">{rotuloDados}</p>
+        <slot name="dados" />
+      </div>
+    </div>
+  </div>
+</section>

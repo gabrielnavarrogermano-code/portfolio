@@ -7,22 +7,31 @@
   --font-mono: var(--ff-geist-mono), ui-monospace, SFMono-Regular, monospace;
   --font-serif: var(--ff-serif), ui-serif, Georgia, serif; /* segunda voz: as frases em destaque */
 
-  /* Base em tons quentes: preto-café e off-white de papel, com duas cores de papéis bem separados:
-     - accent (lima): só o que importa: o destaque das frases, números de resultado, o que está selecionado
-       ou ativo e o foco do teclado. Hover e detalhes decorativos usam o off-white ou o cinza;
-     - link (azul-escuro): só o que é clicável (texto de links); link-strong é o fundo azul do hover dos botões.
-     Na capa, o nome gigante. */
-  --color-bg: #121110;
-  --color-ink: #121110;
-  --color-heading: #f4f2ed;
-  --color-line: #2f2d2a;
-  --color-fg: #e8e6e1;
-  --color-muted: #a3a097;
-  --color-card: #f8f7f3; /* cartão claro dentro da folha "Como eu trabalho" */
-  --color-accent: #bde34a;
-  --color-link: #4a74f0;
-  --color-link-strong: #2f5bdb;
-  --color-ice: #f0eee8; /* branco da capa e do botão Contato: um off-white quente, menos duro que o puro */
+  /* Paleta Pantone, a mesma da capa no site inteiro: o papel (Sunset) de fundo e o quase preto (Nebulosity) no texto.
+     Cada cor tem um papel só:
+     - accent (Red Inferno): o único destaque: o que importa, o item ativo, o "Atual", o botão principal;
+     - link (Neon Navy): o que é clicável; também é a superfície do lado "dados" de cada seção (.on-navy);
+     - line (Astronomicon Grey clareado) e dove (Wild Dove): linhas e detalhes. Os dois cinzas não têm contraste
+       para texto corrido no papel, por isso o texto secundário (muted) é o Nebulosity mais claro. */
+  --color-sunset: #e7e7e0;
+  --color-nebulosity: #1a1b16;
+  --color-navy: #141937;
+  --color-red: #4e0000;
+  --color-astro: #6e7c89;
+  --color-dove: #8b8b8b;
+
+  --color-bg: #e7e7e0;
+  --color-ink: #1a1b16;
+  --color-heading: #1a1b16;
+  --color-line: #b7bcbe;
+  --color-fg: #23241f;
+  --color-muted: #4a4b47;
+  --color-card: #f1f1ec;
+  --color-accent: #4e0000;
+  --color-link: #141937;
+  --color-link-strong: #141937;
+  --color-live: #4e0000;
+  --color-ice: #e7e7e0;
 
   /* Cores do dashboard de notebooks (só nele; o site continua preto e branco).
      viz-1/viz-2: dados normais, duas séries (validadas para daltonismo no fundo escuro).
@@ -35,42 +44,20 @@
   --color-crit: #d03b3b;
 }
 
-/* Blocos claros: invertem as cores do site (fundo branco, informações em preto) */
-.on-light {
-  --color-bg: #f6f5f1;
-  --color-heading: #121110;
-  --color-fg: #2b2925;
-  --color-muted: #5f5b53;
-  --color-line: #e2dfd8;
-  --color-accent: #4d7c0f; /* lima escuro: o neon some sobre o branco */
-  --color-link: #2445c4;
-  --color-link-strong: #2445c4;
-}
-
-/* Folha branca ("Como eu trabalho"): uma seção clara no meio do site preto. O lima some sobre o branco,
-   então o destaque vira um verde-oliva escuro; os cartões do baralho continuam escuros (.on-black). */
-.on-paper {
-  --color-bg: #ecebe5;
-  --color-heading: #121110;
-  --color-fg: #2b2925;
-  --color-muted: #5f5b53;
-  --color-line: #d5d2ca;
-  --color-accent: #2f5bdb; /* destaque em azul nesta seção (o lima some no fundo claro) */
-  --color-link: #2445c4;
-  --color-link-strong: #2445c4;
-  --bg-word-stroke: rgb(18 17 16 / 0.1); /* um pouco mais que os 7,5% do preto: no claro o contorno aparece menos */
-}
-
-/* Blocos pretos (menu e rodapé) */
+/* O lado "dados" de cada seção e o menu: superfície Neon Navy, com o texto em Sunset.
+   O vermelho some sobre o azul, então aqui o destaque é o próprio Sunset. (.on-black: nome antigo, mesmo efeito) */
+.on-navy,
 .on-black {
-  --color-heading: #f4f2ed;
-  --color-fg: #e8e6e1;
-  --color-muted: #a3a097;
-  --color-accent: #bde34a;
-  --color-link: #4a74f0;
-  --color-link-strong: #2f5bdb;
-  --color-bg: #121110;
-  --color-line: #2f2d2a;
+  --color-bg: #141937;
+  --color-ink: #141937;
+  --color-heading: #e7e7e0;
+  --color-fg: #e7e7e0;
+  --color-muted: #b9bcc7;
+  --color-line: rgb(231 231 224 / 0.16);
+  --color-accent: #e7e7e0;
+  --color-link: #e7e7e0;
+  --color-link-strong: #4e0000;
+  --color-live: #e7e7e0;
 }
 
 /* Títulos em Tektur: letras quadradas, de cantos retos, com cara de código.
@@ -114,7 +101,7 @@ body {
   overflow-x: clip;
 }
 
-/* Granulado fino no fundo do site inteiro, como textura de filme: tira a cara de preto chapado.
+/* Granulado fino no fundo do site inteiro, como textura de filme: tira a cara de papel chapado.
    Fica atrás do conteúdo (z-index -1, no fundo do body) e não se mexe, então não atrapalha a leitura. */
 body::before {
   content: '';
@@ -122,8 +109,8 @@ body::before {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: 0.07;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  opacity: 0.08;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
 }
 
 /* Linhas que entram ao rolar (o script em lib/reveal.ts liga as classes). Animação, e não transição,
@@ -184,11 +171,6 @@ html.capa-carregando #inicio .letra {
   content-visibility: auto;
 }
 
-/* Capa: o branco puro vira o branco neutro do --color-ice */
-.hero-ice {
-  --color-heading: var(--color-ice);
-}
-
 /* Barra de progresso de leitura na nav */
 .read-progress {
   transform: scaleX(var(--progress, 0));
@@ -202,7 +184,7 @@ html.capa-carregando #inicio .letra {
   color: var(--color-fg);
 }
 
-/* Títulos do texto numerados como o resto do site: "( 01 )" em mono lima em cima e o título em Tektur
+/* Títulos do texto numerados como o resto do site: "( 01 )" em mono dourado em cima e o título em Tektur
    estreita, caixa alta, com uma linha separando as seções */
 .prose-case {
   counter-reset: secao;
@@ -277,7 +259,7 @@ html.capa-carregando #inicio .letra {
   text-underline-offset: 3px;
 }
 
-/* Nota (ex.: "Projeto real..."): texto em mono, com um traço lima à esquerda */
+/* Nota (ex.: "Projeto real..."): texto em mono, com um traço à esquerda */
 .prose-case blockquote {
   margin: 1.5rem 0;
   padding: 0.25rem 0 0.25rem 1rem;
@@ -300,7 +282,7 @@ html.capa-carregando #inicio .letra {
   padding: 0.1rem 0.35rem;
   border: 1px solid var(--color-line);
   border-radius: 0.375rem;
-  background: rgb(255 255 255 / 0.08);
+  background: rgb(26 27 22 / 0.05);
   color: var(--color-heading);
   font-family: var(--font-mono);
   font-size: 0.875em;
@@ -344,3 +326,332 @@ html.capa-carregando #inicio .letra {
     break-inside: avoid;
   }
 }
+
+/* ======================================================================
+   O molde das seções (o mesmo da capa) e o fio que liga o site
+   Cada seção: a linha de eixo no topo (rótulos em mono), o título em Tektur e os dois lados, "negócio" no papel
+   e "dados" num painel (papel com borda azul e uma faixa Neon Navy no topo), com o fio passando entre eles. O script (lib/fio.ts) desenha o fio preso à
+   rolagem e abre cada seção quando a ponta dele chega: a linha de eixo se abre do centro para as pontas, as letras
+   do título sobem, o texto aparece e o painel enche de baixo para cima, como uma barra.
+   Sem JS ou com movimento reduzido, tudo aparece pronto (as regras de "fechado" só valem com html.fio-js).
+   ====================================================================== */
+.secao {
+  position: relative;
+  padding-block: 7rem 4rem;
+}
+
+@media (min-width: 56rem) {
+  .secao {
+    padding-block: 11svh 5svh;
+  }
+}
+
+.secao-largura {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+
+@media (min-width: 48rem) {
+  .secao-largura {
+    padding-inline: 2.5rem;
+  }
+}
+
+/* Linha de eixo */
+.eixo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding-top: 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.eixo::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: var(--color-heading);
+  transition: transform 0.8s cubic-bezier(0.65, 0, 0.2, 1);
+}
+
+.eixo > * {
+  transition: opacity 0.5s ease 0.45s;
+}
+
+.eixo-pontos {
+  flex: 1;
+  height: 1px;
+  background: repeating-linear-gradient(90deg, var(--color-dove) 0 2px, transparent 2px 7px);
+}
+
+.eixo-forte {
+  color: var(--color-heading);
+}
+
+.eixo-num {
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  color: var(--color-bg);
+  letter-spacing: 0.08em;
+}
+
+.eixo-ponto {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: var(--color-accent);
+}
+
+/* Título */
+.secao-titulo {
+  margin-top: 1.6rem;
+  font-size: clamp(2.8rem, 7.6vw, 7.25rem);
+  font-weight: 900;
+  font-stretch: 75%;
+  font-variation-settings: 'wdth' 75;
+  line-height: 0.86;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  text-wrap: balance;
+  color: var(--color-heading);
+}
+
+.secao-titulo.is-longo {
+  font-size: clamp(2.4rem, 5.6vw, 5.25rem);
+}
+
+/* Os dois lados */
+.lados {
+  display: grid;
+  gap: 2.25rem;
+  margin-top: 2.5rem;
+}
+
+@media (min-width: 56rem) {
+  .lados {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0 4rem;
+    margin-top: 3rem;
+  }
+}
+
+.rotulo-lado {
+  margin-bottom: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.65625rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-astro);
+}
+
+.negocio {
+  transition:
+    opacity 0.7s ease 0.1s,
+    transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) 0.1s;
+}
+
+/* O painel: o papel com uma borda azul e uma faixa Neon Navy no topo com o rótulo "dados", como o cabeçalho de
+   uma tabela; os títulos ficam em azul-marinho. O fundo é um ::before que enche de baixo para cima (a faixa é a
+   última coisa a aparecer); o conteúdo entra depois, um bloco por vez */
+.painel {
+  --color-heading: var(--color-navy);
+  --color-line: rgb(20 25 55 / 0.14);
+  position: relative;
+  isolation: isolate;
+  padding: 3.75rem 1.5rem 1.9rem;
+  color: var(--color-fg);
+  background: none;
+}
+
+.painel > .rotulo-lado {
+  position: absolute;
+  top: 0.95rem;
+  left: 1.5rem;
+  margin: 0;
+  color: var(--color-sunset);
+}
+
+@media (min-width: 56rem) {
+  .painel {
+    padding: 4rem 2.1rem 2.25rem;
+  }
+
+  .painel > .rotulo-lado {
+    left: 2.1rem;
+  }
+}
+
+.painel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 1.25rem;
+  background: linear-gradient(var(--color-navy) 0 2.6rem, var(--color-sunset) 2.6rem);
+  box-shadow: inset 0 0 0 1px rgb(20 25 55 / 0.35);
+  transition: clip-path 0.9s cubic-bezier(0.65, 0, 0.2, 1) 0.2s;
+}
+
+.painel > * {
+  transition:
+    opacity 0.55s ease,
+    transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.painel > :nth-child(2) { --j: 1; }
+.painel > :nth-child(3) { --j: 2; }
+.painel > :nth-child(4) { --j: 3; }
+.painel > :nth-child(n + 5) { --j: 4; }
+
+.secao.aberto-lados .painel > * {
+  transition-delay: calc(0.75s + var(--j, 0) * 0.08s);
+}
+
+/* Texto em serifa do lado "negócio" */
+.serif-grande {
+  font-family: var(--font-serif);
+  font-size: clamp(1.35rem, 2.05vw, 1.75rem);
+  line-height: 1.32;
+  color: var(--color-muted);
+}
+
+.serif-grande b {
+  font-weight: 400;
+  color: var(--color-heading);
+}
+
+.serif-grande em {
+  color: var(--color-accent);
+}
+
+/* Botões */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.btn-cheio {
+  background: var(--color-red);
+  color: var(--color-sunset);
+}
+
+.btn-cheio:hover {
+  background: var(--color-navy);
+}
+
+.btn-linha {
+  border: 1px solid var(--color-line);
+  color: var(--color-heading);
+}
+
+.btn-linha:hover {
+  border-color: var(--color-navy);
+  color: var(--color-navy);
+}
+
+.btn .seta {
+  transition: transform 0.25s ease;
+}
+
+.btn:hover .seta {
+  transform: translateX(3px);
+}
+
+/* O fio: segmentos entre as seções (A: do topo até a linha de eixo) e entre os lados (B: dos lados até o fim) */
+.fio {
+  display: none;
+  position: absolute;
+  left: 50%;
+  width: 1px;
+  margin-left: -0.5px;
+  background: var(--color-heading);
+  transform-origin: top;
+  transform: scaleY(0);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.fio-caneta {
+  display: none;
+}
+
+html.fio-ligado .fio {
+  display: block;
+}
+
+html.fio-ligado .fio-caneta {
+  display: block;
+  position: fixed;
+  left: 50%;
+  top: 62svh;
+  z-index: 40;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+html.fio-ligado .fio-caneta.is-ligada {
+  opacity: 1;
+}
+
+/* Estado "fechado": só com o script rodando (html.fio-js), para nada ficar escondido sem ele */
+html.fio-js .secao:not(.aberto-eixo) .eixo::before {
+  transform: scaleX(0);
+}
+
+html.fio-js .secao:not(.aberto-eixo) .eixo > * {
+  opacity: 0;
+}
+
+html.fio-js .secao:not(.aberto-eixo) .secao-titulo .letra {
+  opacity: 0;
+  transform: translateY(0.55em) rotate(12deg);
+}
+
+html.fio-js .secao:not(.aberto-lados) .negocio {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+html.fio-js .secao:not(.aberto-lados) .painel::before {
+  clip-path: inset(100% 0 0 0 round 1.25rem);
+}
+
+html.fio-js .secao:not(.aberto-lados) .painel > * {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.painel::before {
+  clip-path: inset(0 0 0 0 round 1.25rem);
+}
+
+.secao-titulo .letra {
+  --base: 0.2s;
+}
+
