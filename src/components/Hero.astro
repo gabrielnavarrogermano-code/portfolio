@@ -202,31 +202,38 @@ const tx = textos[idiomaDe(Astro.url)].capa;
       bottom: 0;
       left: 50%;
       translate: -50% 0;
+      /* TESTE (cartão): solto da borda de baixo; o topo continua na mesma altura, então o nome não se mexe */
+      bottom: 4svh;
       width: auto;
-      height: var(--foto-altura);
+      height: calc(var(--foto-altura) - 4svh);
       margin: 0;
     }
 
-    /* O arco atrás do tronco, com a cabeça passando por cima: assume o recorte em vez de deixar a foto solta no
-       fundo. Some junto com a foto quando ela vira pó (lib/po.ts controla --arco) */
+    /* TESTE (cartão): o fundo de estúdio fica no ::before, que some junto com a foto quando ela vira pó
+       (lib/po.ts controla --arco) */
     .retrato::before {
       content: '';
       position: absolute;
       z-index: -1;
-      inset: 22% 6% 0;
-      border-radius: 999px 999px 0 0;
-      background: linear-gradient(
-        to bottom,
-        color-mix(in srgb, var(--color-navy) 14%, var(--color-sunset)),
-        color-mix(in srgb, var(--color-navy) 6%, var(--color-sunset))
-      );
-      box-shadow: inset 0 0 0 1px rgb(20 25 55 / 0.08);
+      inset: 0;
+      border-radius: 1.25rem;
+      background:
+        var(--textura-grao),
+        radial-gradient(
+          120% 85% at 50% 22%,
+          color-mix(in srgb, #fff 45%, var(--color-sunset)),
+          color-mix(in srgb, var(--color-navy) 16%, var(--color-sunset))
+        );
+      background-size: 240px, 100% 100%;
+      box-shadow: inset 0 0 0 1px rgb(20 25 55 / 0.1);
       opacity: var(--arco, 1);
     }
 
-    /* Com o arco atrás, só a base some no fundo (as laterais ficam inteiras) */
+    /* A foto recortada pelos cantos do cartão, sem sumir no fundo */
     .retrato .retrato-moldura {
-      mask-image: linear-gradient(to top, transparent, #000 10%);
+      mask-image: none;
+      overflow: hidden;
+      border-radius: 1.25rem;
     }
 
     .capa-lados {
@@ -306,8 +313,9 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     height: 100%;
     object-fit: contain;
     object-position: 50% 100%;
-    /* em preto e branco, com um pouco mais de contraste, e com o granulado do site (o filtro #capa-grao) */
-    filter: grayscale(1) contrast(1.08) url(#capa-grao);
+    /* TESTE: colorida, só com o granulado do site (o filtro #capa-grao).
+       Em preto e branco era: grayscale(1) contrast(1.08) url(#capa-grao) */
+    filter: url(#capa-grao);
   }
 
   /* A cópia da foto troca com a <img> só quando a foto começa a se desfazer */
@@ -336,31 +344,37 @@ const tx = textos[idiomaDe(Astro.url)].capa;
       padding: 5.25rem 1.5rem 2.5rem;
     }
 
-    /* A foto como no computador: o recorte inteiro em preto e branco, saindo da borda de baixo, com o arco atrás
-       e a base se dissolvendo no papel. Fica entre o nome e os dois lados. */
+    /* TESTE: a foto num cartão, como um retrato de estúdio: o recorte inteiro, colorido, sobre um fundo claro com
+       a luz mais forte atrás da cabeça, de cantos arredondados. Fica entre o nome e os dois lados. */
     .retrato {
       order: 3;
       flex: none;
-      width: min(22rem, 100%);
-      margin: 0.25rem auto 0;
+      width: min(17rem, 78%);
+      margin: 1.25rem auto 0;
+      overflow: hidden;
+      border-radius: 1rem;
+      background:
+        var(--textura-grao),
+        radial-gradient(
+          120% 85% at 50% 22%,
+          color-mix(in srgb, #fff 45%, var(--color-sunset)),
+          color-mix(in srgb, var(--color-navy) 16%, var(--color-sunset))
+        );
+      background-size: 240px, 100% 100%;
+      box-shadow: inset 0 0 0 1px rgb(20 25 55 / 0.1);
     }
 
     .retrato::before {
-      content: '';
-      position: absolute;
-      z-index: -1;
-      inset: 22% 6% 0;
-      border-radius: 999px 999px 0 0;
-      background: linear-gradient(
-        to bottom,
-        color-mix(in srgb, var(--color-navy) 14%, var(--color-sunset)),
-        color-mix(in srgb, var(--color-navy) 6%, var(--color-sunset))
-      );
-      box-shadow: inset 0 0 0 1px rgb(20 25 55 / 0.08);
+      display: none;
     }
 
     .retrato .retrato-moldura {
-      mask-image: linear-gradient(to top, transparent, #000 10%);
+      mask-image: none;
+    }
+
+    /* colorida, só com o grão do site (para testar em preto e branco: grayscale(1) contrast(1.08) antes do url) */
+    .retrato-foto {
+      filter: url(#capa-grao);
     }
 
     .retrato-copia {
@@ -401,7 +415,7 @@ const tx = textos[idiomaDe(Astro.url)].capa;
 
     .capa-dad {
       padding-left: 0.9rem;
-      border-left: 1px solid var(--color-line);
+      border-left: 1px solid color-mix(in srgb, var(--color-latao) 75%, transparent);
       text-align: right;
     }
 

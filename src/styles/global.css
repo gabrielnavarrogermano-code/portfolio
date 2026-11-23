@@ -398,6 +398,36 @@ html.capa-carregando #inicio .letra {
   }
 }
 
+/* Uma estação de latão onde cada seção começa no fio: o ponto de encontro de uma seção com a anterior. Só aparece
+   quando o fio está ligado e abre junto com o título. */
+.secao::before {
+  content: '';
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 2;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 9999px;
+  background: var(--color-latao);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-latao) 22%, transparent);
+  transition:
+    opacity 0.5s ease,
+    transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  pointer-events: none;
+}
+
+html.fio-ligado .secao::before {
+  display: block;
+}
+
+html.fio-js .secao:not(.aberta)::before {
+  opacity: 0;
+  transform: scale(0.2);
+}
+
 .secao-largura {
   width: 100%;
   max-width: 72rem;

@@ -30,7 +30,7 @@ type Po = {
   cw: number; ch: number;
   dados: ImageData; pixels: Uint32Array; mascaraDados: ImageData; inicio: Float32Array;
   x: Float32Array; y: Float32Array; tx: Float32Array; ty: Float32Array; curva: Float32Array;
-  cinza: Uint8Array; alfa: Float32Array; cel: Uint32Array; corFio: [number, number, number];
+  cor: Uint8Array; alfa: Float32Array; cel: Uint32Array; corFio: [number, number, number];
 };
 
 export function iniciarPo(capa: HTMLElement, signal: AbortSignal) {
@@ -94,7 +94,7 @@ export function iniciarPo(capa: HTMLElement, signal: AbortSignal) {
     const cols = Math.ceil(fw / PASSO), linhas = Math.ceil(fh / PASSO);
     mascara.width = cols; mascara.height = linhas;
     const inicio = new Float32Array(cols * linhas);
-    const g = { x: [] as number[], y: [] as number[], tx: [] as number[], ty: [] as number[], curva: [] as number[], cinza: [] as number[], alfa: [] as number[], cel: [] as number[] };
+    const g = { x: [] as number[], y: [] as number[], tx: [] as number[], ty: [] as number[], curva: [] as number[], cor: [] as number[], alfa: [] as number[], cel: [] as number[] };
     const cx = cw / 2, topoFio = ch * TOPO_FIO;
     for (let r = 0; r < linhas; r++) {
       for (let c = 0; c < cols; c++) {
@@ -107,20 +107,18 @@ export function iniciarPo(capa: HTMLElement, signal: AbortSignal) {
         // a base da moldura some no fundo (10%), como na <img> em telas largas
         const borda = Math.min(1, (1 - v) / 0.1);
         if (borda < 0.05) continue;
-        // o tom do ponto em preto e branco com contraste 1,08 (o mesmo filtro da <img>)
-        let l = (0.2126 * px[p] + 0.7152 * px[p + 1] + 0.0722 * px[p + 2]) / 255;
-        l = Math.min(1, Math.max(0, (l - 0.5) * 1.08 + 0.5));
+        // a cor do ponto: a mesma da foto (colorida, como a <img>)
         g.x.push(ox + x); g.y.push(oy + y);
         g.tx.push(cx + (ruido(cel * 5.1) - 0.5) * 1.2); // destino: um ponto do fio
         g.ty.push(topoFio + ruido(cel * 7.7) * (ch - topoFio));
         g.curva.push((ruido(cel * 9.1) - 0.5) * 260);
-        g.cinza.push(Math.round(l * 255)); g.alfa.push(a0 * borda); g.cel.push(cel);
+        g.cor.push(px[p], px[p + 1], px[p + 2]); g.alfa.push(a0 * borda); g.cel.push(cel);
       }
     }
     po = {
       cw, ch, dados, pixels: new Uint32Array(dados.data.buffer), mascaraDados: ctxMascara.createImageData(cols, linhas), inicio,
       x: Float32Array.from(g.x), y: Float32Array.from(g.y), tx: Float32Array.from(g.tx), ty: Float32Array.from(g.ty),
-      curva: Float32Array.from(g.curva), cinza: Uint8Array.from(g.cinza), alfa: Float32Array.from(g.alfa), cel: Uint32Array.from(g.cel),
+      curva: Float32Array.from(g.curva), cor: Uint8Array.from(g.cor), alfa: Float32Array.from(g.alfa), cel: Uint32Array.from(g.cel),
       corFio: corDoFio(), // o pó ganha a cor do fio (Neon Navy) conforme chega nele
     };
     desenhado = -1;
@@ -179,14 +177,14 @@ export function iniciarPo(capa: HTMLElement, signal: AbortSignal) {
         const y = Math.round(po.y[i] + (po.ty[i] - po.y[i]) * k - 60 * arco);
         const a = Math.round(255 * po.alfa[i] * Math.min(1, tt * 5) * some * (1 - 0.35 * arco));
         if (a < 4) continue;
-        const g0 = po.cinza[i], [fr, fg, fb] = po.corFio;
+        const r0 = po.cor[i * 3], g0 = po.cor[i * 3 + 1], b0 = po.cor[i * 3 + 2], [fr, fg, fb] = po.corFio;
         const lado = k > 0.85 ? 1 : 2;
         for (let yy = y; yy < y + lado; yy++) {
           if (yy < 0 || yy >= ch) continue;
           for (let xx = x; xx < x + lado; xx++) {
             if (xx < 0 || xx >= cw) continue;
             const p = (yy * cw + xx) * 4;
-            d[p] = g0 + (fr - g0) * k; d[p + 1] = g0 + (fg - g0) * k; d[p + 2] = g0 + (fb - g0) * k; d[p + 3] = a;
+            d[p] = r0 + (fr - r0) * k; d[p + 1] = g0 + (fg - g0) * k; d[p + 2] = b0 + (fb - b0) * k; d[p + 3] = a;
           }
         }
       }
