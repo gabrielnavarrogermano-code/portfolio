@@ -25,64 +25,15 @@ The IT team had no single view of Microsoft 365 accounts and devices. To find ou
   - **Costs:** how much the licenses cost per year, per month, per account and per department.
 - **Filters per tab**, only the ones that make sense on each, with tooltips on hover and a dedicated mobile layout.
 
-## Under the hood
+## How it works
 
-For those reviewing the technical side: how the base is organized, how the data is cleaned and how the indicators are calculated. The report itself is in Portuguese, so the column and measure names below are kept as they are in it.
+In short, there are three steps:
 
-### The base
+1. **The base.** A spreadsheet with one row for each person or device: name, email, department, licenses, antivirus, LAPS and Windows version.
+2. **The cleaning.** In Power Query, I organize the rows: I separate users from admin accounts, handle accounts with more than one license and flag what is missing on each computer's security.
+3. **The numbers.** In Power BI, each account and each computer is counted only once, and license costs are calculated per year, per month, per account and per department.
 
-One table, with one row per record: a person, an admin account, a shared device or a machine without a user.
-
-- **Name**, **email**, **department** and **role**
-- Microsoft 365 and Adobe **licenses**
-- **PC name** and **asset tag**
-- **Antivirus** (Kaspersky) and **LAPS**
-- **Windows version**
-- **Reason** why someone has no company device
-
-### The cleaning, in Power Query
-
-Before becoming an indicator, each row is cleaned and classified:
-
-1. **Account type:** based on role and name, the row becomes a user, an admin account, a shared device or a machine without a user.
-2. **License:** one account can have several licenses. The classification follows a priority order (no license, Basic, Standard), and free licenses are left out, because they change no decision.
-3. **Device:** with no PC name, the recorded reason says whether the person uses a personal computer, has no computer or gave no reason.
-4. **Security issues:** no LAPS, no antivirus or Windows 11 HOME, which has to become PRO to use LAPS.
-
-### Counting rules
-
-1. An account counts only once, by email: the same email on two rows is one account.
-2. A device counts only once, by PC name: a computer used by two people is one device.
-3. Not having a device is information, not an issue: it does not add to the problem indicators.
-4. LAPS coverage is calculated over all devices, Windows HOME included, on purpose: they need LAPS too.
-
-### Measures
-
-Rules 1 and 2 live in the measures themselves, which count distinct values, not rows. Simplified for reading:
-
-```
-Contas Ativas =
-CALCULATE (
-    DISTINCTCOUNT ( usuarios_office365[E-MAIL] ),
-    usuarios_office365[Conta Ativa] = "Sim"
-)
-
-Computadores = DISTINCTCOUNTNOBLANK ( usuarios_office365[NOME PC] )
-
-% LAPS =
-DIVIDE (
-    CALCULATE ( [Computadores], usuarios_office365[Status LAPS] = "Com LAPS" ),
-    [Computadores]
-)
-
-Custo Licenças (ano) =
-    [Contas Standard] * [Preço M365 Standard]
-        + [Contas Basic] * [Preço M365 Basic]
-        + [Contas Adobe] * [Preço Adobe Acrobat Pro]
-        + [Computadores com Antivírus] * [Valor Custo Antivírus] / [Anos Licença Antivírus]
-```
-
-The antivirus is paid every three years, so it enters the yearly cost divided by 3. Its price is a parameter: on the Costs tab, a filter simulates other values and the whole cost is recalculated.
+The report itself is in Portuguese, so the names in the dashboard are in Portuguese too.
 
 ### Licenses that could be reviewed
 

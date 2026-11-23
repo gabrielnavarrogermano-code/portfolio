@@ -25,64 +25,13 @@ A equipe de TI não tinha uma visão única das contas Microsoft 365 e dos equip
   - **Custos:** quanto as licenças custam por ano, por mês, por conta e por setor.
 - **Filtros por aba**, só os que fazem sentido em cada uma, com dicas ao passar o mouse e um layout próprio para o celular.
 
-## Por dentro
+## Como funciona
 
-Para quem avalia a parte técnica: como a base está organizada, como os dados são tratados e como os indicadores são calculados.
+Em poucas palavras, são três passos:
 
-### A base
-
-Uma tabela, com uma linha por registro: uma pessoa, uma conta administradora, um dispositivo compartilhado ou uma máquina sem usuário.
-
-- **Nome**, **e-mail**, **setor** e **função**
-- **Licenças** Microsoft 365 e Adobe
-- **Nome do PC** e **selo de patrimônio**
-- **Antivírus** (Kaspersky) e **LAPS**
-- **Versão do Windows**
-- **Motivo** de quem não tem equipamento da empresa
-
-### O tratamento, no Power Query
-
-Antes de virar indicador, cada linha é limpa e classificada:
-
-1. **Tipo de conta:** pela função e pelo nome, a linha vira usuário, conta administradora, dispositivo compartilhado ou máquina sem usuário.
-2. **Licença:** a mesma conta pode ter várias licenças. A classificação segue uma ordem de prioridade (sem licença, Basic, Standard), e as licenças gratuitas ficam de fora, porque não mudam nenhuma decisão.
-3. **Equipamento:** sem nome de PC, o motivo informado diz se a pessoa usa um computador particular, se não tem computador ou se o motivo não foi informado.
-4. **Pendências de segurança:** sem LAPS, sem antivírus ou Windows 11 HOME, que precisa virar PRO para usar o LAPS.
-
-### Regras de contagem
-
-1. Uma conta conta uma vez só, pelo e-mail: o mesmo e-mail em duas linhas é uma conta.
-2. Um equipamento conta uma vez só, pelo nome do PC: um computador usado por duas pessoas é um equipamento.
-3. Não ter equipamento é informação, não pendência: não soma nos indicadores de problema.
-4. A cobertura de LAPS é calculada sobre todos os equipamentos, inclusive os Windows HOME, de propósito: eles também precisam do LAPS.
-
-### Medidas
-
-As regras 1 e 2 estão nas próprias medidas, que contam valores distintos, e não linhas. Simplificadas para leitura:
-
-```
-Contas Ativas =
-CALCULATE (
-    DISTINCTCOUNT ( usuarios_office365[E-MAIL] ),
-    usuarios_office365[Conta Ativa] = "Sim"
-)
-
-Computadores = DISTINCTCOUNTNOBLANK ( usuarios_office365[NOME PC] )
-
-% LAPS =
-DIVIDE (
-    CALCULATE ( [Computadores], usuarios_office365[Status LAPS] = "Com LAPS" ),
-    [Computadores]
-)
-
-Custo Licenças (ano) =
-    [Contas Standard] * [Preço M365 Standard]
-        + [Contas Basic] * [Preço M365 Basic]
-        + [Contas Adobe] * [Preço Adobe Acrobat Pro]
-        + [Computadores com Antivírus] * [Valor Custo Antivírus] / [Anos Licença Antivírus]
-```
-
-O antivírus é pago a cada três anos, por isso entra no custo anual dividido por 3. O preço dele é um parâmetro: na aba Custos, um filtro simula outros valores e todo o custo é recalculado.
+1. **A base.** Uma planilha com uma linha para cada pessoa ou equipamento: nome, e-mail, setor, licenças, antivírus, LAPS e versão do Windows.
+2. **A limpeza.** No Power Query, organizo as linhas: separo usuários de contas administrativas, trato as contas com mais de uma licença e marco o que falta de segurança em cada computador.
+3. **Os números.** No Power BI, cada conta e cada computador é contado uma vez só, e o custo das licenças é calculado por ano, por mês, por conta e por setor.
 
 ### Licenças que podem ser revistas
 
