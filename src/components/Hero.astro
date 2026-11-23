@@ -377,6 +377,11 @@ const tx = textos[idiomaDe(Astro.url)].capa;
       padding: 0;
     }
 
+    /* Um pouco menor que a largura toda: NAVARRO ocupa ~75% da tela */
+    .capa-nome .capa-nome-texto {
+      font-size: calc(100cqi / 5.2);
+    }
+
     .capa-lados,
     .capa-lado {
       display: contents;
