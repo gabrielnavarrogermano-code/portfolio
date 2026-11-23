@@ -2,8 +2,9 @@
 // A ponta do fio fica a 62% da altura da tela (e desce até o pé dela no fim da página). Conforme a rolagem, o fio
 // de cada seção se desenha até onde a ponta chegou: se a pessoa para, ele para; se volta, ele recua. Quando a
 // ponta passa pelo título, a seção abre (.aberta); passando por um [data-abre], ele aparece (.aberto); passando
-// por um ponto da linha do tempo [data-no], ele acende (.aceso).
-// - Fio e caneta (o ponto vermelho na ponta) só em telas largas, com movimento e com a capa na página.
+// por um ponto da linha do tempo [data-no], ele acende (.aceso). Um elemento [data-fio-desvia] (o dashboard dos
+// projetos) abre um segundo vão: o fio para na borda de cima dele e volta na de baixo, e a caneta não passa por cima.
+// - Fio e caneta (o ponto em latão na ponta) só em telas largas, com movimento e com a capa na página.
 // - No celular, as peças abrem do mesmo jeito, sem o fio.
 // - Com movimento reduzido, tudo já aparece (o CSS só esconde com html.fio-js).
 
@@ -13,9 +14,10 @@ type Secao = {
   titulo: HTMLElement | null;
   sub: HTMLElement | null;
   fim: HTMLElement | null;
+  desvia: HTMLElement | null;
   abre: HTMLElement[];
   nos: HTMLElement[];
-  m: { topo: number; fim: number; titulo: number; vao: [number, number]; abre: number[]; nos: number[] } | null;
+  m: { topo: number; fim: number; titulo: number; vao: [number, number]; desvio: [number, number]; abre: number[]; nos: number[] } | null;
   f: number;
 };
 
@@ -45,6 +47,7 @@ export function iniciarFio() {
     titulo: el.querySelector('.secao-titulo'),
     sub: el.querySelector('.secao-sub'),
     fim: el.querySelector('[data-fio-fim]'),
+    desvia: el.querySelector('[data-fio-desvia]'),
     abre: [...el.querySelectorAll<HTMLElement>('[data-abre]')],
     nos: [...el.querySelectorAll<HTMLElement>('[data-no]')],
     m: null,
@@ -67,12 +70,18 @@ export function iniciarFio() {
       // o vão do título (e da frase de apoio), com uma folga de 18 px em cima e embaixo
       const ultimo = s.sub ?? s.titulo;
       const vao: [number, number] = s.titulo && ultimo ? [topo(s.titulo) - 18, topo(ultimo) + ultimo.offsetHeight + 18] : [0, 0];
+      // o vão do elemento que o fio contorna, rente às bordas dele
+      const desvio: [number, number] = s.desvia ? [topo(s.desvia), topo(s.desvia) + s.desvia.offsetHeight] : [-1, -1];
       if (s.fio) {
         s.fio.style.height = `${Math.max(0, fim - t)}px`;
         s.fio.style.setProperty('--vao-de', `${vao[0] - t}px`);
         s.fio.style.setProperty('--vao-ate', `${vao[1] - t}px`);
+        if (s.desvia) {
+          s.fio.style.setProperty('--desvio-de', `${desvio[0] - t}px`);
+          s.fio.style.setProperty('--desvio-ate', `${desvio[1] - t}px`);
+        }
       }
-      s.m = { topo: t, fim, titulo: s.titulo ? topo(s.titulo) : t, vao, abre: s.abre.map(topo), nos: s.nos.map(topo) };
+      s.m = { topo: t, fim, titulo: s.titulo ? topo(s.titulo) : t, vao, desvio, abre: s.abre.map(topo), nos: s.nos.map(topo) };
       s.f = -1;
     }
     pedir();
@@ -99,8 +108,9 @@ export function iniciarFio() {
       if (ligado && s.fio) {
         const f = faixa(ponta, m.topo, m.fim);
         if (f !== s.f) { s.f = f; s.fio.style.setProperty('--resto', `${((1 - f) * 100).toFixed(2)}%`); }
-        // a caneta só aparece desenhando, e some enquanto a ponta atravessa o vão do título
-        if (f > 0 && f < 1 && !(ponta > m.vao[0] && ponta < m.vao[1])) desenhando = true;
+        // a caneta só aparece desenhando, e some enquanto a ponta atravessa um vão (o do título ou o do desvio)
+        const noVao = (ponta > m.vao[0] && ponta < m.vao[1]) || (ponta > m.desvio[0] && ponta < m.desvio[1]);
+        if (f > 0 && f < 1 && !noVao) desenhando = true;
       }
       s.el.classList.toggle('aberta', ponta > m.titulo - 40);
       s.abre.forEach((e, k) => e.classList.toggle('aberto', ponta > m.abre[k] + 20));

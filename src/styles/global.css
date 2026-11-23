@@ -7,31 +7,33 @@
   --font-mono: var(--ff-mono), ui-monospace, SFMono-Regular, monospace;
   --font-serif: var(--ff-serif), ui-serif, Georgia, serif; /* só a palavra "negócio" da capa */
 
-  /* Paleta Pantone, a mesma da capa no site inteiro: o papel (Sunset) de fundo e o quase preto (Nebulosity) no texto.
+  /* A paleta: azul-marinho (Neon Navy), creme (o papel, Sunset) e latão como o único destaque.
      Cada cor tem um papel só:
-     - accent (Red Inferno): o único destaque: o que importa, o item ativo, o "Atual", o botão principal;
+     - latão: o único destaque: o que importa, o item ativo, o "Atual", o botão principal. Em preenchimento é o
+       latão claro (--color-latao), com texto azul-marinho por cima (5,5:1); em texto ou detalhe sobre o creme é o
+       latão escuro (--color-accent, 4,8:1). Sobre o azul-marinho, o destaque é o latão claro;
      - link (Neon Navy): o que é clicável; também é a superfície do lado "dados" de cada seção (.on-navy);
      - line (Astronomicon Grey clareado) e dove (Wild Dove): linhas e detalhes. Os dois cinzas não têm contraste
        para texto corrido no papel, por isso o texto secundário (muted) é o Nebulosity mais claro. */
-  --color-sunset: #e7e7e0;
+  --color-sunset: #ece8df;
   --color-nebulosity: #1a1b16;
   --color-navy: #141937;
-  --color-red: #4e0000;
+  --color-latao: #b08d57;
   --color-astro: #6e7c89;
   --color-dove: #8b8b8b;
 
-  --color-bg: #e7e7e0;
+  --color-bg: #ece8df;
   --color-ink: #1a1b16;
   --color-heading: #1a1b16;
   --color-line: #b7bcbe;
   --color-fg: #23241f;
   --color-muted: #4a4b47;
-  --color-card: #f1f1ec;
-  --color-accent: #4e0000;
+  --color-card: #f4f1ea;
+  --color-accent: #7d5f2c;
   --color-link: #141937;
   --color-link-strong: #141937;
-  --color-live: #4e0000;
-  --color-ice: #e7e7e0;
+  --color-live: #7d5f2c;
+  --color-ice: #ece8df;
   /* O fio que liga o site (e tudo o que é ele: linha do tempo, seta, sublinhado do e-mail, o pó da capa) */
   --color-fio: #141937;
 
@@ -46,20 +48,19 @@
   --color-crit: #d03b3b;
 }
 
-/* O lado "dados" de cada seção e o menu: superfície Neon Navy, com o texto em Sunset.
-   O vermelho some sobre o azul, então aqui o destaque é o próprio Sunset. (.on-black: nome antigo, mesmo efeito) */
+/* O lado "dados" de cada seção e o menu: superfície Neon Navy, com o texto em Sunset e o destaque em latão claro. (.on-black: nome antigo, mesmo efeito) */
 .on-navy,
 .on-black {
   --color-bg: #141937;
   --color-ink: #141937;
-  --color-heading: #e7e7e0;
-  --color-fg: #e7e7e0;
+  --color-heading: #ece8df;
+  --color-fg: #ece8df;
   --color-muted: #b9bcc7;
-  --color-line: rgb(231 231 224 / 0.16);
-  --color-accent: #e7e7e0;
-  --color-link: #e7e7e0;
-  --color-link-strong: #4e0000;
-  --color-live: #e7e7e0;
+  --color-line: rgb(236 232 223 / 0.16);
+  --color-accent: #b08d57;
+  --color-link: #ece8df;
+  --color-link-strong: #b08d57;
+  --color-live: #b08d57;
 }
 
 /* Títulos em Tektur: letras quadradas, de cantos retos, com cara de código.
@@ -103,28 +104,41 @@ body {
   overflow-x: clip;
 }
 
-/* Granulado fino no fundo do site inteiro, como textura de filme: tira a cara de papel chapado.
-   Fica atrás do conteúdo (z-index -1, no fundo do body) e não se mexe, então não atrapalha a leitura. */
+/* As texturas do papel, para reusar (o fundo do site e o painel da foto na capa):
+   - grão: granulado fino, como papel de gramatura alta;
+   - linho: fibras finas na horizontal e na vertical, bem fracas, como papel de convite. */
+:root {
+  --textura-grao: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.1 0 0 0 0 0.12 0 0 0 0.1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  --textura-linho-h: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='h'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.004 0.9' numOctaves='2' seed='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.25 0 0 0 0 0.2 0 0 0 0 0.15 0.09 0 0 0 -0.02'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23h)'/%3E%3C/svg%3E");
+  --textura-linho-v: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='v'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9 0.004' numOctaves='2' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.25 0 0 0 0 0.2 0 0 0 0 0.15 0.09 0 0 0 -0.02'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23v)'/%3E%3C/svg%3E");
+}
+
+/* O papel do site inteiro: uma luz suave vindo de cima, o grão e o linho. Fica atrás do conteúdo (z-index -1, no
+   fundo do body) e não se mexe, então não atrapalha a leitura. */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: 0.08;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-image:
+    radial-gradient(ellipse 75% 60% at 50% -10%, rgb(255 253 246 / 0.7), transparent 70%),
+    var(--textura-grao),
+    var(--textura-linho-h),
+    var(--textura-linho-v);
+  background-size: 100% 100%, 240px, 300px, 300px;
 }
 
 /* ---------- O fundo das páginas com capa ----------
    1) O papel muda de tom ao longo do caminho, num degradê contínuo pela altura da página inteira (sem cortes):
       Sunset na capa, um papel levemente azulado no meio (perto da cor do fio) e um tom um pouco mais quente no fim.
       Fica no fundo do <html>, que cobre o documento todo; a capa (o trilho, --capa-alt) fica toda em Sunset.
-   2) A vinheta: as bordas da tela um pouco mais escuras, como uma foto impressa. Fica parada atrás do conteúdo e
-      só aparece depois da capa (--vinheta, de 0 a 1, vem de lib/fio.ts). */
+   2) A vinheta: as bordas da tela um pouco mais escuras, como uma foto impressa. Fica parada atrás do conteúdo:
+      fraca na capa e mais forte depois dela (--vinheta, de 0 a 1, vem de lib/fio.ts). */
 html:has([data-capa]) {
   --capa-alt: 100svh;
   --fundo-meio: color-mix(in srgb, var(--color-navy) 7%, var(--color-sunset));
-  --fundo-fim: color-mix(in srgb, var(--color-red) 6%, var(--color-sunset));
+  --fundo-fim: color-mix(in srgb, var(--color-latao) 10%, var(--color-sunset));
   background-image: linear-gradient(
     to bottom,
     var(--color-sunset) 0,
@@ -145,8 +159,9 @@ body::after {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: var(--vinheta, 0);
-  background: radial-gradient(ellipse 85% 80% at 50% 45%, transparent 55%, rgb(26 27 22 / 0.13) 100%);
+  /* um pouco de vinheta sempre (dá profundidade à capa também); depois da capa ela chega ao máximo */
+  opacity: max(0.6, var(--vinheta, 0));
+  background: radial-gradient(ellipse 95% 90% at 50% 40%, transparent 55%, rgb(60 45 30 / 0.12) 100%);
 }
 
 /* Linhas que entram ao rolar (o script em lib/reveal.ts liga as classes). Animação, e não transição,
@@ -450,12 +465,13 @@ html.capa-carregando #inicio .letra {
 }
 
 .btn-cheio {
-  background: var(--color-red);
-  color: var(--color-sunset);
+  background: var(--color-latao);
+  color: var(--color-navy);
 }
 
 .btn-cheio:hover {
   background: var(--color-navy);
+  color: var(--color-sunset);
 }
 
 .btn-linha {
@@ -470,7 +486,9 @@ html.capa-carregando #inicio .letra {
 
 /* O fio: um segmento por seção, no centro, que se desenha até onde a ponta chegou (o recorte de baixo, --resto,
    vem do script). Ele tem um vão na altura do título e da frase (--vao-de a --vao-ate), para não passar por cima
-   das letras. Recorte e máscara não mexem no layout: só na pintura. */
+   das letras, e um segundo vão opcional (--desvio-de a --desvio-ate) em volta de um [data-fio-desvia], como o
+   dashboard dos projetos. Sem desvio, o segundo vão fica além do fim do fio. Recorte e máscara não mexem no
+   layout: só na pintura. */
 .fio {
   display: none;
   position: absolute;
@@ -484,7 +502,9 @@ html.capa-carregando #inicio .letra {
     to bottom,
     #000 0 var(--vao-de, 0px),
     transparent var(--vao-de, 0px) var(--vao-ate, 0px),
-    #000 var(--vao-ate, 0px)
+    #000 var(--vao-ate, 0px) var(--desvio-de, 100000px),
+    transparent var(--desvio-de, 100000px) var(--desvio-ate, 100000px),
+    #000 var(--desvio-ate, 100000px)
   );
   pointer-events: none;
   z-index: 1;

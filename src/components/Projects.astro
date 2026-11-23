@@ -17,7 +17,7 @@ const projetos = (await getCollection(idioma === 'en' ? 'projetosEn' : 'projetos
   {
     projetos.map((p) => (
       <Secao titulo={p.data.title} sub={p.data.summary}>
-        <a href={caminho(idioma, `projeto:${p.id}`)} data-active data-abre class="pj-prancha" aria-label={tx.abrir(p.data.title)}>
+        <a href={caminho(idioma, `projeto:${p.id}`)} data-active data-abre data-fio-desvia class="pj-prancha" aria-label={tx.abrir(p.data.title)}>
           {p.data.cover && (
             <Image src={p.data.cover} alt="" widths={[768, 1280, 1920]} sizes="(min-width: 72rem) 67rem, 100vw" format="webp" class="pj-img" />
           )}

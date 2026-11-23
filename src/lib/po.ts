@@ -66,6 +66,7 @@ export function iniciarPo(capa: HTMLElement, signal: AbortSignal) {
       el.style.removeProperty('transform');
     }
     fioCapa.style.removeProperty('transform');
+    retrato.style.removeProperty('--arco');
     ctxPo.clearRect(0, 0, cvPo.width, cvPo.height);
   };
 
@@ -103,8 +104,8 @@ export function iniciarPo(capa: HTMLElement, signal: AbortSignal) {
         const p = (Math.floor(y * dpr) * W + Math.floor(x * dpr)) * 4;
         const a0 = px[p + 3] / 255;
         if (a0 < 0.2) continue;
-        // as bordas da moldura somem no fundo (laterais 14%, base 16%), como na <img>
-        const u = x / fw, borda = Math.min(1, u / 0.14, (1 - u) / 0.14) * Math.min(1, (1 - v) / 0.16);
+        // a base da moldura some no fundo (10%), como na <img> em telas largas
+        const borda = Math.min(1, (1 - v) / 0.1);
         if (borda < 0.05) continue;
         // o tom do ponto em preto e branco com contraste 1,08 (o mesmo filtro da <img>)
         let l = (0.2126 * px[p] + 0.7152 * px[p + 1] + 0.0722 * px[p + 2]) / 255;
@@ -147,6 +148,8 @@ export function iniciarPo(capa: HTMLElement, signal: AbortSignal) {
     for (const el of somem) { el.style.opacity = String(1 - t); el.style.transform = t ? `translateY(${-24 * t}px)` : ''; }
     // o fio da capa se desenha enquanto o pó chega nele
     fioCapa.style.transform = `scaleY(${suave(faixa(s, T.fioDe, T.fioAte))})`;
+    // o arco atrás da foto some enquanto ela se desfaz
+    retrato.style.setProperty('--arco', String(1 - suave(faixa(s, T.comeca, T.comeca + T.espalha + T.saida))));
     if (!po) return;
     const solto = s > T.comeca;
     retrato.classList.toggle('po-ativo', solto);
