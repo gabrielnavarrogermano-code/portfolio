@@ -150,7 +150,7 @@ html:has([data-capa]) {
 }
 
 html.palco-ativo:has([data-capa]) {
-  --capa-alt: 230svh;
+  --capa-alt: 190svh;
 }
 
 body::after {

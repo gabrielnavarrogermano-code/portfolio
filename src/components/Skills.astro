@@ -150,7 +150,7 @@ const posicoes = [
                           <span class="c4-eixo c4-eixo-x">{tx.d4.esforco} →</span>
                           {tx.d4.quadrantes.map((q, k) => (
                             <div
-                              class:list={['c4-item d-pop', q.win && 'c4-vence']}
+                              class:list={['c4-item d-pop', q.win && 'c4-vence', k % 2 === 1 && 'c4-dir']}
                               style={`--x: ${posicoes[k].x}%; --y: ${posicoes[k].y}%; --d: 0.3s`}
                             >
                               <span class="c4-ponto" />
@@ -747,6 +747,19 @@ const posicoes = [
     margin-top: 0.15rem;
     font-size: 0.75rem;
     opacity: 0.8;
+  }
+
+  /* Celular: o plano é estreito, então cada coluna começa mais perto da borda e ganha quase metade da largura
+     (a 72% os rótulos da direita quebravam em até quatro linhas) */
+  @media (max-width: 39.99rem) {
+    .c4-item {
+      left: 5%;
+      max-width: 44%;
+    }
+
+    .c4-item.c4-dir {
+      left: 54%;
+    }
   }
 
   .c4-vence .c4-ponto {

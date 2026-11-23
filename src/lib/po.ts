@@ -9,8 +9,9 @@
 // - nada roda com a capa parada; a rolagem chega amortecida, para o movimento nunca dar tranco.
 
 const PASSO = 4; // um grão a cada 4 px da foto
-// Linha do tempo do trilho (0 a 1)
-const T = { textos: 0.16, comeca: 0.05, espalha: 0.24, ruido: 0.05, saida: 0.04, viagem: 0.3, fioDe: 0.5, fioAte: 0.78, poSome: 0.86 };
+// Linha do tempo do trilho (0 a 1). O pó some perto do fim (0,96), para o trilho não terminar com a tela parada,
+// só com o fio (o trilho, na Hero, tem 190svh)
+const T = { textos: 0.18, comeca: 0.056, espalha: 0.27, ruido: 0.056, saida: 0.045, viagem: 0.336, fioDe: 0.56, fioAte: 0.874, poSome: 0.963 };
 const TOPO_FIO = 0.58; // o fio da capa vai de 58% da altura da tela até o pé dela
 
 // A cor do fio (--color-fio, no global.css), em RGB

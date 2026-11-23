@@ -2,8 +2,12 @@
 import { site } from '../data/site';
 import { idiomaDe, textos } from '../i18n';
 
-// Rodapé enxuto: o nome e o ano de um lado, os links e o "voltar ao topo" do outro. Os links ficam aqui porque a
-// página do projeto não tem a seção de contato.
+// Rodapé enxuto: o nome e o ano de um lado, os links e o "voltar ao topo" do outro. Os links só aparecem na página
+// do projeto, que não tem a seção de contato; na inicial eles já estão logo acima, nos botões de "Fale comigo".
+interface Props {
+  comLinks?: boolean;
+}
+const { comLinks = true } = Astro.props;
 const tx = textos[idiomaDe(Astro.url)].rodape;
 const links = [
   { label: tx.email, href: `mailto:${site.email}` },
@@ -18,6 +22,7 @@ const links = [
       <p>© {site.ano} {site.name}</p>
       <nav aria-label="Links">
         {
+          comLinks &&
           links.map((l) => (
             <a href={l.href} {...(l.external ? { target: '_blank', rel: 'noopener' } : {})}>
               {l.label}
