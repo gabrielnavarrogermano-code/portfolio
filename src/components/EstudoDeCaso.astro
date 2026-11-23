@@ -49,7 +49,7 @@ const proximos = [
         <span>{p.data.kind}</span>
         <span>{tx.leitura(minutes)}</span>
       </p>
-      <h1 class="pj-title mt-4 max-w-5xl font-display leading-[0.9] font-black text-balance text-heading uppercase">
+      <h1 class="pj-title mt-4 max-w-5xl font-display font-black text-balance text-heading uppercase">
         {p.data.title}
       </h1>
       <p class="mt-6 max-w-3xl text-xl leading-snug text-balance text-muted sm:text-2xl">{p.data.summary}</p>
@@ -164,8 +164,10 @@ const proximos = [
 </Layout>
 
 <style>
+  /* line-height 1.2: a cedilha da Tektur é longa; o Ç e os acentos não encostam na linha vizinha */
   .pj-title {
-    font-size: clamp(2.75rem, 7.5vw, 6.5rem);
+    font-size: clamp(2.2rem, 5.2vw, 4.25rem);
+    line-height: 1.2;
     font-stretch: 75%;
     font-variation-settings: 'wdth' 75;
   }
@@ -193,7 +195,7 @@ const proximos = [
 
   /* Fechamento: linhas grandes, a linha inteira é clicável e acende em azul */
   .nx-link {
-    font-size: clamp(2rem, 6vw, 4.25rem);
+    font-size: clamp(1.75rem, 4.5vw, 3.25rem);
     font-stretch: 75%;
     font-variation-settings: 'wdth' 75;
   }
