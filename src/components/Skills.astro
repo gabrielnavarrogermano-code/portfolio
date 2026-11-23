@@ -62,7 +62,9 @@ const posicoes = [
                     <p class="pc-curto">{p.short}</p>
                     <h3 class="pc-titulo">{p.title}</h3>
                     <p class="pc-texto">{p.text}</p>
-                    <p class="sr-only">{resumos[i]}</p>
+                    <p class="sr-only">
+                      {resumos[i]} {tx.bastidorRotulo}: {tx.bastidor[i].ferramenta}, {tx.bastidor[i].nota}.
+                    </p>
                   </div>
 
                   <div class="pc-cena" data-cena aria-hidden="true">
@@ -160,6 +162,14 @@ const posicoes = [
                         </div>
                       </div>
                     )}
+
+                    <!-- O bastidor: a ferramenta e o trecho que fazem o princípio virar entrega. Entra depois do
+                         gesto principal da cena, discreto, no pé do palco -->
+                    <p class="c-bastidor d-pop" style="--d: 2.4s">
+                      <span class="c-ferramenta">{tx.bastidor[i].ferramenta}</span>
+                      <code class="c-codigo">{tx.bastidor[i].codigo}</code>
+                      <span class="c-nota">{tx.bastidor[i].nota}</span>
+                    </p>
                   </div>
                 </li>
               ))
@@ -387,6 +397,7 @@ const posicoes = [
     .pc.is-rolagem .pc-cena {
       flex: 1;
       display: grid;
+      grid-template-rows: 1fr auto;
       align-items: center;
       min-height: 0;
       max-height: 30rem;
@@ -453,6 +464,47 @@ const posicoes = [
 
     .pc.is-rolagem .c4-item {
       max-width: 14rem;
+    }
+  }
+
+  /* ---------- O bastidor de cada cena ----------
+     Uma linha no pé do palco: a ferramenta (num selo de contorno), o trecho em fonte de código e uma nota curta */
+  .c-bastidor {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem 0.75rem;
+    margin-top: 1.8rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--linha);
+    font-size: 0.875rem;
+  }
+
+  .c-ferramenta {
+    flex: none;
+    padding: 0.1rem 0.6rem;
+    border: 1px solid rgb(176 141 87 / 0.7);
+    border-radius: 9999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-latao);
+  }
+
+  .c-codigo {
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    color: var(--color-sunset);
+    overflow-wrap: anywhere;
+  }
+
+  .c-nota {
+    color: var(--color-muted);
+  }
+
+  @media (max-width: 39.99rem) {
+    .c-nota {
+      flex-basis: 100%;
     }
   }
 

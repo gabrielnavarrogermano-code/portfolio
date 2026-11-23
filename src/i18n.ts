@@ -133,6 +133,14 @@ export const textos = {
           { task: 'Refazer todo o histórico', tag: 'Evita', win: false },
         ],
       },
+      // O bastidor de cada cena: a ferramenta e o trecho que fazem o princípio virar entrega
+      bastidorRotulo: 'Na prática',
+      bastidor: [
+        { ferramenta: 'Excel', codigo: '=MÁXIMOSES(Pedidos[Data]; Pedidos[Cliente]; [@Cliente])', nota: 'o último pedido de cada cliente' },
+        { ferramenta: 'Power BI', codigo: '% da meta = DIVIDE([Faturamento], [Meta])', nota: 'medida DAX com a comparação' },
+        { ferramenta: 'Power BI', codigo: 'churn_mensal → "Clientes que saíram"', nota: 'o nome da medida no modelo' },
+        { ferramenta: 'Excel', codigo: '=SE(E([@Impacto]="Alto"; [@Esforço]="Baixo"); "Faz primeiro"; …)', nota: 'a regra da matriz numa fórmula' },
+      ],
     },
     contato: {
       titulo: 'Vamos conversar?',
@@ -262,6 +270,13 @@ export const textos = {
           { task: 'Rebuild the whole history', tag: 'Avoid', win: false },
         ],
       },
+      bastidorRotulo: 'In practice',
+      bastidor: [
+        { ferramenta: 'Excel', codigo: '=MAXIFS(Orders[Date], Orders[Customer], [@Customer])', nota: "each customer's last order" },
+        { ferramenta: 'Power BI', codigo: '% of target = DIVIDE([Revenue], [Target])', nota: 'a DAX measure with the comparison' },
+        { ferramenta: 'Power BI', codigo: 'monthly_churn → "Customers who left"', nota: 'the measure name in the model' },
+        { ferramenta: 'Excel', codigo: '=IF(AND([@Impact]="High", [@Effort]="Low"), "Do first", …)', nota: 'the matrix rule as a formula' },
+      ],
     },
     contato: {
       titulo: "Let's talk?",
