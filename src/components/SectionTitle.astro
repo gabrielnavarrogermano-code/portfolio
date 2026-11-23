@@ -1,7 +1,9 @@
 ---
-// Título de seção: grande, em Tektur, e entra uma vez só quando chega na tela, subindo de trás de uma
-// linha invisível; a frase de apoio aparece logo depois. Títulos que já estão na tela ao abrir a página,
-// sem JS ou com movimento reduzido, aparecem direto.
+import Letras from './Letras.astro';
+
+// Título de seção: grande, em Tektur, e entra uma vez só quando chega na tela, letra por letra, em onda
+// (componente Letras), subindo de trás de uma linha invisível; a frase de apoio aparece logo depois.
+// Títulos que já estão na tela ao abrir a página, sem JS ou com movimento reduzido, aparecem direto.
 interface Props {
   title: string;
   subtitle?: string;
@@ -12,24 +14,16 @@ const { title, subtitle } = Astro.props;
 
 <div data-title-reveal class="max-w-3xl">
   <h2 class="overflow-hidden pb-1 text-4xl leading-[1.05] font-bold text-heading sm:text-5xl md:text-6xl">
-    <span class="title-line block">{title}</span>
+    <Letras texto={title} class="block" />
   </h2>
   {subtitle && <p class="title-sub mt-4 max-w-2xl text-lg text-muted">{subtitle}</p>}
 </div>
 
 <style>
-  .title-line {
-    transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-
   .title-sub {
     transition:
       opacity 0.6s ease 0.3s,
       transform 0.6s ease 0.3s;
-  }
-
-  .is-armed .title-line {
-    transform: translateY(110%);
   }
 
   .is-armed .title-sub {

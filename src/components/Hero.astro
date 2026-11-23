@@ -1,91 +1,44 @@
 ---
 import { Image } from 'astro:assets';
-import foto from '../assets/gabriel.png';
+import foto from '../assets/gabriel-recorte.png';
 import { site } from '../data/site';
 import { temCurriculo } from '../lib/curriculo';
-
-const focus = ['Excel', 'Power BI', 'ETL'];
-
-// Abertura: a lista de pessoas (fictícias) que a consulta filtra: fase 1 = WHERE área = 'Dados';
-// fase 2 = AND foco = 'Power BI'. Sobra você.
-const acima = [
-  { nome: 'Ana Souza', area: 'RH', fase: 1 },
-  { nome: 'Lucas Prado', area: 'Dados', fase: 2 },
-];
-const abaixo = [
-  { nome: 'Carla Dias', area: 'Dados', fase: 2 },
-  { nome: 'Rafael Melo', area: 'Logística', fase: 1 },
-  { nome: 'Thiago Rocha', area: 'Dados', fase: 2 },
-];
+import Letras from './Letras.astro';
 ---
 
-<!-- Abertura: na primeira visita da sessão, antes de pintar a capa, liga a animação de abertura.
-     Quem pediu menos movimento (ou já viu nesta sessão) vai direto para o site. -->
+<!-- Antes de pintar: esconde os blocos da capa para eles encherem como um dashboard (capa-carregando) e, no
+     computador, já monta o palco (palco-ativo), para as cenas não aparecerem em bloco e depois pularem de lugar.
+     Quem pediu menos movimento vê a capa pronta e as cenas em blocos normais. -->
 <script is:inline>
   (function () {
     try {
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      if (sessionStorage.getItem('intro-seen')) return;
-      sessionStorage.setItem('intro-seen', '1');
-      var root = document.documentElement;
-      root.classList.add('show-intro', 'intro-pending');
-      // Trava de segurança: se algo falhar, em 5,5 s o site aparece e a rolagem volta
-      setTimeout(function () {
-        root.classList.remove('show-intro', 'intro-pending', 'name-flying', 'name-hold');
-      }, 5500);
+      document.documentElement.classList.add('capa-carregando');
+      if (matchMedia('(min-width: 48rem)').matches) document.documentElement.classList.add('palco-ativo');
     } catch (e) {}
   })();
 </script>
 
-<!-- Abertura, automática (uns 3 segundos), no traço do site:
-     1. "Procurando alguém para cuidar dos seus dados?": com o filtro aplicado (a busca do recrutador), a lista risca as pessoas até sobrar
-        o seu nome, selecionado;
-     2. o fundo some e cada palavra do nome sai da lista e voa até o seu lugar na capa; a capa carrega
-        como um dashboard (blocos enchendo como barras, o ano contando). Se a pessoa pular antes de a lista
-        aparecer, a tela sobe como uma cortina.
-     Qualquer clique, toque, rolagem ou tecla pula direto para a capa. -->
-<div data-intro class="intro on-black fixed inset-0 z-[100] items-center justify-center overflow-hidden bg-bg" aria-hidden="true">
-  <div class="intro-data absolute w-[min(92vw,32rem)]">
-    <p class="intro-q intro-q2 mb-6 font-serif text-[1.6rem] leading-tight text-heading sm:text-4xl">
-      Procurando alguém para <em class="text-accent">cuidar dos seus dados?</em>
-    </p>
-    <p class="font-mono text-[11px] leading-[1.7] text-fg/80 sm:text-xs">
-      <b>Filtro</b> área = <i>'Dados'</i> <span aria-hidden="true">·</span> foco = <i>'Power BI'</i>
-    </p>
-    <ol class="mt-5 border-t border-line">
-      {
-        acima.map((r) => (
-          <li class="ir-row" style={`--d: ${r.fase === 1 ? 1.1 : 1.45}s`}>
-            <span class="ir-row-in"><span class="w-24 flex-none text-muted/70">{r.area}</span>{r.nome}</span>
-          </li>
-        ))
-      }
-      <li class="ir-me">
-        <span class="w-24 flex-none self-start pt-1 font-mono text-[11px] text-accent">Dados</span>
-        <!-- Cada palavra é medida no fim da abertura: é dali que o nome da capa sai voando -->
-        <span class="ir-me-name font-display font-black uppercase"><span class="ir-w">Gabriel</span> <span class="ir-w">Navarro</span> <span class="ir-w">Germano</span></span>
-      </li>
-      {
-        abaixo.map((r) => (
-          <li class="ir-row" style={`--d: ${r.fase === 1 ? 1.15 : 1.5}s`}>
-            <span class="ir-row-in"><span class="w-24 flex-none text-muted/70">{r.area}</span>{r.nome}</span>
-          </li>
-        ))
-      }
-    </ol>
-  </div>
-
-  <p class="intro-skip absolute bottom-8 left-1/2 -translate-x-1/2 font-mono text-[10px] tracking-[0.15em] whitespace-nowrap text-muted/70 uppercase">
-    ( Toque ou role para pular )
-  </p>
-</div>
-
-<section id="inicio" class="hero-ice relative isolate flex min-h-svh flex-col pt-20 sm:pt-28">
+<!-- O palco: no computador (com movimento), a capa fica presa na tela enquanto a rolagem passa por três cenas, com
+     a foto sempre em cena, mudando de lugar e de enquadramento, e o texto de cada cena se escrevendo em volta dela:
+     1. a capa; 2. "Prazer, Gabriel", com a foto fechada no rosto; 3. a trajetória, com a foto num recorte estreito.
+     No fim, a foto vira pó e o pó abre caminho para os projetos. As cenas 2 e 3 vêm da Presentation (o slot).
+     No celular, com movimento reduzido ou sem JS, tudo fica em blocos normais, um embaixo do outro. -->
+<section id="inicio" data-capa class="hero-ice trilho relative isolate">
+  <!-- Destino do link "Apresentação" no palco: o script põe na altura da rolagem em que a cena 2 está montada -->
+  <span data-ancora-palco class="palco-ancora" aria-hidden="true"></span>
+  <div data-palco class="palco">
+  <!-- Luz de estúdio: um brilho quente e suave atrás do personagem da cena (o script a leva junto com ele) -->
+  <div class="palco-luz" aria-hidden="true"></div>
+  <!-- A capa: fundo claro e sólido, o nome gigante atrás e você recortado na frente, saindo da borda de baixo.
+       Nos lados, pouco texto: à esquerda o negócio e o contato; à direita os dados e as redes.
+       No celular, tudo em coluna: o nome em três linhas, você embaixo dele e os dois lados depois. -->
+  <div class="capa-conteudo capa-clara">
   <!-- Linha de rótulos no topo -->
-  <div class="mx-auto w-full max-w-5xl px-6">
+  <div data-capa-some class="capa-topo mx-auto w-full max-w-6xl px-6">
     <!-- A linha de cima é o eixo do "dashboard": se desenha da esquerda para a direita quando a capa carrega -->
     <div class="hero-axis relative flex items-center justify-between gap-4 pt-3 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs">
-      <!-- O que procuro: a bolinha lima funciona como um status, "disponível" (pisca como um indicador ao vivo) -->
+      <!-- O que procuro: a bolinha funciona como um status, "disponível" (pisca como um indicador ao vivo) -->
       <p class="hero-load flex items-center gap-2" style="--k: 0">
         <span class="hero-dot relative size-1.5 flex-none rounded-full bg-accent" aria-hidden="true"></span>
         Buscando oportunidades em Dados & BI
@@ -94,44 +47,52 @@ const abaixo = [
     </div>
   </div>
 
-  <!-- Centro, em três colunas: os focos, uma frase de apresentação e os botões.
-       Cada bloco (.hero-load) enche da esquerda para a direita, um depois do outro, na ordem de --k -->
-  <div class="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-6 py-6 sm:py-10">
-    <div class="grid gap-6 sm:gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,2.2fr)_auto] md:items-start md:gap-10">
-      <!-- Frase em serifa (Instrument Serif): contrasta com a Tektur do nome; o destaque em lima vai em itálico -->
-      <!-- Abaixo da frase, quem sou hoje em uma linha (o que procuro está no rótulo do topo) -->
-      <div class="md:order-2">
-        <p class="hero-load max-w-xl font-serif text-[1.8rem] leading-[1.08] text-balance text-heading sm:text-[2.6rem] lg:text-5xl" style="--k: 3">
-          Transformo planilhas soltas em <em class="text-accent">dashboards que a equipe usa para decidir.</em>
-        </p>
-        <p style="--k: 4" class="hero-load mt-4 font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:mt-5 sm:text-xs">
-          Estagiário de TI <span aria-hidden="true">·</span> Engenharia de Software
-        </p>
-      </div>
+  <!-- O nome gigante, atrás de você (a cabeça passa na frente de parte das letras). Entra letra por letra -->
+  <h1 data-capa-some class="capa-nome">
+    <span class="sr-only">{site.name}, Análise de Dados & BI</span>
+    <span class="capa-nome-texto" aria-hidden="true">
+      <span class="hero-name-line"><Letras texto="Gabriel" atraso={0.35} /></span>
+      <span class="hero-name-line"><Letras texto="Navarro" atraso={0.5} /></span>
+      <span class="hero-name-line"><Letras texto="Germano" atraso={0.65} /></span>
+    </span>
+  </h1>
 
-      <!-- Foto em retrato (preto e branco, ganha cor no hover) e os focos logo abaixo; no celular, lado a lado -->
-      <div class="flex items-end gap-5 md:order-1 md:flex-col md:items-start md:gap-5">
-        <div data-active="view" class="hero-photo w-24 flex-none sm:w-32 md:w-full md:max-w-44">
-          <Image
-            src={foto}
-            alt="Foto de Gabriel Navarro Germano"
-            widths={[240, 480]}
-            sizes="(min-width: 768px) 176px, 128px"
-            format="webp"
-            loading="eager"
-            fetchpriority="high"
-            class="aspect-[4/5] size-full object-cover object-[50%_25%]"
-          />
-        </div>
-        <div>
-          <p class="hero-load font-mono text-[11px] tracking-[0.15em] text-muted uppercase sm:text-xs" style="--k: 2">( Foco )</p>
-          <ul class="hero-load hero-focus-items text-heading mt-3 font-mono text-sm leading-relaxed sm:text-base" style="--k: 2.5">
-            {focus.map((f) => <li>{f}</li>)}
-          </ul>
-        </div>
-      </div>
+  <!-- Você, recortado, em preto e branco, saindo da borda de baixo -->
+  <!-- O granulado do site aplicado só dentro do seu contorno, para a foto parecer do mesmo material da página -->
+  <svg class="sr-only" width="0" height="0" aria-hidden="true">
+    <filter id="capa-grao" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" result="ruido" />
+      <feColorMatrix in="ruido" type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 0.12" result="cinza" />
+      <feComposite in="cinza" in2="SourceAlpha" operator="in" result="grao" />
+      <feMerge>
+        <feMergeNode in="SourceGraphic" />
+        <feMergeNode in="grao" />
+      </feMerge>
+    </filter>
+  </svg>
+  <div data-retrato class="retrato">
+    <figure class="retrato-moldura">
+      <Image
+        src={foto}
+        alt="Foto de Gabriel Navarro Germano"
+        widths={[480, 928]}
+        sizes="(min-width: 768px) 50rem, 90vw"
+        format="webp"
+        loading="eager"
+        fetchpriority="high"
+        class="retrato-foto"
+      />
+    </figure>
+  </div>
 
-      <div class="hero-load flex flex-wrap items-center gap-2 sm:gap-3 md:order-3 md:flex-col md:items-end" style="--k: 5">
+  <!-- Os dois lados, na frente de tudo -->
+  <div class="capa-lados mx-auto w-full max-w-6xl px-6">
+    <div data-lado-texto="negocio" data-capa-some class="capa-lado">
+      <p class="font-serif text-[2.6rem] leading-none text-heading sm:text-6xl"><Letras texto="negócio" atraso={0.3} /></p>
+      <p class="hero-load mt-3 max-w-[17rem] text-sm leading-relaxed text-fg/80 sm:text-base" style="--k: 2">
+        Começo pela decisão que o número precisa ajudar a tomar, não pelo gráfico.
+      </p>
+      <div class="hero-load mt-5 flex items-center gap-2 max-md:flex-wrap" style="--k: 4">
         <a
           href="#contato"
           class="group inline-flex items-center gap-2 rounded-full bg-heading px-5 py-2 font-medium sm:px-6 sm:py-3 whitespace-nowrap text-bg transition hover:bg-link-strong hover:text-white"
@@ -139,82 +100,305 @@ const abaixo = [
           Entre em contato
           <span class="transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
         </a>
-        <div class="flex items-center gap-2 sm:gap-3">
-          {
-            temCurriculo && (
-              <a
-                href={site.curriculo}
-                download={site.curriculoNome}
-                class="inline-flex items-center justify-center gap-2 rounded-full border border-line bg-bg font-medium max-sm:size-10 sm:px-5 sm:py-3 text-heading transition hover:border-link hover:bg-link-strong/15"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4" aria-hidden="true">
-                  <path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <span class="max-sm:sr-only">Currículo</span>
-              </a>
-            )
-          }
-          <a
-            href={site.linkedin}
-            target="_blank"
-            rel="noopener"
-            aria-label="LinkedIn"
-            class="inline-flex size-10 flex-none sm:size-12 items-center justify-center rounded-full border border-line bg-bg text-muted transition hover:border-link hover:text-heading"
-          >
-            <svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
-              <path
-                d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13ZM7.12 20.45H3.56V9h3.56v11.45ZM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0Z"
-              ></path>
-            </svg>
-          </a>
-          <a
-            href={site.github}
-            target="_blank"
-            rel="noopener"
-            aria-label="GitHub"
-            class="inline-flex size-10 flex-none sm:size-12 items-center justify-center rounded-full border border-line bg-bg text-muted transition hover:border-link hover:text-heading"
-          >
-            <svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
-              <path
-                d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57v-2.02c-3.34.73-4.04-1.6-4.04-1.6-.55-1.4-1.34-1.77-1.34-1.77-1.08-.74.09-.73.09-.73 1.2.09 1.83 1.24 1.83 1.24 1.07 1.83 2.8 1.3 3.49 1 .1-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22v3.29c0 .31.21.69.82.57A12 12 0 0 0 12 .3Z"
-              ></path>
-            </svg>
-          </a>
-        </div>
+        {
+          temCurriculo && (
+            <a
+              href={site.curriculo}
+              download={site.curriculoNome}
+              class="inline-flex items-center justify-center gap-2 rounded-full border border-line font-medium max-sm:size-10 sm:px-5 sm:py-3 text-heading transition hover:border-heading"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4" aria-hidden="true">
+                <path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <span class="max-sm:sr-only">Currículo</span>
+            </a>
+          )
+        }
+      </div>
+    </div>
+
+    <div data-lado-texto="dados" data-capa-some class="capa-lado md:text-right">
+      <p class="capa-dados font-display leading-none text-heading uppercase"><Letras texto="Dados" atraso={0.45} /></p>
+      <p class="hero-load mt-3 max-w-[17rem] text-sm leading-relaxed text-fg/80 sm:text-base md:ml-auto" style="--k: 3">
+        Excel, Power BI e ETL para transformar planilhas soltas em dashboards que a equipe usa.
+      </p>
+      <div class="hero-load mt-5 flex items-center gap-2 md:justify-end" style="--k: 5">
+        <a
+          href={site.linkedin}
+          target="_blank"
+          rel="noopener"
+          aria-label="LinkedIn"
+          class="inline-flex size-10 flex-none sm:size-12 items-center justify-center rounded-full border border-line text-heading transition hover:border-heading"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
+            <path
+              d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13ZM7.12 20.45H3.56V9h3.56v11.45ZM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0Z"
+            ></path>
+          </svg>
+        </a>
+        <a
+          href={site.github}
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+          class="inline-flex size-10 flex-none sm:size-12 items-center justify-center rounded-full border border-line text-heading transition hover:border-heading"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
+            <path
+              d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57v-2.02c-3.34.73-4.04-1.6-4.04-1.6-.55-1.4-1.34-1.77-1.34-1.77-1.08-.74.09-.73.09-.73 1.2.09 1.83 1.24 1.83 1.24 1.07 1.83 2.8 1.3 3.49 1 .1-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22v3.29c0 .31.21.69.82.57A12 12 0 0 0 12 .3Z"
+            ></path>
+          </svg>
+        </a>
       </div>
     </div>
   </div>
+  </div>
 
-  <!-- Nome grande: ocupa a largura da coluna de conteúdo, alinhado com o resto da capa
-       (uma linha no computador, três no celular). -->
-  <h1 class="hero-name mx-auto w-full max-w-5xl px-6 pb-6 sm:pb-8">
-    <span class="sr-only">{site.name}, Análise de Dados & BI</span>
-    <span class="hero-name-text" aria-hidden="true">
-      <span class="hero-name-line"><span class="hero-title hero-name-word">Gabriel</span></span>
-      <span class="hero-name-line"><span class="hero-title hero-name-word" style="--delay: 0.08s">Navarro</span></span>
-      <span class="hero-name-line"><span class="hero-title hero-name-word" style="--delay: 0.16s">Germano</span></span>
-    </span>
-  </h1>
+  <!-- Cenas 2 e 3 -->
+  <slot />
+  </div>
 </section>
 
 <style>
-  /* Tektur no peso máximo e na largura mais estreita: um nome alto e apertado, da largura da coluna de conteúdo.
-     O tamanho sai da largura do h1 (unidade cqi, que já desconta o padding), sem script: medido na Tektur 900
-     estreita, GABRIEL = 3,45em, NAVARRO = 3,894em e GERMANO = 3,79em.
-     - Computador, uma linha: 3,45 + 0,18 + 3,894 + 0,18 + 3,79 = 11,494em (ocupa a coluna inteira)
-     - Celular, três linhas: a mais larga é NAVARRO, 3,894em; de propósito fica em ~63% da largura
-     Divisores um pouco maiores que a medida deixam uma folga para não encostar na borda. */
-  .hero-name {
+  /* ---------- A capa ---------- */
+  /* Fundo claro e sólido, com as cores do site invertidas (texto escuro). O fundo fica num ::before, para o palco
+     apagá-lo aos poucos ao sair da capa (--capa-fundo, de 1 a 0): a passagem para as cenas escuras fica contínua */
+  .capa-clara {
+    --color-bg: #e7e5e0;
+    --color-heading: #141311;
+    --color-fg: #2b2925;
+    --color-muted: #5f5b53;
+    --color-line: #cbc7be;
+    --color-accent: #4d7c0f; /* o status "disponível": o lima some no claro, vira um verde-oliva */
+    --color-link: #2445c4;
+    --color-link-strong: #2445c4;
+  }
+
+  .capa-conteudo {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    min-height: 100svh;
+    overflow: hidden;
+    padding-top: 5rem;
+  }
+
+  .capa-conteudo::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--color-bg);
+    opacity: var(--capa-fundo, 1);
+  }
+
+  .capa-topo {
+    position: relative;
+    z-index: 3;
+  }
+
+  /* Celular: em coluna. O nome em três linhas, os dois lados e, por último, você saindo da borda de baixo da capa */
+  .capa-nome {
+    position: relative;
+    z-index: 0;
+    margin-top: 2rem;
+    padding-inline: 1.5rem;
     container-type: inline-size;
   }
 
-  .hero-name-text {
+  .retrato {
+    position: relative;
+    z-index: 1;
+    align-self: center;
+    order: 3;
+    width: min(26rem, 100%);
+    aspect-ratio: 928 / 1140; /* a proporção da foto recortada */
+    touch-action: pan-y; /* no celular, encostar desintegra e arrastar na vertical rola a página */
+  }
+
+  .capa-lados {
+    position: relative;
+    z-index: 2;
+    order: 2;
+    display: grid;
+    gap: 2.5rem;
+    padding-block: 2.5rem 1.5rem;
+  }
+
+  /* Computador: o nome atravessa a tela atrás de você; você sai da borda de baixo, no centro; os lados embaixo,
+     um em cada ponta, com o meio livre para você */
+  @media (min-width: 40rem) {
+    .capa-conteudo {
+      padding-top: 7rem;
+    }
+  }
+
+  /* Tudo se mede pela altura da foto (--foto-altura): o nome fica sempre logo acima da sua cabeça e os lados na
+     altura do seu peito, em qualquer altura de tela */
+  @media (min-width: 48rem) {
+    .capa-conteudo {
+      --foto-altura: min(68svh, 46rem);
+      height: 100svh;
+      min-height: 40rem;
+    }
+
+    .capa-nome {
+      position: absolute;
+      bottom: calc(var(--foto-altura) - 0.25rem); /* o topo da foto tem uma folga acima do cabelo: o nome encosta nela */
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    .retrato {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      translate: -50% 0;
+      width: auto;
+      height: var(--foto-altura);
+      margin: 0;
+    }
+
+    .capa-lados {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: calc(var(--foto-altura) * 0.2);
+      grid-template-columns: 1fr minmax(14rem, 22rem) 1fr; /* o meio só precisa da largura do seu corpo */
+      align-items: end; /* os dois lados terminam na mesma linha */
+      padding-block: 0;
+    }
+
+    .capa-lado[data-lado-texto='dados'] {
+      grid-column: 3;
+    }
+  }
+
+  /* "Dados" em Tektur estreita, do mesmo tamanho visual do "negócio" em serifa */
+  .capa-dados {
+    font-size: 2.3rem;
+    font-weight: 900;
+    font-stretch: 75%;
+    font-variation-settings: 'wdth' 75;
+  }
+
+  @media (min-width: 40rem) {
+    .capa-dados {
+      font-size: 3.3rem;
+    }
+  }
+
+  .capa-lado {
+    transition:
+      opacity 0.4s ease,
+      filter 0.45s ease,
+      translate 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  /* Você: a foto sem fundo, inteira (sem moldura) */
+  .retrato-moldura {
+    position: absolute;
+    inset: 0;
+    /* as laterais e a base somem no fundo: você sai do fundo, em vez de ser cortado pela borda */
+    mask-image:
+      linear-gradient(to right, transparent, #000 14%, #000 86%, transparent),
+      linear-gradient(to top, transparent, #000 16%);
+    mask-composite: intersect;
+  }
+
+  .retrato-foto {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: 50% 100%;
+    /* em preto e branco, com um pouco mais de contraste, e com o granulado do site (o filtro #capa-grao) */
+    filter: grayscale(1) contrast(1.08) url(#capa-grao);
+  }
+
+  /* ---------- O palco (computador, com movimento) ---------- */
+  /* O trilho é a distância de rolagem que o palco dura; o palco fica preso na tela enquanto isso.
+     O que é da capa (os textos e a foto) some quando a rolagem sai dela, enquanto o fundo claro escurece. */
+  .palco-ancora {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 1px;
+  }
+
+  :global(html.palco-ativo) .trilho {
+    height: 460svh;
+  }
+
+  :global(html.palco-ativo) .palco {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: clip;
+  }
+
+  :global(html.palco-ativo) .capa-conteudo {
+    height: 100svh;
+  }
+
+  [data-capa-some] {
+    transition:
+      filter 0.45s ease,
+      translate 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .palco.fora-da-capa [data-capa-some] {
+    filter: opacity(0);
+    translate: 0 -1.5rem;
+    pointer-events: none;
+  }
+
+  /* A foto some junto (só a opacidade: o translate dela é o que a centraliza) */
+  .retrato {
+    transition: opacity 0.6s ease;
+  }
+
+  .palco.fora-da-capa .retrato {
+    opacity: 0;
+  }
+
+  /* A luz de estúdio: atrás de tudo, no meio do palco (aparece nas cenas escuras; na capa, o fundo claro a cobre). Um azul-marinho
+     fechado: dá cor ao preto sem aparecer em nenhum texto (na capa, a única cor nas letras é o lima do "dados").
+     Larga e fraca: o texto, fora do centro dela, não perde contraste */
+  .palco-luz {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: var(--luz-forca, 1);
+    background: radial-gradient(
+      circle min(50rem, 80vw) at var(--luz-x, 50%) var(--luz-y, 45%),
+      rgb(32 52 128 / 0.32),
+      rgb(32 52 128 / 0.1) 45%,
+      transparent 78%
+    );
+  }
+
+  /* ---------- Nome ---------- */
+  /* Tektur no peso máximo e na largura mais estreita: um nome alto e apertado. Medido na Tektur 900 estreita,
+     GABRIEL = 3,45em, NAVARRO = 3,894em e GERMANO = 3,79em.
+     - Computador, uma linha atravessando a tela atrás de você: 3,45 + 0,18 + 3,894 + 0,18 + 3,79 = 11,494em;
+       com 100vw / 12,3, ocupa ~93% da largura da janela
+     - Celular, três linhas: a mais larga é NAVARRO, 3,894em; com 100cqi / 4,3, ocupa ~90% da largura */
+  .capa-nome-texto {
     display: flex;
     flex-direction: column;
     width: max-content;
     font-family: var(--font-display);
     color: var(--color-heading);
-    font-size: calc(100cqi / 6.2); /* celular: ~63% da largura, para o nome não pesar mais que a frase da capa */
+    font-size: calc(100cqi / 4.3);
     font-weight: 900;
     font-stretch: 75%;
     font-variation-settings: 'wdth' 75;
@@ -224,66 +408,30 @@ const abaixo = [
   }
 
   @media (min-width: 48rem) {
-    .hero-name-text {
+    .capa-nome-texto {
       flex-direction: row;
       gap: 0.18em;
-      font-size: calc(100cqi / 11.55);
+      font-size: min(100vw / 12.3, 13svh); /* em telas baixas, diminui um pouco para não encostar na linha de cima */
     }
   }
 
-  /* Foto em retrato: preto e branco, ganha cor e aproxima no hover; na abertura, sobe de baixo para cima */
-  .hero-photo {
-    overflow: hidden;
-    border-radius: 1rem;
-    clip-path: inset(0 0 0 0 round 1rem);
-    transition: clip-path 1.1s cubic-bezier(0.2, 0.75, 0.15, 1) 0.4s;
-  }
-
-  .hero-photo :global(img) {
-    filter: grayscale(1) contrast(1.05);
-    transform: scale(1.04);
-    transition:
-      filter 0.6s ease,
-      transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-
-  .hero-photo:hover :global(img) {
-    filter: grayscale(0);
-    transform: scale(1.1);
-  }
-
-  /* No toque, sem hover: a foto ganha cor sozinha logo depois de aparecer (depois da abertura, se houver) */
-  @media (hover: none) {
-    :global(html:not(.intro-pending)) .hero-photo.is-active :global(img) {
-      filter: grayscale(0);
-      transform: scale(1.1);
-      transition-delay: 0.9s;
-    }
-  }
-
-  :global(html.intro-pending) .hero-photo {
-    clip-path: inset(100% 0 0 0 round 1rem);
-  }
-
-  /* Cada palavra sobe de trás de uma linha invisível quando a abertura termina */
+  /* As letras de cada palavra sobem de trás de uma linha invisível quando a capa carrega (componente Letras) */
   .hero-name-line {
     display: block;
     overflow: hidden;
     padding-block: 0.06em 0.02em;
   }
 
-  .hero-name-word {
-    display: block;
-    transition: transform 1.1s cubic-bezier(0.2, 0.75, 0.15, 1) var(--delay, 0s);
-  }
-
-  /* A capa carrega como um dashboard: cada bloco enche da esquerda para a direita, como uma barra,
-     um depois do outro (--k). A folga de 1rem no recorte deixa passar o hover e o contorno de foco. */
+  /* ---------- A capa carrega como um dashboard ---------- */
+  /* Cada bloco enche da esquerda para a direita, como uma barra, um depois do outro (--k).
+     A folga de 1rem no recorte deixa passar o hover e o contorno de foco. */
   .hero-load {
     clip-path: inset(-1rem -1rem -1rem -1rem);
     transition:
       clip-path 0.75s cubic-bezier(0.65, 0, 0.2, 1) calc(0.25s + var(--k, 0) * 0.09s),
-      opacity 0.3s ease calc(0.25s + var(--k, 0) * 0.09s);
+      opacity 0.4s ease calc(0.25s + var(--k, 0) * 0.09s),
+      filter 0.45s ease,
+      translate 0.6s cubic-bezier(0.2, 0.7, 0.2, 1); /* o sumiço ao sair da capa, no palco */
   }
 
   /* O eixo: a linha de cima se desenha antes dos blocos */
@@ -307,8 +455,8 @@ const abaixo = [
     opacity: 0;
   }
 
-  :global(html:not(.intro-pending)) .hero-dot::after {
-    animation: hero-ping 1.1s ease-out 1.2s 2;
+  :global(html:not(.capa-carregando)) .hero-dot::after {
+    animation: hero-ping 1.1s ease-out 1.4s 2;
   }
 
   @keyframes hero-ping {
@@ -322,20 +470,16 @@ const abaixo = [
     }
   }
 
-  :global(html.intro-pending) .hero-name-word {
-    transform: translateY(105%);
-    animation: hero-failsafe 0s 4.5s forwards; /* se o script falhar, o nome aparece mesmo assim */
-  }
-
-  :global(html.intro-pending) .hero-load {
+  /* Estado antes de carregar (as letras ficam no global.css). Se o script falhar, tudo aparece sozinho em 2,5 s */
+  :global(html.capa-carregando) .hero-load {
     clip-path: inset(-1rem 100% -1rem -1rem);
     opacity: 0;
-    animation: hero-failsafe 0s 4.5s forwards;
+    animation: hero-failsafe 0s 2.5s forwards;
   }
 
-  :global(html.intro-pending) .hero-axis::before {
+  :global(html.capa-carregando) .hero-axis::before {
     transform: scaleX(0);
-    animation: hero-failsafe 0s 4.5s forwards;
+    animation: hero-failsafe 0s 2.5s forwards;
   }
 
   @keyframes hero-failsafe {
@@ -345,209 +489,13 @@ const abaixo = [
       clip-path: inset(-1rem -1rem -1rem -1rem);
     }
   }
-
-  /* O nome voando da lista para a capa: sem o recorte da linha e sem a transição da subida
-     (quem move as palavras é o script). Enquanto o fundo da abertura some, o nome da capa espera escondido. */
-  :global(html.name-flying) .hero-name-line {
-    overflow: visible;
-  }
-
-  :global(html.name-flying) .hero-name-word {
-    transform: none;
-    transition: none;
-    animation: none;
-  }
-
-  :global(html.name-hold) .hero-name-word {
-    visibility: hidden;
-  }
-
-  /* Abertura: só aparece com html.show-intro (o script inline liga na primeira visita da sessão) */
-  .intro {
-    display: none;
-  }
-
-  :global(html.show-intro) .intro {
-    display: flex;
-    animation: intro-failsafe 0s 5.5s forwards;
-  }
-
-  /* Ao sair pelo nome: o fundo e o resto da abertura somem, só o nome fica (e depois voa) */
-  .intro.is-handoff {
-    background-color: transparent;
-    transition: background-color 0.3s ease;
-  }
-
-  .intro.is-handoff .intro-data > p,
-  .intro.is-handoff .intro-skip,
-  .intro.is-handoff .ir-me > :first-child {
-    opacity: 0;
-    animation: none;
-    transition: opacity 0.2s ease;
-  }
-
-  .intro.is-handoff ol,
-  .intro.is-handoff .ir-me {
-    border-color: transparent;
-    transition: border-color 0.2s ease;
-  }
-
-  .intro.is-handoff .ir-row,
-  .intro.is-handoff .ir-me::before {
-    visibility: hidden;
-  }
-
-  :global(html.show-intro) body {
-    overflow: hidden;
-  }
-
-  /* Ao sair, sobe como uma cortina */
-  .intro.is-leaving {
-    transform: translateY(-100%);
-    transition: transform 0.75s cubic-bezier(0.75, 0, 0.2, 1);
-  }
-
-  @keyframes intro-failsafe {
-    to {
-      visibility: hidden;
-    }
-  }
-
-  /* Ritmo (~3 s): a lista entra logo de cara; ~1 s para ler a pergunta e o filtro, o filtro risca as
-     pessoas (1,1 s e 1,45 s), o seu nome é selecionado em ~1,85 s e a abertura sai em 2,9 s. */
-
-  /* A frase da lista sobe e aparece */
-  .intro-q {
-    animation: intro-rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) 0.15s both;
-  }
-
-  .intro-skip {
-    animation: intro-rise 0.7s ease 0.6s both;
-  }
-
-  @keyframes intro-rise {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-  }
-
-  /* A lista filtrada usa o azul no lugar do lima: azul (lista) → lima (capa) */
-  .intro-data {
-    --color-accent: var(--color-link);
-    animation: intro-data 0.45s ease 0.05s both;
-  }
-
-  @keyframes intro-data {
-    from {
-      opacity: 0;
-      transform: scale(0.96);
-    }
-  }
-
-  .intro-data :global(b) {
-    font-weight: 500;
-    color: var(--color-accent);
-  }
-
-  .intro-data :global(i) {
-    font-style: normal;
-    color: var(--color-heading);
-  }
-
-  /* Linhas dos outros: o filtro risca, apaga e recolhe */
-  .ir-row {
-    position: relative;
-    display: grid;
-    grid-template-rows: 1fr;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: color-mix(in srgb, var(--color-fg) 60%, transparent);
-    animation: ir-row-out 0.6s cubic-bezier(0.6, 0, 0.2, 1) var(--d) forwards;
-  }
-
-  .ir-row::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 50%;
-    height: 1px;
-    background: var(--color-accent);
-    transform: scaleX(0);
-    transform-origin: left;
-    animation: ir-strike 0.25s ease var(--d) forwards;
-  }
-
-  .ir-row-in {
-    display: flex;
-    min-height: 0;
-    overflow: hidden;
-    border-bottom: 1px solid var(--color-line);
-    padding-block: 0.4rem;
-  }
-
-  @keyframes ir-strike {
-    to {
-      transform: scaleX(1);
-    }
-  }
-
-  @keyframes ir-row-out {
-    0%,
-    35% {
-      opacity: 1;
-      grid-template-rows: 1fr;
-    }
-    100% {
-      opacity: 0;
-      grid-template-rows: 0fr;
-    }
-  }
-
-  /* A sua linha: o nome grande, que acende e fica selecionado quando sobra só ele */
-  .ir-me {
-    position: relative;
-    display: flex;
-    border-bottom: 1px solid var(--color-line);
-    padding-block: 0.6rem;
-  }
-
-  .ir-me::before {
-    content: '';
-    position: absolute;
-    inset: -1px -0.5rem;
-    border: 2px solid var(--color-accent);
-    opacity: 0;
-    animation: intro-select 0.4s ease 1.85s forwards;
-  }
-
-  /* Mesma cor do nome da capa, para a troca no fim da abertura não aparecer */
-  .ir-me-name {
-    color: var(--color-ice);
-    font-size: clamp(1.6rem, 6.5vw, 2.6rem);
-    line-height: 0.9;
-    font-stretch: 75%;
-    font-variation-settings: 'wdth' 75;
-    opacity: 0.55;
-    animation: intro-select 0.4s ease 1.85s forwards;
-  }
-
-  @keyframes intro-select {
-    to {
-      opacity: 1;
-    }
-  }
 </style>
 
 <script>
-  // Abertura: depois de uns 3 segundos (ou no primeiro clique, toque, rolagem ou tecla) a tela sobe,
-  // revelando a capa, e o nome entra.
   let controller: AbortController | undefined;
 
-  // A capa carrega: tira o intro-pending (os blocos enchem pelo CSS) e o ano conta até o atual, como um KPI
-  const loadCover = (root: HTMLElement) => {
-    root.classList.remove('intro-pending');
+  // O ano conta até o atual, como um KPI
+  const contarAno = () => {
     const year = document.querySelector<HTMLElement>('[data-year]');
     if (!year) return;
     const final = year.textContent ?? '';
@@ -567,74 +515,79 @@ const abaixo = [
     requestAnimationFrame(step);
   };
 
-  // Saída pelo nome: o fundo da abertura some deixando só o nome selecionado; depois cada palavra da capa
-  // sai do lugar e do tamanho da palavra na lista (medidos aqui) e voa até a sua posição final.
-  // Devolve false quando não dá para fazer a ponte (aí entra a cortina).
-  const handoff = (intro: HTMLElement) => {
+  // ---------- O palco ----------
+  // A rolagem pelo trilho (0 a 1) é uma linha do tempo:
+  //   capa · a capa some e o fundo escurece · "Prazer" · trajetória · a luz apaga e o palco solta.
+  // A luz de estúdio fica no meio do palco, atrás das cenas.
+  const TEMPO = { capaSai: 0.06, prazerChega: 0.26, prazerSai: 0.44, trajetoriaChega: 0.62, saidaComeca: 0.8, saidaAcaba: 0.96 };
+
+  const iniciarPalco = (capa: HTMLElement, signal: AbortSignal) => {
     const root = document.documentElement;
-    const from = [...intro.querySelectorAll<HTMLElement>('.ir-w')];
-    const to = [...document.querySelectorAll<HTMLElement>('#inicio .hero-name-word')];
-    if (!from.length || from.length !== to.length) return false;
+    const palco = capa.querySelector<HTMLElement>('[data-palco]');
+    const cenaPrazer = capa.querySelector<HTMLElement>('[data-cena="prazer"]');
+    const cenaTrajetoria = capa.querySelector<HTMLElement>('[data-cena="trajetoria"]');
+    const ancora = capa.querySelector<HTMLElement>('[data-ancora]');
+    const ancoraPalco = capa.querySelector<HTMLElement>('[data-ancora-palco]');
+    if (!palco || !cenaPrazer || !cenaTrajetoria) return;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    // Posição final das palavras da capa: sem a subida e sem o recorte, mas ainda escondidas
-    root.classList.add('name-flying', 'name-hold');
-    const pairs = from.map((f, i) => [f.getBoundingClientRect(), to[i].getBoundingClientRect()] as const);
-    if (pairs.some(([a, b]) => !a.width || !b.width)) {
-      root.classList.remove('name-flying', 'name-hold');
-      return false;
-    }
+    const telaGrande = matchMedia('(min-width: 48rem)');
+    let ativo = false;
+    let percurso = 1; // quantos px de rolagem o palco dura
+    let quadro = 0;
 
-    intro.classList.add('is-handoff');
-    setTimeout(() => {
-      // Troca invisível: a palavra da capa aparece exatamente onde estava a da lista, e a lista some
-      intro.style.visibility = 'hidden';
-      root.classList.remove('name-hold');
-      to.forEach((el, i) => {
-        const [a, b] = pairs[i];
-        const dx = a.left + a.width / 2 - (b.left + b.width / 2);
-        const dy = a.top + a.height / 2 - (b.top + b.height / 2);
-        el.animate([{ transform: `translate(${dx}px, ${dy}px) scale(${a.width / b.width})` }, { transform: 'none' }], {
-          duration: 950,
-          delay: i * 70,
-          easing: 'cubic-bezier(0.7, 0, 0.15, 1)',
-          fill: 'backwards',
-        });
-      });
-      // A capa começa a carregar enquanto o nome ainda está assentando
-      setTimeout(() => loadCover(root), 600);
-      setTimeout(() => {
-        root.classList.remove('name-flying', 'show-intro');
-        intro.style.visibility = '';
-      }, 950 + 70 * (to.length - 1) + 50);
-    }, 300);
-    return true;
-  };
-
-  const runIntro = (signal: AbortSignal) => {
-    const root = document.documentElement;
-    if (!root.classList.contains('show-intro')) return;
-    const intro = document.querySelector<HTMLElement>('[data-intro]');
-    if (!intro) return root.classList.remove('show-intro', 'intro-pending');
-
-    const skip = new AbortController();
-    const startedAt = performance.now();
-    let done = false;
-    const leave = () => {
-      if (done) return;
-      done = true;
-      skip.abort();
-      clearTimeout(timer);
-      // O nome só faz a ponte se a lista já está na tela (~0,5 s); antes disso, a cortina de sempre
-      if (performance.now() - startedAt > 500 && handoff(intro)) return;
-      intro.classList.add('is-leaving');
-      setTimeout(() => loadCover(root), 350);
-      setTimeout(() => root.classList.remove('show-intro'), 800); // fim da subida (0,75 s)
+    const limpar = () => {
+      palco.classList.remove('fora-da-capa');
+      cenaPrazer.classList.remove('is-ativa');
+      cenaTrajetoria.classList.remove('is-ativa');
+      palco.style.removeProperty('--luz-forca');
+      palco.style.removeProperty('--capa-fundo');
     };
-    const timer = setTimeout(leave, 2900);
-    signal.addEventListener('abort', leave);
-    for (const type of ['pointerdown', 'keydown', 'wheel', 'touchstart']) {
-      window.addEventListener(type, leave, { passive: true, signal: skip.signal });
-    }
+
+    const faixa = (s: number, de: number, ate: number) => Math.min(1, Math.max(0, (s - de) / (ate - de)));
+    const suave = (t: number) => t * t * (3 - 2 * t);
+
+    const aplicar = () => {
+      quadro = 0;
+      if (!ativo) return;
+      const s = Math.min(1, Math.max(0, -capa.getBoundingClientRect().top / percurso));
+      const T = TEMPO;
+      palco.classList.toggle('fora-da-capa', s > T.capaSai * 0.5);
+      cenaPrazer.classList.toggle('is-ativa', s > T.prazerChega - 0.06 && s < T.prazerSai + 0.02);
+      cenaTrajetoria.classList.toggle('is-ativa', s > T.trajetoriaChega - 0.06);
+      // O fundo claro da capa escurece aos poucos até o das cenas; na saída, a luz apaga
+      palco.style.setProperty('--capa-fundo', String(1 - suave(faixa(s, T.capaSai, T.prazerChega))));
+      palco.style.setProperty('--luz-forca', String(1 - faixa(s, T.saidaComeca, T.saidaAcaba)));
+    };
+    const pedir = () => {
+      if (!quadro) quadro = requestAnimationFrame(aplicar);
+    };
+
+    const medir = () => {
+      ativo = telaGrande.matches;
+      root.classList.toggle('palco-ativo', ativo);
+      // O link "Apresentação" do menu: no palco, vai para a rolagem em que a cena 2 está montada
+      (ativo ? ancora : ancoraPalco)?.removeAttribute('id');
+      (ativo ? ancoraPalco : ancora)?.setAttribute('id', 'apresentacao');
+      if (!ativo) {
+        limpar();
+        return;
+      }
+      percurso = Math.max(1, capa.offsetHeight - window.innerHeight);
+      const margem = parseFloat(getComputedStyle(root).scrollPaddingTop) || 0;
+      if (ancoraPalco) ancoraPalco.style.top = `${percurso * ((TEMPO.prazerChega + TEMPO.prazerSai) / 2) + margem}px`;
+      aplicar();
+    };
+
+    medir();
+    window.addEventListener('scroll', pedir, { passive: true, signal });
+    telaGrande.addEventListener('change', medir, { signal });
+    const ro = new ResizeObserver(() => medir());
+    ro.observe(palco);
+    signal.addEventListener('abort', () => {
+      ro.disconnect();
+      limpar();
+    });
   };
 
   document.addEventListener('astro:page-load', () => {
@@ -642,9 +595,21 @@ const abaixo = [
     controller = new AbortController();
     const { signal } = controller;
 
-    const hero = document.getElementById('inicio');
-    if (!hero) return;
+    const capa = document.querySelector<HTMLElement>('[data-capa]');
+    if (!capa) return;
+    const root = document.documentElement;
+    const animar = root.classList.contains('capa-carregando');
 
-    runIntro(signal);
+    iniciarPalco(capa, signal); // o palco: as cenas trocando com a rolagem
+
+    if (animar) {
+      // Dois quadros: garante que o estado escondido foi pintado antes de soltar as transições
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          root.classList.remove('capa-carregando');
+          contarAno();
+        }),
+      );
+    }
   });
 </script>

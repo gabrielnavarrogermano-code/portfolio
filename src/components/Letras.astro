@@ -1,0 +1,46 @@
+---
+// Texto que entra letra por letra, em onda: cada letra sobe com um leve giro, uma depois da outra.
+// - Na capa (#inicio), entra quando a capa carrega (html.capa-carregando, ver a Hero).
+// - No resto do site, entra quando chega na tela: o script só arma o que está abaixo da tela ao abrir a página.
+// O texto inteiro fica para os leitores de tela; as letras soltas ficam escondidas deles.
+// As palavras não quebram no meio: cada uma é um bloco que não se divide.
+interface Props {
+  texto: string;
+  atraso?: number; // segundos antes da primeira letra
+  class?: string;
+}
+
+const { texto, atraso = 0, class: classe } = Astro.props;
+
+let n = 0;
+const palavras = texto.split(' ').map((palavra) => [...palavra].map((letra) => ({ letra, i: n++ })));
+---
+
+<span class:list={['letras', classe]} data-letras style={`--base: ${atraso}s`}><span class="sr-only">{texto}</span><span aria-hidden="true">{palavras.map((p, k) => <><span class="palavra">{p.map(({ letra, i }) => <span class="letra" style={`--i: ${i}`}>{letra}</span>)}</span>{k < palavras.length - 1 && ' '}</>)}</span></span>
+
+<script>
+  let io: IntersectionObserver | undefined;
+
+  document.addEventListener('astro:page-load', () => {
+    io?.disconnect();
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    io = new IntersectionObserver(
+      (entradas) => {
+        for (const e of entradas) {
+          if (!e.isIntersecting) continue;
+          e.target.classList.remove('is-armed');
+          io?.unobserve(e.target);
+        }
+      },
+      { rootMargin: '0px 0px -12% 0px' },
+    );
+
+    document.querySelectorAll<HTMLElement>('[data-letras]').forEach((el) => {
+      if (el.closest('#inicio')) return; // a capa tem o próprio carregamento
+      if (el.getBoundingClientRect().top < window.innerHeight * 0.9) return;
+      el.classList.add('is-armed');
+      io?.observe(el);
+    });
+  });
+</script>

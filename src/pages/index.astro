@@ -12,9 +12,10 @@ import Footer from '../components/Footer.astro';
 <Layout>
   <Nav />
   <main>
-    <Hero />
-    <!-- Quem sou, depois o projeto e o método juntos (os princípios usam os dados do projeto) -->
-    <Presentation />
+    <!-- A capa é um palco: a apresentação e a trajetória são as cenas 2 e 3 dele -->
+    <Hero>
+      <Presentation />
+    </Hero>
     <Projects />
     <Skills />
     <Contact />
