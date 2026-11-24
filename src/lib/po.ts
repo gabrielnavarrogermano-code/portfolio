@@ -46,6 +46,7 @@ export function iniciarPo(capa: HTMLElement, signal: AbortSignal) {
   const somem = [...capa.querySelectorAll<HTMLElement>('[data-capa-some]')];
   if (!palco || !retrato || !img || !cvFoto || !cvPo || !fioCapa) return;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const pb = retrato.hasAttribute('data-po-pb');
 
   const ctxFoto = cvFoto.getContext('2d')!;
   const ctxPo = cvPo.getContext('2d')!;
@@ -108,12 +109,16 @@ export function iniciarPo(capa: HTMLElement, signal: AbortSignal) {
         // a base da moldura some no fundo (10%), como na <img> em telas largas
         const borda = Math.min(1, (1 - v) / 0.1);
         if (borda < 0.05) continue;
-        // a cor do ponto: a mesma da foto (colorida, como a <img>)
+        // a cor do ponto: a mesma da foto; com a foto em preto e branco ([data-po-pb]), o cinza dela
         g.x.push(ox + x); g.y.push(oy + y);
         g.tx.push(cx + (ruido(cel * 5.1) - 0.5) * 1.2); // destino: um ponto do fio
         g.ty.push(topoFio + ruido(cel * 7.7) * (ch - topoFio));
         g.curva.push((ruido(cel * 9.1) - 0.5) * 260);
-        g.cor.push(px[p], px[p + 1], px[p + 2]); g.alfa.push(a0 * borda); g.cel.push(cel);
+        if (pb) {
+          const l = Math.round(0.299 * px[p] + 0.587 * px[p + 1] + 0.114 * px[p + 2]);
+          g.cor.push(l, l, l);
+        } else g.cor.push(px[p], px[p + 1], px[p + 2]);
+        g.alfa.push(a0 * borda); g.cel.push(cel);
       }
     }
     po = {

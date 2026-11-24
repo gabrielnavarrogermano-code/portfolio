@@ -15,25 +15,29 @@
      - link (Neon Navy): o que é clicável; também é a superfície do lado "dados" de cada seção (.on-navy);
      - line (Astronomicon Grey clareado) e dove (Wild Dove): linhas e detalhes. Os dois cinzas não têm contraste
        para texto corrido no papel, por isso o texto secundário (muted) é o Nebulosity mais claro. */
-  --color-sunset: #ece8df;
+  --color-sunset: #e8e8e6; /* cinza-claro de estúdio, o tom do fundo da foto da capa (antes creme #ece8df) */
   --color-nebulosity: #1a1b16;
   --color-navy: #141937;
   --color-latao: #b08d57;
   --color-astro: #6e7c89;
   --color-dove: #8b8b8b;
 
-  --color-bg: #ece8df;
+  --color-bg: #e8e8e6;
+  /* Capa: "Portfólio" em tom sobre tom, e a cor do nome que, com mix-blend-mode: difference, vira o azul-marinho
+     sobre o fundo (= fundo − azul-marinho). Se o fundo mudar, recalcule: #e8e8e6 − #141937 = #d4cfaf */
+  --color-fantasma: #dcdcd9;
+  --color-nome-inverso: #d4cfaf;
   --color-ink: #1a1b16;
   --color-heading: #0c1028;
   --color-line: #b7bcbe;
   --color-fg: #23241f;
   --color-muted: #4a4b47;
-  --color-card: #f4f1ea;
+  --color-card: #f9fafb;
   --color-accent: #7d5f2c;
   --color-link: #141937;
   --color-link-strong: #141937;
   --color-live: #7d5f2c;
-  --color-ice: #ece8df;
+  --color-ice: #e8e8e6;
   /* O fio que liga o site (e tudo o que é ele: linha do tempo, seta, sublinhado do e-mail, o pó da capa) */
   --color-fio: #141937;
 

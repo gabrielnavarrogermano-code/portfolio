@@ -6,6 +6,8 @@ import tailwindcss from '@tailwindcss/vite';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://gabrielnavarrogermano.vercel.app',
+  // A barra de ferramentas do Astro no rodapé da tela (só no dev) ficava por cima dos controles do site
+  devToolbar: { enabled: false },
   // Fontes baixadas do Google no build e servidas pelo próprio site: sem pedido a outro domínio,
   // e com fontes de reserva ajustadas para o texto não pular quando a fonte chega.
   fonts: [

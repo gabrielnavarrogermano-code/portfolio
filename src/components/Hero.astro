@@ -1,20 +1,20 @@
 ---
 import { Image } from 'astro:assets';
 import foto from '../assets/gabriel-recorte.png';
-import { site } from '../data/site';
-import { temCurriculo } from '../lib/curriculo';
 import Letras from './Letras.astro';
 import { idiomaDe, textos } from '../i18n';
 
 const tx = textos[idiomaDe(Astro.url)].capa;
 ---
 
-<!-- Antes de pintar: esconde os blocos da capa para eles encherem como uma barra (capa-carregando) e, em telas
-     largas, já monta o palco (palco-ativo), para a capa não aparecer em bloco e depois pular de lugar.
+<!-- Antes de pintar: esconde os blocos da capa para eles entrarem (capa-carregando) e, em telas largas, já monta o
+     palco (palco-ativo), para a capa não aparecer em bloco e depois pular de lugar. "na-capa" esconde o Contato da
+     barra de cima enquanto a capa está na tela (ela já tem o seu botão).
      Quem pediu menos movimento vê a capa pronta, sem palco. -->
 <script is:inline>
   (function () {
     try {
+      document.documentElement.classList.add('na-capa');
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       document.documentElement.classList.add('capa-carregando');
       if (matchMedia('(min-width: 56rem)').matches) document.documentElement.classList.add('palco-ativo');
@@ -22,97 +22,49 @@ const tx = textos[idiomaDe(Astro.url)].capa;
   })();
 </script>
 
-<!-- A capa. Em telas largas, com movimento, ela fica presa na tela enquanto a rolagem passa pelo trilho: os textos
-     saem, a foto se desfaz em pó e o pó vira o fio que liga o resto do site (lib/po.ts e lib/fio.ts).
+<!-- A capa: você no centro, em preto e branco, num fundo cinza de estúdio. O nome emoldura você e passa NA FRENTE
+     da foto, mudando de cor onde cruza a camisa; atrás de tudo, "Portfólio" gigante em tom sobre tom.
+     Em telas largas, com movimento, ela fica presa na tela enquanto a rolagem passa pelo trilho: os textos saem, a
+     foto se desfaz em pó e o pó vira o fio que liga o resto do site (lib/po.ts e lib/fio.ts).
      No celular, com movimento reduzido ou sem JS, é um bloco normal, com a foto parada. -->
 <section id="inicio" data-capa class="trilho relative isolate">
   <div data-palco class="palco">
     <div class="capa-conteudo">
-      <!-- O nome gigante, atrás de você. Entra letra por letra -->
-      <h1 data-capa-some class="capa-nome">
-        <span class="sr-only">{tx.nomeSr}</span>
-        <span class="capa-nome-texto" aria-hidden="true">
-          <span class="hero-name-line"><Letras texto="Gabriel" atraso={0.35} /></span>
-          <span class="hero-name-line"><Letras texto="Navarro" atraso={0.5} /></span>
-          <span class="hero-name-line"><Letras texto="Germano" atraso={0.65} /></span>
-        </span>
-      </h1>
-      <!-- A função e a cidade, logo abaixo do nome: o que eu sou, em uma linha -->
-      <p data-capa-some class="capa-funcao hero-load" style="--k: 1">{tx.funcao}</p>
+      <div class="cena">
+        <!-- tom sobre tom, atrás de tudo -->
+        <p data-capa-some class="fantasma" aria-hidden="true">{tx.fantasma}</p>
 
-      <!-- O granulado do site aplicado só dentro do seu contorno, para a foto parecer do mesmo material da página -->
-      <svg class="sr-only" width="0" height="0" aria-hidden="true">
-        <filter id="capa-grao" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
-          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" result="ruido" />
-          <feColorMatrix in="ruido" type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 0.12" result="cinza" />
-          <feComposite in="cinza" in2="SourceAlpha" operator="in" result="grao" />
-          <feMerge>
-            <feMergeNode in="SourceGraphic" />
-            <feMergeNode in="grao" />
-          </feMerge>
-        </filter>
-      </svg>
+        <!-- O nome: entra letra por letra e passa na frente da foto -->
+        <h1 data-capa-some class="capa-nome">
+          <span class="sr-only">{tx.nomeSr}</span>
+          <span class="nome-1 hero-name-line" aria-hidden="true"><Letras texto="Gabriel" atraso={0.35} /></span>
+          <span class="nome-2 hero-name-line" aria-hidden="true"><Letras texto="Germano" atraso={0.5} /></span>
+        </h1>
 
-      <!-- Você, recortado, em preto e branco, saindo da borda de baixo -->
-      <div data-retrato class="retrato">
-        <figure class="retrato-moldura">
-          <Image
-            src={foto}
-            alt={tx.foto}
-            widths={[480, 928]}
-            sizes="(min-width: 768px) 50rem, 22rem"
-            format="webp"
-            quality={92}
-            loading="eager"
-            fetchpriority="high"
-            class="retrato-foto"
-          />
-          <!-- A cópia da foto que o pó apaga (lib/po.ts): só aparece quando a foto começa a se desfazer -->
-          <canvas data-po-foto class="retrato-foto retrato-copia" aria-hidden="true"></canvas>
-        </figure>
+        <!-- Você, recortado, em preto e branco, saindo da borda de baixo -->
+        <div data-retrato data-po-pb class="retrato">
+          <figure class="retrato-moldura">
+            <Image
+              src={foto}
+              alt={tx.foto}
+              widths={[480, 928]}
+              sizes="(min-width: 56rem) 40rem, 22rem"
+              format="webp"
+              quality={92}
+              loading="eager"
+              fetchpriority="high"
+              class="retrato-foto"
+            />
+            <!-- A cópia da foto que o pó apaga (lib/po.ts): só aparece quando a foto começa a se desfazer -->
+            <canvas data-po-foto class="retrato-foto retrato-copia" aria-hidden="true"></canvas>
+          </figure>
+        </div>
       </div>
 
-      <!-- Os dois lados: negócio e dados -->
-      <div class="capa-lados mx-auto w-full max-w-6xl px-6">
-        <div data-capa-some class="capa-lado">
-          <p class="capa-palavra capa-neg font-serif text-[2.6rem] leading-none text-heading sm:text-6xl"><Letras texto={tx.negocio} atraso={0.3} /></p>
-          <p class="capa-desc capa-neg hero-load mt-3 max-w-[17rem] text-sm leading-relaxed text-balance text-muted sm:text-base" style="--k: 2">
-            {tx.negocioTexto}
-          </p>
-          <div class="capa-acoes capa-acoes-neg hero-load mt-5 flex items-center gap-2" style="--k: 4">
-            <a href="#contato" class="btn btn-cheio">{tx.contato}</a>
-            {
-              temCurriculo && (
-                <a href={site.curriculo} download={site.curriculoNome} class="btn btn-linha capa-cv" aria-label={tx.curriculoRotulo}>
-                  <span aria-hidden="true">↓</span> <span class="capa-cv-texto">{tx.curriculo}</span>
-                </a>
-              )
-            }
-          </div>
-        </div>
-
-        <div data-capa-some class="capa-lado capa-lado-dados md:text-right">
-          <p class="capa-palavra capa-dad capa-dados font-display leading-none text-heading uppercase"><Letras texto={tx.dados} atraso={0.45} /></p>
-          <p class="capa-desc capa-dad hero-load mt-3 max-w-[17rem] text-sm leading-relaxed text-balance text-muted sm:text-base md:ml-auto" style="--k: 3">
-            {tx.dadosTexto}
-          </p>
-          <div class="capa-acoes capa-acoes-dad hero-load mt-5 flex items-center gap-2 md:justify-end" style="--k: 5">
-            <a href={site.linkedin} target="_blank" rel="noopener" aria-label="LinkedIn" class="capa-redondo">
-              <svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
-                <path
-                  d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13ZM7.12 20.45H3.56V9h3.56v11.45ZM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0Z"
-                ></path>
-              </svg>
-            </a>
-            <a href={site.github} target="_blank" rel="noopener" aria-label="GitHub" class="capa-redondo">
-              <svg viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
-                <path
-                  d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57v-2.02c-3.34.73-4.04-1.6-4.04-1.6-.55-1.4-1.34-1.77-1.34-1.77-1.08-.74.09-.73.09-.73 1.2.09 1.83 1.24 1.83 1.24 1.07 1.83 2.8 1.3 3.49 1 .1-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22v3.29c0 .31.21.69.82.57A12 12 0 0 0 12 .3Z"
-                ></path>
-              </svg>
-            </a>
-          </div>
-        </div>
+      <!-- Só o essencial: o que eu faço e onde, e o contato (o resto fica na seção Contato) -->
+      <div data-capa-some class="capa-info">
+        <p class="capa-funcao hero-load" style="--k: 1">{tx.funcao}</p>
+        <a href="#contato" class="capa-cta hero-load" style="--k: 2">{tx.contato}</a>
       </div>
     </div>
 
@@ -124,186 +76,126 @@ const tx = textos[idiomaDe(Astro.url)].capa;
 
 <style>
   /* ---------- A capa ---------- */
+  /* Cabe sempre na altura da tela. O fundo é pintado aqui (e não só na página) porque o nome inverte de cor
+     sobre ele e sobre a foto (mix-blend-mode precisa do fundo dentro do mesmo grupo, o isolation). */
   .capa-conteudo {
     position: relative;
     isolation: isolate;
-    display: flex;
-    flex-direction: column;
-    min-height: 100svh;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    height: 100svh;
+    min-height: 34rem;
     overflow: hidden;
-    padding-top: 5rem;
+    padding-top: 5.5rem; /* a barra de cima */
+    background: var(--color-bg);
   }
 
-  /* Celular: em coluna. O nome em três linhas, os dois lados e, por último, você saindo da borda de baixo */
-  .capa-nome {
-    position: relative;
-    z-index: 0;
-    margin-top: 2rem;
-    padding-inline: 1.5rem;
-    container-type: inline-size;
-  }
-
-  .retrato {
-    position: relative;
+  /* A capa é lisa; o papel do resto do site (grão e linho, global.css) só aparece no pé dela, aos poucos,
+     para ela não terminar numa faixa reta. Fica atrás da foto e do nome. */
+  .capa-conteudo::after {
+    content: '';
+    position: absolute;
     z-index: 1;
-    align-self: center;
-    order: 3;
-    width: min(26rem, 100%);
+    inset: 0;
+    background: var(--textura-grao), var(--textura-linho-h), var(--textura-linho-v);
+    background-size: 240px, 300px, 300px;
+    mask-image: linear-gradient(to bottom, transparent 55%, #000);
+    pointer-events: none;
+  }
+
+  /* uma luz de estúdio suave atrás de você, como um fundo infinito iluminado */
+  .capa-conteudo::before {
+    content: '';
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    background: radial-gradient(ellipse 38% 60% at 50% 55%, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0) 70%);
+    pointer-events: none;
+  }
+
+  .cena {
+    position: relative;
+    min-height: 0;
+  }
+
+  /* "Portfólio": gigante, num cinza só um pouco mais escuro que o fundo. No celular fica atrás dos ombros,
+     abaixo do nome; no computador, no alto, atrás da cabeça. */
+  .fantasma {
+    position: absolute;
+    z-index: 0;
+    left: 50%;
+    top: 40%;
+    translate: -50% 0;
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: min(30vw, 34svh);
+    line-height: 0.8;
+    letter-spacing: -0.03em;
+    white-space: nowrap;
+    color: var(--color-fantasma);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* O nome fica NA FRENTE da foto e inverte de cor: azul-marinho sobre o fundo, creme claro sobre a camisa preta.
+     Com "difference", a cor final é |fundo − cor|; --color-nome-inverso é o fundo menos o azul-marinho (global.css),
+     então sobre o cinza sai exatamente o azul-marinho do site. */
+  .capa-nome {
+    position: absolute;
+    z-index: 3;
+    inset: 0;
+    margin: 0;
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: min(24vw, 13svh);
+    line-height: 0.85;
+    letter-spacing: -0.03em;
+    color: var(--color-nome-inverso);
+    mix-blend-mode: difference;
+    pointer-events: none;
+  }
+
+  /* celular: as duas palavras empilhadas no alto, "Germano" alinhado à direita */
+  .nome-1,
+  .nome-2 {
+    position: absolute;
+    white-space: nowrap;
+  }
+
+  .nome-1 {
+    left: 1.5rem;
+    top: 0;
+  }
+
+  .nome-2 {
+    right: 1.5rem;
+    top: 0.85em;
+  }
+
+  /* a linha esconde as letras enquanto elas sobem (componente Letras) */
+  .hero-name-line {
+    display: block;
+    overflow: hidden;
+    padding-block: 0.06em 0.02em;
+  }
+
+  /* Você: o recorte inteiro, sem moldura, saindo da borda de baixo da cena. No celular a cabeça começa logo
+     abaixo de "Germano". */
+  .retrato {
+    position: absolute;
+    z-index: 2;
+    bottom: 0;
+    left: 50%;
+    translate: -50% 0;
+    height: 72%;
+    max-width: 92%;
     aspect-ratio: 928 / 1140; /* a proporção da foto recortada */
   }
 
-  .capa-lados {
-    position: relative;
-    z-index: 2;
-    order: 2;
-    display: grid;
-    gap: 2.5rem;
-    padding-block: 2.5rem 1.5rem;
-  }
-
-  @media (min-width: 40rem) {
-    .capa-conteudo {
-      padding-top: 7rem;
-    }
-  }
-
-  /* Telas largas: tudo se mede pela altura da foto (--foto-altura): o nome fica logo acima da sua cabeça e os
-     lados na altura do seu peito, um em cada ponta, com o meio livre para você */
-  @media (min-width: 48rem) {
-    .capa-conteudo {
-      --foto-altura: min(68svh, 46rem);
-      height: 100svh;
-      min-height: 40rem;
-    }
-
-    /* o nome sobe um pouco para a linha da função caber entre ele e a sua cabeça */
-    .capa-nome {
-      position: absolute;
-      bottom: calc(var(--foto-altura) + 2.5rem);
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      margin: 0;
-      padding: 0;
-    }
-
-    .capa-conteudo .capa-funcao {
-      position: absolute;
-      bottom: calc(var(--foto-altura) + 0.8rem);
-      left: 0;
-      right: 0;
-      margin: 0;
-      font-size: 1rem;
-    }
-
-    .retrato {
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      translate: -50% 0;
-      /* TESTE (cartão): solto da borda de baixo; o topo continua na mesma altura, então o nome não se mexe */
-      bottom: 4svh;
-      width: auto;
-      height: calc(var(--foto-altura) - 4svh);
-      margin: 0;
-    }
-
-    /* TESTE (cartão): o fundo de estúdio fica no ::before, que some junto com a foto quando ela vira pó
-       (lib/po.ts controla --arco) */
-    .retrato::before {
-      content: '';
-      position: absolute;
-      z-index: -1;
-      inset: 0;
-      border-radius: 1.25rem;
-      background:
-        var(--textura-grao),
-        radial-gradient(
-          120% 85% at 50% 22%,
-          color-mix(in srgb, #fff 45%, var(--color-sunset)),
-          color-mix(in srgb, var(--color-navy) 16%, var(--color-sunset))
-        );
-      background-size: 240px, 100% 100%;
-      box-shadow: inset 0 0 0 1px rgb(20 25 55 / 0.1);
-      opacity: var(--arco, 1);
-    }
-
-    /* A foto recortada pelos cantos do cartão, sem sumir no fundo */
-    .retrato .retrato-moldura {
-      mask-image: none;
-      overflow: hidden;
-      border-radius: 1.25rem;
-    }
-
-    .capa-lados {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: calc(var(--foto-altura) * 0.2);
-      grid-template-columns: 1fr minmax(14rem, 22rem) 1fr;
-      align-items: end;
-      padding-block: 0;
-    }
-
-    .capa-lado-dados {
-      grid-column: 3;
-    }
-  }
-
-  /* "Dados" em Tektur estreita, do mesmo tamanho visual do "negócio" em serifa */
-  .capa-dados {
-    font-size: 2.3rem;
-    font-weight: 900;
-    font-stretch: 75%;
-    font-variation-settings: 'wdth' 75;
-  }
-
-  @media (min-width: 40rem) {
-    .capa-dados {
-      font-size: 3.3rem;
-    }
-  }
-
-  /* A função e a cidade: texto simples, discreto, centralizado embaixo do nome */
-  .capa-funcao {
-    position: relative;
-    z-index: 0;
-    margin-top: 0.6rem;
-    font-size: 0.9375rem;
-    letter-spacing: 0.01em;
-    text-align: center;
-    color: var(--color-muted);
-  }
-
-  .capa-redondo {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    justify-content: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    border: 1px solid var(--color-line);
-    border-radius: 9999px;
-    color: var(--color-heading);
-    transition:
-      border-color 0.25s ease,
-      color 0.25s ease;
-  }
-
-  .capa-redondo:hover {
-    border-color: var(--color-navy);
-    color: var(--color-navy);
-  }
-
-  /* Você: a foto sem fundo, inteira (sem moldura); as laterais e a base somem no fundo */
   .retrato-moldura {
     position: absolute;
     inset: 0;
-    mask-image:
-      linear-gradient(to right, transparent, #000 14%, #000 86%, transparent),
-      linear-gradient(to top, transparent, #000 16%);
-    mask-composite: intersect;
+    margin: 0;
   }
 
   .retrato-foto {
@@ -313,9 +205,8 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     height: 100%;
     object-fit: contain;
     object-position: 50% 100%;
-    /* TESTE: colorida, só com o granulado do site (o filtro #capa-grao).
-       Em preto e branco era: grayscale(1) contrast(1.08) url(#capa-grao) */
-    filter: url(#capa-grao);
+    /* o preto e branco vem daqui; a cópia que o pó apaga (canvas) usa o mesmo filtro */
+    filter: grayscale(1) contrast(1.06);
   }
 
   /* A cópia da foto troca com a <img> só quando a foto começa a se desfazer */
@@ -331,178 +222,93 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     opacity: 0;
   }
 
-  /* ---------- Celular: a capa inteira numa tela só ----------
-     O mesmo cartaz do computador, em pé: o nome gigante em três linhas, a foto recortada em preto e branco com o arco
-     atrás e, embaixo, "negócio" e "Dados" lado a lado, separados pelo eixo (uma linha fina no meio), com os botões
-     numa linha só. As caixas dos lados viram "invisíveis" (display: contents) para cada peça se encaixar na sua
-     linha; a ordem é dada pelo order. Sem pó. */
-  @media (max-width: 47.99rem) {
-    .capa-conteudo {
-      flex-flow: row wrap;
-      align-content: flex-start;
-      min-height: 100svh;
-      padding: 5.25rem 1.5rem 2.5rem;
-    }
-
-    /* TESTE: a foto num cartão, como um retrato de estúdio: o recorte inteiro, colorido, sobre um fundo claro com
-       a luz mais forte atrás da cabeça, de cantos arredondados. Fica entre o nome e os dois lados. */
-    .retrato {
-      order: 3;
-      flex: none;
-      width: min(17rem, 78%);
-      margin: 1.25rem auto 0;
-      overflow: hidden;
-      border-radius: 1rem;
-      background:
-        var(--textura-grao),
-        radial-gradient(
-          120% 85% at 50% 22%,
-          color-mix(in srgb, #fff 45%, var(--color-sunset)),
-          color-mix(in srgb, var(--color-navy) 16%, var(--color-sunset))
-        );
-      background-size: 240px, 100% 100%;
-      box-shadow: inset 0 0 0 1px rgb(20 25 55 / 0.1);
-    }
-
-    .retrato::before {
-      display: none;
-    }
-
-    .retrato .retrato-moldura {
-      mask-image: none;
-    }
-
-    /* colorida, só com o grão do site (para testar em preto e branco: grayscale(1) contrast(1.08) antes do url) */
-    .retrato-foto {
-      filter: url(#capa-grao);
-    }
-
-    .retrato-copia {
-      display: none;
-    }
-
-    /* O nome em três linhas, enchendo a largura: NAVARRO (a mais larga) ocupa ~90% da tela (ver .capa-nome-texto) */
-    .capa-nome {
-      order: 1;
-      flex: 0 0 100%;
-      display: flex;
-      justify-content: center;
-      margin-top: 0.5rem;
-      padding: 0;
-    }
-
-    /* Um pouco menor que a largura toda: NAVARRO ocupa ~75% da tela */
-    .capa-nome .capa-nome-texto {
-      font-size: calc(100cqi / 5.2);
-    }
-
-    .capa-lados,
-    .capa-lado {
-      display: contents;
-    }
-
-    /* Os dois lados: "negócio" à esquerda, "Dados" à direita, com o eixo passando entre eles */
-    .capa-palavra,
-    .capa-desc {
-      flex: 0 0 50%;
-      max-width: none;
-      margin: 0;
-    }
-
-    .capa-neg {
-      padding-right: 0.9rem;
-    }
-
-    .capa-dad {
-      padding-left: 0.9rem;
-      border-left: 1px solid color-mix(in srgb, var(--color-latao) 75%, transparent);
-      text-align: right;
-    }
-
-    .capa-palavra {
-      order: 4;
-      align-self: flex-end;
-      padding-top: 1.5rem;
-    }
-
-    .capa-palavra.capa-dad {
-      order: 5;
-    }
-
-    .capa-neg.capa-palavra {
-      font-size: 2.3rem;
-    }
-
-    .capa-dados {
-      font-size: 2rem;
-    }
-
-    .capa-desc {
-      order: 6;
-      padding-top: 0.6rem;
-      font-size: 0.8125rem;
-      line-height: 1.5;
-    }
-
-    .capa-desc.capa-dad {
-      order: 7;
-    }
-
-    /* Os botões numa linha só, centralizados: contato e currículo (só o ícone), LinkedIn e GitHub */
-    .capa-acoes {
-      order: 8;
-      gap: 0.4rem;
-      margin: 1.5rem 0 0 auto;
-    }
-
-    .capa-acoes-dad {
-      order: 9;
-      margin: 1.5rem auto 0 0.4rem;
-    }
-
-    .capa-funcao {
-      order: 2;
-      flex: 0 0 100%;
-      margin-top: 0.5rem;
-      font-size: 0.875rem;
-    }
-
-    .capa-cv,
-    .capa-redondo {
-      width: 2.6rem;
-      height: 2.6rem;
-      padding: 0;
-      justify-content: center;
-    }
-
-    .capa-cv-texto {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-    }
-
-    .capa-acoes .btn-cheio {
-      padding-inline: 1.1rem;
-    }
+  /* Embaixo: a função e o botão */
+  .capa-info {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    padding: 1.25rem 1.5rem 1.75rem;
   }
 
-  /* Celulares estreitos (até ~370 px): o botão de contato um pouco menor, para os 4 botões caberem numa linha */
-  @media (max-width: 23.2rem) {
-    .capa-acoes .btn-cheio {
-      padding-inline: 0.85rem;
-      font-size: 0.8125rem;
+  .capa-funcao {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-heading);
+  }
+
+  /* reto, sem arredondar, no espírito editorial da capa */
+  .capa-cta {
+    display: inline-flex;
+    align-items: center;
+    min-height: 3rem;
+    padding: 0 1.5rem;
+    background: var(--color-navy);
+    color: #fff;
+    font-weight: 700;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .capa-cta:hover {
+    background: var(--color-latao);
+    color: var(--color-navy);
+  }
+
+  /* Computador: "Gabriel" e "Germano" na altura dos ombros, chegando perto do centro e cruzando os seus ombros
+     (sem passar pelo rosto); você no meio, ocupando a altura toda; função e botão numa linha, embaixo. */
+  @media (min-width: 56rem) {
+    .capa-conteudo {
+      grid-template-rows: 1fr;
     }
 
-    .capa-acoes,
-    .capa-acoes-dad {
-      gap: 0.3rem;
+    .fantasma {
+      top: 0;
     }
 
-    .capa-acoes-dad {
-      margin-left: 0.3rem;
+    .capa-nome {
+      font-size: min(8.5vw, 17svh);
+    }
+
+    .nome-1,
+    .nome-2 {
+      top: 38%;
+    }
+
+    .nome-1 {
+      left: auto;
+      right: calc(50% + 0.85em);
+    }
+
+    .nome-2 {
+      right: auto;
+      left: calc(50% + 0.85em);
+    }
+
+    .retrato {
+      height: 100%;
+      max-width: 60%;
+    }
+
+    .capa-info {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      max-width: 80rem;
+      margin-inline: auto;
+      padding: 0 2rem clamp(1.5rem, 6svh, 4rem);
+      background: none;
+      pointer-events: none;
+    }
+
+    .capa-info > * {
+      pointer-events: auto;
     }
   }
 
@@ -521,7 +327,7 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     position: sticky;
     top: 0;
     height: 100svh;
-    min-height: 40rem;
+    min-height: 34rem;
     overflow: clip;
   }
 
@@ -553,52 +359,31 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     will-change: opacity, transform;
   }
 
-  /* ---------- Nome ---------- */
-  /* Tektur no peso máximo e na largura mais estreita: um nome alto e apertado.
-     - Computador, uma linha atravessando a tela atrás de você: com 100vw / 12,3, ocupa ~93% da largura
-     - Celular, três linhas: a mais larga é NAVARRO; com 100cqi / 4,3, ocupa ~90% da largura */
-  .capa-nome-texto {
-    display: flex;
-    flex-direction: column;
-    width: max-content;
-    font-family: var(--font-display);
-    color: var(--color-heading);
-    font-size: calc(100cqi / 4.3);
-    font-weight: 900;
-    font-stretch: 75%;
-    font-variation-settings: 'wdth' 75;
-    line-height: 0.8;
-    letter-spacing: -0.01em;
-    text-transform: uppercase;
-  }
-
-  @media (min-width: 48rem) {
-    .capa-nome-texto {
-      flex-direction: row;
-      gap: 0.18em;
-      font-size: min(100vw / 12.3, 13svh);
-    }
-  }
-
-  .hero-name-line {
-    display: block;
-    overflow: hidden;
-    padding-block: 0.06em 0.02em;
-  }
-
-  /* ---------- A capa carrega como um dashboard ---------- */
-  /* Cada bloco enche da esquerda para a direita, como uma barra, um depois do outro (--k).
+  /* ---------- A capa carrega ---------- */
+  /* A função e o botão enchem da esquerda para a direita, um depois do outro (--k).
      A folga de 1rem no recorte deixa passar o hover e o contorno de foco. */
   .hero-load {
     clip-path: inset(-1rem -1rem -1rem -1rem);
     transition:
-      clip-path 0.75s cubic-bezier(0.65, 0, 0.2, 1) calc(0.25s + var(--k, 0) * 0.09s),
-      opacity 0.4s ease calc(0.25s + var(--k, 0) * 0.09s);
+      clip-path 0.75s cubic-bezier(0.65, 0, 0.2, 1) calc(0.6s + var(--k, 0) * 0.12s),
+      opacity 0.4s ease calc(0.6s + var(--k, 0) * 0.12s);
   }
 
   /* Estado antes de carregar (as letras ficam no global.css). Se o script falhar, tudo aparece sozinho em 2,5 s */
   :global(html.capa-carregando) .hero-load {
     clip-path: inset(-1rem 100% -1rem -1rem);
+    opacity: 0;
+    animation: hero-failsafe 0s 2.5s forwards;
+  }
+
+  /* a foto e o "Portfólio" aparecem devagar */
+  .retrato,
+  .fantasma {
+    transition: opacity 1.2s ease 0.1s;
+  }
+
+  :global(html.capa-carregando) .retrato,
+  :global(html.capa-carregando) .fantasma {
     opacity: 0;
     animation: hero-failsafe 0s 2.5s forwards;
   }
@@ -620,12 +405,21 @@ const tx = textos[idiomaDe(Astro.url)].capa;
   document.addEventListener('astro:page-load', () => {
     controller?.abort();
     controller = new AbortController();
-
-    const capa = document.querySelector<HTMLElement>('[data-capa]');
-    if (!capa) return;
     const root = document.documentElement;
 
+    const capa = document.querySelector<HTMLElement>('[data-capa]');
+    if (!capa) {
+      root.classList.remove('na-capa');
+      return;
+    }
+
     iniciarPo(capa, controller.signal); // a foto que vira pó, e o pó que vira o fio
+
+    // O Contato da barra de cima volta quando os textos da capa saem (ela já tem o seu botão)
+    const naCapa = () => root.classList.toggle('na-capa', scrollY < innerHeight * 0.12);
+    naCapa();
+    addEventListener('scroll', naCapa, { passive: true, signal: controller.signal });
+    controller.signal.addEventListener('abort', () => root.classList.remove('na-capa'));
 
     if (root.classList.contains('capa-carregando')) {
       // Dois quadros: garante que o estado escondido foi pintado antes de soltar as transições

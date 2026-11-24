@@ -55,7 +55,7 @@ const idiomas = [
       </button>
       <a
         href={caminho(idioma, '#contato')}
-        class="hidden rounded-full bg-latao px-4 py-2.5 text-[0.9375rem] font-semibold text-navy transition-colors hover:bg-navy hover:text-sunset sm:inline-flex"
+        class="nav-contato hidden rounded-full bg-latao px-4 py-2.5 text-[0.9375rem] font-semibold text-navy transition-colors hover:bg-navy hover:text-sunset sm:inline-flex"
       >
         {tx.contato}
       </a>
@@ -150,6 +150,23 @@ const idiomas = [
   .idioma.is-atual {
     background: var(--color-heading);
     color: var(--color-bg);
+  }
+
+  /* Na capa, o Contato da barra some (a capa já tem o seu botão); volta quando os textos da capa saem (Hero) */
+  .nav-contato {
+    transition:
+      opacity 0.3s ease,
+      visibility 0s,
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  :global(html.na-capa) .nav-contato {
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.3s ease,
+      visibility 0s linear 0.3s;
   }
 
   /* Fechado: escondido e "enrolado" para cima. Aberto: a cortina desce e os links sobem em sequência */
