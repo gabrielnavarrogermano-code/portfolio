@@ -38,7 +38,7 @@ const posicoes = [
 ---
 
 <div id="habilidades" data-processo>
-  <Secao titulo={tx.titulo}>
+  <Secao titulo={tx.titulo} escura>
     <div class="pc" data-fio-fim>
       <div class="pc-pista">
         <div class="pc-palco">
@@ -208,10 +208,7 @@ const posicoes = [
     font-family: var(--font-display);
     font-size: 1.7rem;
     font-weight: 800;
-    font-stretch: 75%;
-    font-variation-settings: 'wdth' 75;
     line-height: 1;
-    text-transform: uppercase;
     color: var(--color-accent);
   }
 
@@ -234,7 +231,7 @@ const posicoes = [
     text-wrap: pretty;
   }
 
-  /* ---------- O palco: a cena, em azul-marinho, com a luz e o grão do papel ---------- */
+  /* ---------- O palco: a cena, um painel plano um tom acima do azul-marinho da faixa, com uma borda fina ---------- */
   .pc-cena {
     --color-heading: var(--color-sunset);
     --color-fg: var(--color-sunset);
@@ -244,13 +241,8 @@ const posicoes = [
     margin-top: 1.4rem;
     padding: 1.6rem 1.4rem;
     overflow: hidden;
-    border-radius: 1.25rem;
-    background-image:
-      radial-gradient(ellipse 70% 80% at 30% 0%, rgb(120 135 190 / 0.28), transparent 70%),
-      var(--textura-grao),
-      linear-gradient(160deg, #1b2147, #10142c);
-    background-size: 100% 100%, 240px, 100% 100%;
-    box-shadow: 0 30px 60px -30px rgb(16 20 44 / 0.55);
+    border: 1px solid rgb(232 232 230 / 0.14);
+    background: #1a2044;
     color: var(--color-fg);
   }
 
@@ -290,7 +282,7 @@ const posicoes = [
       left: 0;
       right: 0;
       height: 1.5px;
-      background: rgb(20 25 55 / 0.18);
+      background: rgb(232 232 230 / 0.2);
     }
 
     .pc-linha-cheia {
@@ -316,7 +308,7 @@ const posicoes = [
       height: 1.1rem;
       border: 1.5px solid var(--color-fio);
       border-radius: 9999px;
-      background: var(--color-sunset);
+      background: var(--color-navy);
       transition:
         background-color 0.35s ease,
         transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -334,11 +326,8 @@ const posicoes = [
       font-family: var(--font-display);
       font-size: 1.35rem;
       font-weight: 800;
-      font-stretch: 75%;
-      font-variation-settings: 'wdth' 75;
       line-height: 1;
-      text-transform: uppercase;
-      color: var(--color-astro);
+      color: #9aa0b8;
       transition: color 0.3s ease;
     }
 

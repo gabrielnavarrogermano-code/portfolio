@@ -40,6 +40,15 @@ const links = [
     padding-block: 5rem 4rem;
   }
 
+  /* Na página inicial o contato é uma faixa azul-marinho: o rodapé continua nela, até o fim da página */
+  :global(main:has(#contato.secao-escura)) + .rodape {
+    --color-line: rgb(232 232 230 / 0.22);
+    --color-muted: #b9bcc7;
+    --color-heading: #e8e8e6;
+    padding-top: 2rem;
+    background: var(--color-navy);
+  }
+
   .rodape-linha {
     display: flex;
     flex-wrap: wrap;

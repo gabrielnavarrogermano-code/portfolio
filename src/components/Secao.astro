@@ -8,12 +8,13 @@ interface Props {
   id?: string;
   titulo: string;
   sub?: string;
+  escura?: boolean; // faixa em azul-marinho de ponta a ponta, com o texto e o fio claros
 }
 
-const { id, titulo, sub } = Astro.props;
+const { id, titulo, sub, escura = false } = Astro.props;
 ---
 
-<section id={id} class="secao" data-secao>
+<section id={id} class:list={['secao', escura && 'secao-escura on-navy']} data-secao>
   <span class="fio" data-fio aria-hidden="true"></span>
   <div class="secao-largura">
     <h2 class="secao-titulo"><Letras texto={titulo} /></h2>

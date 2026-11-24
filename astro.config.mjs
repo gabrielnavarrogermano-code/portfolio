@@ -11,23 +11,13 @@ export default defineConfig({
   // Fontes baixadas do Google no build e servidas pelo próprio site: sem pedido a outro domínio,
   // e com fontes de reserva ajustadas para o texto não pular quando a fonte chega.
   fonts: [
+    // A capa: sem serifa geométrica, em negrito e minúsculas, com as letras apertadas
     {
       provider: fontProviders.google(),
-      name: 'Tektur',
-      cssVariable: '--ff-tektur',
-      weights: ['400 900'],
-      // O nome da capa usa a Tektur estreita (largura 75%): sem este eixo, ele não cabe na tela
-      options: { experimental: { variableAxis: { wdth: [[75, 100]] } } },
+      name: 'Inter Tight',
+      cssVariable: '--ff-grotesk',
+      weights: ['500 800'],
       fallbacks: ['sans-serif'],
-    },
-    // Serifa: só na palavra "negócio" da capa
-    {
-      provider: fontProviders.google(),
-      name: 'Instrument Serif',
-      cssVariable: '--ff-serif',
-      weights: [400],
-      styles: ['normal'],
-      fallbacks: ['serif'],
     },
     // O texto do site inteiro: desenhada pelo Braille Institute para ser lida com facilidade por qualquer pessoa
     {

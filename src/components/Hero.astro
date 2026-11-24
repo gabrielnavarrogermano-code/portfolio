@@ -7,69 +7,64 @@ import { idiomaDe, textos } from '../i18n';
 const tx = textos[idiomaDe(Astro.url)].capa;
 ---
 
-<!-- Antes de pintar: esconde os blocos da capa para eles entrarem (capa-carregando) e, em telas largas, já monta o
-     palco (palco-ativo), para a capa não aparecer em bloco e depois pular de lugar. "na-capa" esconde o Contato da
-     barra de cima enquanto a capa está na tela (ela já tem o seu botão).
-     Quem pediu menos movimento vê a capa pronta, sem palco. -->
+<!-- Antes de pintar: esconde os blocos da capa para eles entrarem (capa-carregando) e liga o movimento da rolagem
+     (capa-movimento). "na-capa" esconde o Contato da barra de cima enquanto a capa está na tela (ela já tem o seu
+     botão). Quem pediu menos movimento vê a capa pronta e parada. -->
 <script is:inline>
   (function () {
     try {
       document.documentElement.classList.add('na-capa');
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      document.documentElement.classList.add('capa-carregando');
-      if (matchMedia('(min-width: 56rem)').matches) document.documentElement.classList.add('palco-ativo');
+      document.documentElement.classList.add('capa-carregando', 'capa-movimento');
     } catch (e) {}
   })();
 </script>
 
-<!-- A capa: você no centro, em preto e branco, num fundo cinza de estúdio. O nome emoldura você e passa NA FRENTE
-     da foto, mudando de cor onde cruza a camisa; atrás de tudo, "Portfólio" gigante em tom sobre tom.
-     Em telas largas, com movimento, ela fica presa na tela enquanto a rolagem passa pelo trilho: os textos saem, a
-     foto se desfaz em pó e o pó vira o fio que liga o resto do site (lib/po.ts e lib/fio.ts).
-     No celular, com movimento reduzido ou sem JS, é um bloco normal, com a foto parada. -->
-<section id="inicio" data-capa class="trilho relative isolate">
-  <div data-palco class="palco">
-    <div class="capa-conteudo">
-      <div class="cena">
-        <!-- tom sobre tom, atrás de tudo -->
-        <p data-capa-some class="fantasma" aria-hidden="true">{tx.fantasma}</p>
+<!-- A capa: você no centro, em preto e branco, num fundo cinza de estúdio. O nome, em negrito e minúsculas, emoldura
+     você e passa NA FRENTE da foto, mudando de cor onde cruza a camisa; atrás da cabeça, "navarro" gigante em tom
+     sobre tom.
+     Ao rolar, cada camada anda numa velocidade (parallax): o nome sobe mais rápido e esmaece, você acompanha a
+     página, "Navarro" quase parado; o fio nasce no centro e a seção seguinte entra esmaecida e ganha nitidez.
+     Com movimento reduzido ou sem JS, é um bloco normal, parado. -->
+<section id="inicio" data-capa class="relative isolate">
+  <div class="capa-conteudo">
+    <div class="cena">
+      <!-- tom sobre tom, atrás de tudo; data-vel: a velocidade na rolagem (negativa = mais devagar que a página) -->
+      <p class="fantasma" data-vel="-0.55" aria-hidden="true">{tx.fantasma}</p>
 
-        <!-- O nome: entra letra por letra e passa na frente da foto -->
-        <h1 data-capa-some class="capa-nome">
-          <span class="sr-only">{tx.nomeSr}</span>
-          <span class="nome-1 hero-name-line" aria-hidden="true"><Letras texto="Gabriel" atraso={0.35} /></span>
-          <span class="nome-2 hero-name-line" aria-hidden="true"><Letras texto="Germano" atraso={0.5} /></span>
-        </h1>
+      <!-- O nome: entra letra por letra e passa na frente da foto -->
+      <h1 class="capa-nome" data-vel="0.45" data-some>
+        <span class="sr-only">{tx.nomeSr}</span>
+        <span class="nome-1 hero-name-line" aria-hidden="true"><Letras texto="Gabriel" atraso={0.35} /></span>
+        <span class="nome-2 hero-name-line" aria-hidden="true"><Letras texto="Germano" atraso={0.5} /></span>
+      </h1>
 
-        <!-- Você, recortado, em preto e branco, saindo da borda de baixo -->
-        <div data-retrato data-po-pb class="retrato">
-          <figure class="retrato-moldura">
-            <Image
-              src={foto}
-              alt={tx.foto}
-              widths={[480, 928]}
-              sizes="(min-width: 56rem) 40rem, 22rem"
-              format="webp"
-              quality={92}
-              loading="eager"
-              fetchpriority="high"
-              class="retrato-foto"
-            />
-            <!-- A cópia da foto que o pó apaga (lib/po.ts): só aparece quando a foto começa a se desfazer -->
-            <canvas data-po-foto class="retrato-foto retrato-copia" aria-hidden="true"></canvas>
-          </figure>
-        </div>
-      </div>
-
-      <!-- Só o essencial: o que eu faço e onde, e o contato (o resto fica na seção Contato) -->
-      <div data-capa-some class="capa-info">
-        <p class="capa-funcao hero-load" style="--k: 1">{tx.funcao}</p>
-        <a href="#contato" class="capa-cta hero-load" style="--k: 2">{tx.contato}</a>
+      <!-- Você, recortado, em preto e branco, saindo da borda de baixo. Anda junto com a página (sem data-vel):
+           mais devagar, a base da foto seria cortada quando a capa termina -->
+      <div class="retrato">
+        <figure class="retrato-moldura">
+          <Image
+            src={foto}
+            alt={tx.foto}
+            widths={[480, 928]}
+            sizes="(min-width: 56rem) 40rem, 22rem"
+            format="webp"
+            quality={92}
+            loading="eager"
+            fetchpriority="high"
+            class="retrato-foto"
+          />
+        </figure>
       </div>
     </div>
 
-    <!-- O pó (por cima da capa) e o fio que ele forma no centro, que continua nas seções -->
-    <canvas data-po class="po" aria-hidden="true"></canvas>
+    <!-- Só o essencial: o que eu faço e onde, e o contato (o resto fica na seção Contato) -->
+    <div class="capa-info" data-vel="0.3" data-some>
+      <p class="capa-funcao hero-load" style="--k: 1">{tx.funcao}</p>
+      <a href="#contato" class="capa-cta hero-load" style="--k: 2">{tx.contato}</a>
+    </div>
+
+    <!-- O fio: nasce no centro enquanto a capa sai e continua nas seções (lib/fio.ts) -->
     <span data-fio-capa class="fio-capa" aria-hidden="true"></span>
   </div>
 </section>
@@ -90,27 +85,32 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     background: var(--color-bg);
   }
 
-  /* A capa é lisa; o papel do resto do site (grão e linho, global.css) só aparece no pé dela, aos poucos,
-     para ela não terminar numa faixa reta. Fica atrás da foto e do nome. */
-  .capa-conteudo::after {
-    content: '';
-    position: absolute;
-    z-index: 1;
-    inset: 0;
-    background: var(--textura-grao), var(--textura-linho-h), var(--textura-linho-v);
-    background-size: 240px, 300px, 300px;
-    mask-image: linear-gradient(to bottom, transparent 55%, #000);
-    pointer-events: none;
-  }
-
-  /* uma luz de estúdio suave atrás de você, como um fundo infinito iluminado */
+  /* O estúdio, só com degradês, igual no computador e no celular (nada de imagem, para não pesar):
+     1) a softbox: uma luz forte atrás da cabeça e dos ombros, caindo para as bordas;
+     2) os cantos um pouco mais escuros, como numa foto de estúdio;
+     3) o fundo infinito: a parede clara se curva e vira o chão, alguns tons mais escuro, na altura dos joelhos.
+        Embaixo, sob a função e o botão, volta ao cinza do site, para a capa não terminar numa faixa reta. */
   .capa-conteudo::before {
     content: '';
     position: absolute;
     z-index: 0;
     inset: 0;
-    background: radial-gradient(ellipse 38% 60% at 50% 55%, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0) 70%);
     pointer-events: none;
+    background:
+      radial-gradient(ellipse 72% 40% at 50% 38%, rgb(255 255 255 / 0.9), rgb(255 255 255 / 0) 72%),
+      radial-gradient(ellipse 85% 70% at 50% 42%, rgb(20 25 55 / 0) 50%, rgb(20 25 55 / 0.17) 100%),
+      linear-gradient(
+        to bottom,
+        rgb(20 25 55 / 0.08) 0%,
+        rgb(20 25 55 / 0) 30%,
+        rgb(20 25 55 / 0) 56%,
+        rgb(20 25 55 / 0.08) 65%,
+        rgb(20 25 55 / 0.18) 76%,
+        rgb(20 25 55 / 0.15) 86%,
+        rgb(20 25 55 / 0) 100%
+      );
+    /* tudo se dissolve no cinza do site no pé da capa: sem emenda com a seção seguinte */
+    mask-image: linear-gradient(to bottom, #000 86%, transparent 100%);
   }
 
   .cena {
@@ -118,84 +118,73 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     min-height: 0;
   }
 
-  /* "Portfólio": gigante, num cinza só um pouco mais escuro que o fundo. No celular fica atrás dos ombros,
-     abaixo do nome; no computador, no alto, atrás da cabeça. */
+  /* "navarro": gigante, em negrito, num cinza só um pouco mais escuro que o fundo, atrás da cabeça */
   .fantasma {
     position: absolute;
     z-index: 0;
     left: 50%;
-    top: 40%;
+    top: 0;
     translate: -50% 0;
     margin: 0;
-    font-family: var(--font-serif);
-    font-size: min(30vw, 34svh);
+    font-family: var(--font-grotesk);
+    font-weight: 800;
+    font-size: min(24vw, 30svh);
     line-height: 0.8;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.055em;
     white-space: nowrap;
     color: var(--color-fantasma);
     pointer-events: none;
     user-select: none;
   }
 
-  /* O nome fica NA FRENTE da foto e inverte de cor: azul-marinho sobre o fundo, creme claro sobre a camisa preta.
-     Com "difference", a cor final é |fundo − cor|; --color-nome-inverso é o fundo menos o azul-marinho (global.css),
-     então sobre o cinza sai exatamente o azul-marinho do site. */
+  /* O nome: sem serifa, em negrito e minúsculas, com as letras apertadas. Fica NA FRENTE da foto e inverte de cor:
+     azul-marinho sobre o fundo, creme claro sobre a camisa preta. Com "difference", a cor final é |fundo − cor|;
+     --color-nome-inverso é o fundo menos o azul-marinho (global.css), então sobre o cinza sai o azul-marinho do site. */
   .capa-nome {
     position: absolute;
     z-index: 3;
     inset: 0;
     margin: 0;
-    font-family: var(--font-serif);
-    font-weight: 400;
-    font-size: min(24vw, 13svh);
-    line-height: 0.85;
-    letter-spacing: -0.03em;
+    font-family: var(--font-grotesk);
+    font-weight: 800;
+    line-height: 0.9;
+    letter-spacing: -0.05em;
     color: var(--color-nome-inverso);
     mix-blend-mode: difference;
     pointer-events: none;
   }
 
-  /* celular: as duas palavras empilhadas no alto, "Germano" alinhado à direita */
   .nome-1,
   .nome-2 {
     position: absolute;
     white-space: nowrap;
   }
 
-  .nome-1 {
-    left: 1.5rem;
-    top: 0;
-  }
-
-  .nome-2 {
-    right: 1.5rem;
-    top: 0.85em;
-  }
-
-  /* a linha esconde as letras enquanto elas sobem (componente Letras) */
+  /* a linha esconde as letras enquanto elas sobem (componente Letras). Folgas: embaixo para a perna do "g", e
+     dos lados porque, com as letras apertadas, a curva do "o" passa um pouco da caixa e seria cortada */
   .hero-name-line {
     display: block;
     overflow: hidden;
-    padding-block: 0.06em 0.02em;
+    padding: 0.04em 0.1em 0.12em;
+    margin-inline: -0.1em;
   }
 
-  /* Você: o recorte inteiro, sem moldura, saindo da borda de baixo da cena. No celular a cabeça começa logo
-     abaixo de "Germano". */
+  /* Você: o recorte inteiro, sem moldura, saindo da borda de baixo da cena */
   .retrato {
     position: absolute;
     z-index: 2;
     bottom: 0;
     left: 50%;
     translate: -50% 0;
-    height: 72%;
-    max-width: 92%;
     aspect-ratio: 928 / 1140; /* a proporção da foto recortada */
   }
 
+  /* a base da foto se dissolve no fundo: quando a capa sai, ela não termina num corte reto */
   .retrato-moldura {
     position: absolute;
     inset: 0;
     margin: 0;
+    mask-image: linear-gradient(to bottom, #000 78%, transparent 100%);
   }
 
   .retrato-foto {
@@ -205,21 +194,7 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     height: 100%;
     object-fit: contain;
     object-position: 50% 100%;
-    /* o preto e branco vem daqui; a cópia que o pó apaga (canvas) usa o mesmo filtro */
     filter: grayscale(1) contrast(1.06);
-  }
-
-  /* A cópia da foto troca com a <img> só quando a foto começa a se desfazer */
-  .retrato-copia {
-    opacity: 0;
-  }
-
-  .retrato:global(.po-ativo) .retrato-copia {
-    opacity: 1;
-  }
-
-  .retrato:global(.po-ativo) img.retrato-foto {
-    opacity: 0;
   }
 
   /* Embaixo: a função e o botão */
@@ -231,7 +206,6 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem 1.5rem;
-    padding: 1.25rem 1.5rem 1.75rem;
   }
 
   .capa-funcao {
@@ -260,19 +234,136 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     color: var(--color-navy);
   }
 
-  /* Computador: "Gabriel" e "Germano" na altura dos ombros, chegando perto do centro e cruzando os seus ombros
+  /* O fio da capa: só com movimento. Nasce do meio da tela para baixo enquanto a capa sai (script abaixo) */
+  .fio-capa {
+    display: none;
+  }
+
+  :global(html.capa-movimento) .fio-capa {
+    display: block;
+    position: absolute;
+    z-index: 4;
+    left: 50%;
+    top: 58%;
+    bottom: 0;
+    width: 1.5px;
+    margin-left: -0.75px;
+    background: var(--color-fio);
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+
+  /* no celular o fio da capa não aparece: as seções não têm o fio no centro, e ele passaria pelo nome */
+  @media (max-width: 55.99rem) {
+    :global(html.capa-movimento) .fio-capa {
+      display: none;
+    }
+  }
+
+  /* ---------- Celular ----------
+     Você inteiro, centralizado, sobre o chão de estúdio, com "Gabriel / Germano" na frente do peito (mudando de
+     cor sobre a camisa). Sem "Navarro".
+     --p: a altura da foto (no máximo a da cena). O nome se mede a partir do topo da foto, para acompanhá-la. */
+  @media (max-width: 55.99rem) {
+    .capa-conteudo {
+      grid-template-rows: minmax(0, 1fr) auto;
+      padding-top: 5.25rem;
+    }
+
+    .cena {
+      --p: min(100%, 124vw);
+    }
+
+
+
+    .fantasma {
+      display: none;
+    }
+
+    /* o nome na frente da foto, sobre o peito, mudando de cor sobre a camisa (como no computador): "Gabriel" à
+       esquerda e "Germano" embaixo, à direita. Medido a partir do topo da foto (100% - --p). */
+    .capa-nome {
+      font-size: min(17vw, 8.5svh);
+    }
+
+    .nome-1 {
+      left: 1.25rem;
+      top: calc(100% - var(--p) * 0.6);
+    }
+
+    .nome-2 {
+      right: 1.25rem;
+      top: calc(100% - var(--p) * 0.6 + 0.9em);
+    }
+
+    /* multiply (só no celular): o branco e o halo claro da borda do recorte assumem o cinza do fundo, e a foto
+       passa a ter a mesma luz da página. No computador não, porque lá "Navarro" fica atrás da cabeça e as letras
+       apareceriam através do cabelo. */
+    .retrato {
+      bottom: -2px; /* entra um pouco atrás do tampo, para não sobrar fresta */
+      height: var(--p);
+      mix-blend-mode: multiply;
+    }
+
+    .retrato-foto {
+      filter: grayscale(1) contrast(1.02) brightness(1.04);
+    }
+
+    /* sem esfumado: a foto vai nítida até o tampo da bancada, onde ela termina */
+    .retrato-moldura {
+      mask-image: none;
+    }
+
+    /* A bancada de estúdio, na frente de você: o tampo fica na linha onde a foto termina (as mãos apoiadas nele) e
+       a frente dela é o fundo da função e do botão. A frente clareia até o cinza do site, sem emenda com a seção
+       seguinte. */
+    .capa-info {
+      position: relative;
+      z-index: 3;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.875rem;
+      padding: 1.5rem 1.25rem max(1.25rem, env(safe-area-inset-bottom));
+      background: linear-gradient(to bottom, #d3d3d0, #dcdcd9 45%, var(--color-bg) 100%);
+      /* a bancada anda junto com a foto (sem o parallax do computador): se subisse mais rápido, deixaria o corte
+         da foto à mostra */
+      transform: none !important;
+      opacity: 1 !important;
+    }
+
+    /* o tampo: uma faixa clara (a luz batendo na borda), com a sombra que você faz sobre ele */
+    .capa-info::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 0.75rem;
+      background:
+        radial-gradient(ellipse 34% 140% at 50% 0%, rgb(20 25 55 / 0.28), rgb(20 25 55 / 0) 70%),
+        linear-gradient(to bottom, #f4f4f2, #e2e2df 55%, #cbcbc8);
+      box-shadow: 0 1px 0 rgb(20 25 55 / 0.12);
+    }
+
+    .capa-funcao {
+      font-size: 1rem;
+    }
+
+    .capa-cta {
+      justify-content: center;
+      min-height: 3.25rem;
+    }
+  }
+
+  /* Computador: "gabriel" e "germano" na altura dos ombros, chegando perto do centro e cruzando os seus ombros
      (sem passar pelo rosto); você no meio, ocupando a altura toda; função e botão numa linha, embaixo. */
   @media (min-width: 56rem) {
     .capa-conteudo {
       grid-template-rows: 1fr;
     }
 
-    .fantasma {
-      top: 0;
-    }
-
     .capa-nome {
-      font-size: min(8.5vw, 17svh);
+      font-size: min(7.2vw, 14svh);
     }
 
     .nome-1,
@@ -281,13 +372,11 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     }
 
     .nome-1 {
-      left: auto;
-      right: calc(50% + 0.85em);
+      right: calc(50% + 0.6em);
     }
 
     .nome-2 {
-      right: auto;
-      left: calc(50% + 0.85em);
+      left: calc(50% + 0.6em);
     }
 
     .retrato {
@@ -303,7 +392,6 @@ const tx = textos[idiomaDe(Astro.url)].capa;
       max-width: 80rem;
       margin-inline: auto;
       padding: 0 2rem clamp(1.5rem, 6svh, 4rem);
-      background: none;
       pointer-events: none;
     }
 
@@ -312,51 +400,9 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     }
   }
 
-  /* O pó e o fio da capa: só no palco */
-  .po,
-  .fio-capa {
-    display: none;
-  }
-
-  /* ---------- O palco (telas largas, com movimento) ---------- */
-  :global(html.palco-ativo) .trilho {
-    height: 190svh;
-  }
-
-  :global(html.palco-ativo) .palco {
-    position: sticky;
-    top: 0;
-    height: 100svh;
-    min-height: 34rem;
-    overflow: clip;
-  }
-
-  :global(html.palco-ativo) .po {
-    display: block;
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 4;
-    pointer-events: none;
-  }
-
-  :global(html.palco-ativo) .fio-capa {
-    display: block;
-    position: absolute;
-    left: 50%;
-    top: 58%;
-    bottom: 0;
-    width: 1.5px;
-    margin-left: -0.75px;
-    background: var(--color-fio);
-    transform: scaleY(0);
-    transform-origin: top;
-    z-index: 4;
-  }
-
-  [data-capa-some] {
-    will-change: opacity, transform;
+  /* cada camada que se move vira uma camada própria na placa de vídeo */
+  [data-vel] {
+    will-change: transform, opacity;
   }
 
   /* ---------- A capa carrega ---------- */
@@ -376,13 +422,13 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     animation: hero-failsafe 0s 2.5s forwards;
   }
 
-  /* a foto e o "Portfólio" aparecem devagar */
-  .retrato,
+  /* a foto e o "navarro" aparecem devagar */
+  .retrato-moldura,
   .fantasma {
     transition: opacity 1.2s ease 0.1s;
   }
 
-  :global(html.capa-carregando) .retrato,
+  :global(html.capa-carregando) .retrato-moldura,
   :global(html.capa-carregando) .fantasma {
     opacity: 0;
     animation: hero-failsafe 0s 2.5s forwards;
@@ -391,20 +437,29 @@ const tx = textos[idiomaDe(Astro.url)].capa;
   @keyframes hero-failsafe {
     to {
       opacity: 1;
-      transform: none;
       clip-path: inset(-1rem -1rem -1rem -1rem);
     }
   }
 </style>
 
 <script>
-  import { iniciarPo } from '../lib/po';
-
+  // Parallax da capa: cada camada [data-vel] anda numa velocidade na rolagem (positiva = sobe mais rápido que a
+  // página, negativa = mais devagar) e [data-some] esmaece enquanto a capa sai. O fio da capa nasce no centro, e a
+  // primeira seção entra esmaecida e ganha nitidez.
+  // Leve de propósito:
+  // - só transform e opacity, que a placa de vídeo faz sem redesenhar a página (nada de blur a cada quadro: desfocar
+  //   uma seção inteira travava a rolagem, principalmente no celular);
+  // - nenhuma medida durante a rolagem: as posições são lidas uma vez (e de novo só quando o tamanho muda), para o
+  //   navegador nunca ter que recalcular a página no meio de um quadro;
+  // - um quadro por rolagem, só escreve o que mudou, e nada roda com a página parada.
   let controller: AbortController | undefined;
+
+  const faixa = (v: number, a: number, b: number) => Math.min(1, Math.max(0, (v - a) / (b - a)));
 
   document.addEventListener('astro:page-load', () => {
     controller?.abort();
     controller = new AbortController();
+    const { signal } = controller;
     const root = document.documentElement;
 
     const capa = document.querySelector<HTMLElement>('[data-capa]');
@@ -412,22 +467,93 @@ const tx = textos[idiomaDe(Astro.url)].capa;
       root.classList.remove('na-capa');
       return;
     }
-
-    iniciarPo(capa, controller.signal); // a foto que vira pó, e o pó que vira o fio
-
-    // O Contato da barra de cima volta quando os textos da capa saem (ela já tem o seu botão)
-    const naCapa = () => root.classList.toggle('na-capa', scrollY < innerHeight * 0.12);
-    naCapa();
-    addEventListener('scroll', naCapa, { passive: true, signal: controller.signal });
-    controller.signal.addEventListener('abort', () => root.classList.remove('na-capa'));
+    // o "na-capa" passa do <html> para o próprio botão: trocar uma classe no <html> recalcula o estilo do site todo
+    const navContato = document.querySelector<HTMLElement>('.nav-contato');
+    signal.addEventListener('abort', () => navContato?.classList.remove('na-capa'));
 
     if (root.classList.contains('capa-carregando')) {
       // Dois quadros: garante que o estado escondido foi pintado antes de soltar as transições
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => {
-          root.classList.remove('capa-carregando');
-        }),
-      );
+      requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('capa-carregando')));
     }
+
+    const movimento = root.classList.contains('capa-movimento');
+    const camadas = movimento
+      ? [...capa.querySelectorAll<HTMLElement>('[data-vel]')].map((el) => ({
+          el,
+          vel: Number(el.dataset.vel),
+          some: el.hasAttribute('data-some'),
+        }))
+      : [];
+    const fio = movimento ? capa.querySelector<HTMLElement>('[data-fio-capa]') : null;
+    const entrada = movimento ? document.querySelector<HTMLElement>('main [data-secao] .secao-largura') : null;
+
+    // as medidas: só aqui, nunca durante a rolagem
+    let vh = innerHeight;
+    let altura = capa.offsetHeight;
+    let topoEntrada = 0;
+    const medir = () => {
+      vh = innerHeight;
+      altura = capa.offsetHeight;
+      if (entrada) topoEntrada = entrada.getBoundingClientRect().top + scrollY;
+      ultimoP = ultimoK = -1;
+      pedir();
+    };
+
+    let quadro = 0;
+    let ultimoP = -1;
+    let ultimoK = -1;
+    let naCapa: boolean | undefined;
+
+    const pintar = () => {
+      quadro = 0;
+      const y = Math.max(0, scrollY);
+
+      // o Contato da barra de cima volta quando os textos da capa saem (ela já tem o seu botão)
+      const agora = y < vh * 0.12;
+      if (agora !== naCapa) {
+        navContato?.classList.toggle('na-capa', (naCapa = agora));
+        root.classList.remove('na-capa');
+      }
+
+      if (!movimento) return;
+
+      const p = Math.min(1, y / altura);
+      if (p !== ultimoP && (p < 1 || ultimoP < 1)) {
+        ultimoP = p;
+        for (const c of camadas) {
+          c.el.style.transform = p ? `translate3d(0, ${(-c.vel * Math.min(y, altura)).toFixed(1)}px, 0)` : '';
+          if (c.some) c.el.style.opacity = p ? String(Math.max(0, 1 - p * 1.6)) : '';
+        }
+        if (fio) fio.style.transform = `scaleY(${faixa(p, 0.2, 0.9).toFixed(3)})`;
+      }
+
+      // a seção seguinte: esmaecida ao entrar, nítida quando chega na metade da tela (sem deslocar: o fio mede a
+      // posição dela para saber onde terminar)
+      if (entrada) {
+        const k = 1 - faixa(topoEntrada - y, vh * 0.5, vh * 0.95);
+        if (k !== ultimoK) {
+          ultimoK = k;
+          entrada.style.opacity = k < 1 ? (0.25 + 0.75 * k).toFixed(3) : '';
+        }
+      }
+    };
+
+    const pedir = () => {
+      if (!quadro) quadro = requestAnimationFrame(pintar);
+    };
+
+    addEventListener('scroll', pedir, { passive: true, signal });
+    addEventListener('resize', medir, { signal });
+    // a altura da página muda quando as fontes e as imagens chegam: mede de novo
+    const ro = new ResizeObserver(medir);
+    ro.observe(document.body);
+    medir();
+
+    signal.addEventListener('abort', () => {
+      ro.disconnect();
+      cancelAnimationFrame(quadro);
+      for (const c of camadas) c.el.style.transform = c.el.style.opacity = '';
+      if (entrada) entrada.style.opacity = '';
+    });
   });
 </script>

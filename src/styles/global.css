@@ -3,9 +3,9 @@
 @theme {
   /* As --ff-* vêm do <Font> do Layout (fontes configuradas em astro.config.mjs, servidas pelo próprio site) */
   --font-sans: var(--ff-texto), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--ff-tektur), var(--ff-texto), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--ff-grotesk), var(--ff-texto), ui-sans-serif, system-ui, sans-serif; /* títulos: Inter Tight, a mesma do nome na capa */
   --font-mono: var(--ff-mono), ui-monospace, SFMono-Regular, monospace;
-  --font-serif: var(--ff-serif), ui-serif, Georgia, serif; /* só a palavra "negócio" da capa */
+  --font-grotesk: var(--ff-grotesk), ui-sans-serif, system-ui, sans-serif; /* o nome da capa */
 
   /* A paleta: azul-marinho (Neon Navy), creme (o papel, Sunset) e latão como o único destaque.
      Cada cor tem um papel só:
@@ -57,23 +57,23 @@
 .on-black {
   --color-bg: #141937;
   --color-ink: #141937;
-  --color-heading: #ece8df;
-  --color-fg: #ece8df;
+  --color-heading: #e8e8e6;
+  --color-fg: #e8e8e6;
   --color-muted: #b9bcc7;
-  --color-line: rgb(236 232 223 / 0.16);
+  --color-line: rgb(232 232 230 / 0.22);
   --color-accent: #b08d57;
-  --color-link: #ece8df;
+  --color-link: #e8e8e6;
+  --color-fio: #e8e8e6;
   --color-link-strong: #b08d57;
   --color-live: #b08d57;
 }
 
-/* Títulos em Tektur: letras quadradas, de cantos retos, com cara de código.
-   Espaçamento normal: apertada (tracking-tight), a Tektur encosta uma letra na outra. */
+/* Títulos em Inter Tight, a mesma letra do nome na capa: sem serifa, em negrito, com as letras apertadas */
 h1,
 h2,
 h3 {
   font-family: var(--font-display);
-  letter-spacing: 0.005em;
+  letter-spacing: -0.03em;
 }
 
 .sr-only {
@@ -117,56 +117,8 @@ body {
   --textura-linho-v: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='v'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9 0.004' numOctaves='2' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.25 0 0 0 0 0.2 0 0 0 0 0.15 0.09 0 0 0 -0.02'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23v)'/%3E%3C/svg%3E");
 }
 
-/* O papel do site inteiro: uma luz suave vindo de cima, o grão e o linho. Fica atrás do conteúdo (z-index -1, no
-   fundo do body) e não se mexe, então não atrapalha a leitura. */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image:
-    radial-gradient(ellipse 75% 60% at 50% -10%, rgb(255 253 246 / 0.7), transparent 70%),
-    var(--textura-grao),
-    var(--textura-linho-h),
-    var(--textura-linho-v);
-  background-size: 100% 100%, 240px, 300px, 300px;
-}
-
-/* ---------- O fundo das páginas com capa ----------
-   1) O papel muda de tom ao longo do caminho, num degradê contínuo pela altura da página inteira (sem cortes):
-      Sunset na capa, um papel levemente azulado no meio (perto da cor do fio) e um tom um pouco mais quente no fim.
-      Fica no fundo do <html>, que cobre o documento todo; a capa (o trilho, --capa-alt) fica toda em Sunset.
-   2) A vinheta: as bordas da tela um pouco mais escuras, como uma foto impressa. Fica parada atrás do conteúdo:
-      fraca na capa e mais forte depois dela (--vinheta, de 0 a 1, vem de lib/fio.ts). */
-html:has([data-capa]) {
-  --capa-alt: 100svh;
-  --fundo-meio: color-mix(in srgb, var(--color-navy) 7%, var(--color-sunset));
-  --fundo-fim: color-mix(in srgb, var(--color-latao) 10%, var(--color-sunset));
-  background-image: linear-gradient(
-    to bottom,
-    var(--color-sunset) 0,
-    var(--color-sunset) var(--capa-alt),
-    var(--fundo-meio) 52%,
-    var(--fundo-meio) 68%,
-    var(--fundo-fim) 100%
-  );
-}
-
-html.palco-ativo:has([data-capa]) {
-  --capa-alt: 190svh;
-}
-
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  /* um pouco de vinheta sempre (dá profundidade à capa também); depois da capa ela chega ao máximo */
-  opacity: max(0.6, var(--vinheta, 0));
-  background: radial-gradient(ellipse 95% 90% at 50% 40%, transparent 55%, rgb(60 45 30 / 0.12) 100%);
-}
+/* O fundo do site: o cinza de estúdio da capa, liso (sem textura nem vinheta). O ritmo entre as seções vem das
+   faixas em azul-marinho (.secao-escura), de ponta a ponta da tela. */
 
 /* Linhas que entram ao rolar (o script em lib/reveal.ts liga as classes). Animação, e não transição,
    para não brigar com as transições de hover de cada componente. */
@@ -251,11 +203,9 @@ html.capa-carregando #inicio .letra {
   padding-top: 2rem;
   border-top: 1px solid var(--color-line);
   font-size: clamp(2rem, 3.6vw, 2.75rem);
-  line-height: 0.95;
-  font-weight: 900;
-  font-stretch: 75%;
-  font-variation-settings: 'wdth' 75;
-  text-transform: uppercase;
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.04em;
   color: var(--color-heading);
 }
 
@@ -445,25 +395,29 @@ html.fio-js .secao:not(.aberta)::before {
   }
 }
 
-/* Título: Tektur estreita, centralizado no eixo (o fio tem um vão recortado na altura dele: ver .fio) */
+/* Título: Inter Tight em negrito, só a primeira letra maiúscula, centralizado no eixo (o fio tem um vão recortado
+   na altura dele: ver .fio) */
 .secao-titulo {
   position: relative;
   z-index: 2;
   width: fit-content;
   max-width: 100%;
   margin-inline: auto;
-  padding: 0.15em 0.2em 0;
-  font-size: clamp(2.2rem, 5vw, 4.5rem);
-  font-weight: 900;
-  font-stretch: 75%;
-  font-variation-settings: 'wdth' 75;
+  padding: 0.1em 0.15em 0.05em;
+  font-size: clamp(2.4rem, 5.4vw, 4.6rem);
+  font-weight: 800;
   /* espaço para o Ç e os acentos não encostarem na linha vizinha */
-  line-height: 1.18;
-  letter-spacing: -0.01em;
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+  word-spacing: 0.08em;
   text-align: center;
-  text-transform: uppercase;
   text-wrap: balance;
   color: var(--color-heading);
+}
+
+/* Faixa em azul-marinho de ponta a ponta (Secao com escura): o texto e o fio ficam claros (.on-navy) */
+.secao-escura {
+  background: var(--color-navy);
 }
 
 .secao-titulo .letra {
@@ -488,8 +442,9 @@ html.fio-js .secao:not(.aberta)::before {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.3rem;
-  border-radius: 9999px;
+  min-height: 3rem;
+  padding: 0 1.4rem;
+  border-radius: 0; /* retos, como o botão da capa */
   font-size: 1rem;
   font-weight: 600;
   white-space: nowrap;

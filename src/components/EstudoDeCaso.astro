@@ -49,7 +49,7 @@ const proximos = [
         <span>{p.data.kind}</span>
         <span>{tx.leitura(minutes)}</span>
       </p>
-      <h1 class="pj-title mt-4 max-w-5xl font-display font-black text-balance text-heading uppercase">
+      <h1 class="pj-title mt-4 max-w-5xl font-display font-extrabold text-balance text-heading">
         {p.data.title}
       </h1>
       <p class="mt-6 max-w-3xl text-xl leading-snug text-balance text-muted sm:text-2xl">{p.data.summary}</p>
@@ -103,7 +103,7 @@ const proximos = [
             {p.data.stats.map((s) => (
               <div class="flex flex-col-reverse justify-end border-b border-line py-6 pr-4 md:border-b-0">
                 <dt class="mt-3 text-[0.9375rem] text-muted">{s.label}</dt>
-                <dd data-count class="pj-stat font-display tabular-nums leading-[0.85] font-black text-heading">{s.value}</dd>
+                <dd data-count class="pj-stat font-display tabular-nums leading-[0.85] font-extrabold text-heading">{s.value}</dd>
               </div>
             ))}
           </dl>
@@ -147,7 +147,7 @@ const proximos = [
         {
           proximos.map((n) => (
             <li class="nx-row group relative flex items-center gap-4 border-b border-line py-6 sm:gap-8 sm:py-8">
-              <a href={n.href} class="nx-link flex-1 font-display leading-none font-black text-heading uppercase transition-colors">
+              <a href={n.href} class="nx-link flex-1 font-display leading-none font-extrabold text-heading transition-colors">
                 {n.label}
               </a>
               <span class="nx-icon pointer-events-none grid size-12 flex-none place-items-center rounded-full border border-line text-lg text-heading transition" aria-hidden="true">
@@ -168,14 +168,10 @@ const proximos = [
   .pj-title {
     font-size: clamp(2.2rem, 5.2vw, 4.25rem);
     line-height: 1.2;
-    font-stretch: 75%;
-    font-variation-settings: 'wdth' 75;
   }
 
   .pj-stat {
     font-size: clamp(3.5rem, 8vw, 6rem);
-    font-stretch: 75%;
-    font-variation-settings: 'wdth' 75;
   }
 
   /* Índice: a seção que está sendo lida fica marcada (o script liga a classe is-current) */
@@ -196,8 +192,6 @@ const proximos = [
   /* Fechamento: linhas grandes, a linha inteira é clicável e acende em azul */
   .nx-link {
     font-size: clamp(1.75rem, 4.5vw, 3.25rem);
-    font-stretch: 75%;
-    font-variation-settings: 'wdth' 75;
   }
 
   .nx-link::after {

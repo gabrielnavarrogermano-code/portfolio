@@ -15,7 +15,7 @@ const canais = [
 ];
 ---
 
-<Secao id="contato" titulo={tx.titulo} sub={tx.frase}>
+<Secao id="contato" titulo={tx.titulo} sub={tx.frase} escura>
   <div class="ct-corpo">
     <button
       type="button"
@@ -63,9 +63,10 @@ const canais = [
     display: inline-block;
     max-width: 100%;
     padding-bottom: 0.5rem;
-    font-size: clamp(1.15rem, 4.4vw, 3.3rem);
-    font-weight: 700;
-    letter-spacing: -0.01em;
+    font-family: var(--font-display);
+    font-size: clamp(1.3rem, 4.6vw, 3.6rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
     overflow-wrap: anywhere;
     color: var(--color-heading);
     cursor: pointer;
@@ -96,7 +97,7 @@ const canais = [
   }
 
   .ct-email:hover {
-    color: var(--color-navy);
+    color: var(--color-accent);
   }
 
   .ct-email:hover::after {

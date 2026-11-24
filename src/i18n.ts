@@ -57,7 +57,7 @@ export const textos = {
       dados: 'Dados',
       dadosTexto: 'Excel e Power BI para organizar planilhas e montar painéis.',
       funcao: 'Análise de dados e BI, em Maringá (PR)',
-      fantasma: 'Portfólio',
+      fantasma: 'Navarro',
     },
     prazer: {
       titulo: 'Prazer, Gabriel',
@@ -197,7 +197,7 @@ export const textos = {
       dados: 'Data',
       dadosTexto: 'Excel and Power BI to organize spreadsheets and build dashboards.',
       funcao: 'Data analysis and BI, in Maringá, Brazil',
-      fantasma: 'Portfolio',
+      fantasma: 'Navarro',
     },
     prazer: {
       titulo: "Hi, I'm Gabriel",
