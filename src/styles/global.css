@@ -23,9 +23,8 @@
   --color-dove: #8b8b8b;
 
   --color-bg: #e8e8e6;
-  /* Capa: "Portfólio" em tom sobre tom, e a cor do nome que, com mix-blend-mode: difference, vira o azul-marinho
-     sobre o fundo (= fundo − azul-marinho). Se o fundo mudar, recalcule: #e8e8e6 − #141937 = #d4cfaf */
-  --color-fantasma: #dcdcd9;
+  /* Capa: a cor do nome que, com mix-blend-mode: difference, vira o azul-marinho sobre o fundo
+     (= fundo − azul-marinho). Se o fundo mudar, recalcule: #e8e8e6 − #141937 = #d4cfaf */
   --color-nome-inverso: #d4cfaf;
   --color-ink: #1a1b16;
   --color-heading: #0c1028;

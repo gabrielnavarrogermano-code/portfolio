@@ -56,9 +56,7 @@ export const textos = {
       curriculoRotulo: 'Baixar currículo',
       dados: 'Dados',
       dadosTexto: 'Excel e Power BI para organizar planilhas e montar painéis.',
-      funcao: 'Análise de dados e BI, em Maringá (PR)',
-      fantasma: 'Navarro',
-    },
+      funcao: 'Análise de dados e BI, em Maringá (PR)',    },
     prazer: {
       titulo: 'Prazer, Gabriel',
       origem: 'Origem',
@@ -196,9 +194,7 @@ export const textos = {
       curriculoRotulo: 'Download résumé',
       dados: 'Data',
       dadosTexto: 'Excel and Power BI to organize spreadsheets and build dashboards.',
-      funcao: 'Data analysis and BI, in Maringá, Brazil',
-      fantasma: 'Navarro',
-    },
+      funcao: 'Data analysis and BI, in Maringá, Brazil',    },
     prazer: {
       titulo: "Hi, I'm Gabriel",
       origem: 'Roots',

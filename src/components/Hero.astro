@@ -20,23 +20,24 @@ const tx = textos[idiomaDe(Astro.url)].capa;
   })();
 </script>
 
-<!-- A capa: você no centro, em preto e branco, num fundo cinza de estúdio. O nome, em negrito e minúsculas, emoldura
-     você e passa NA FRENTE da foto, mudando de cor onde cruza a camisa; atrás da cabeça, "navarro" gigante em tom
-     sobre tom.
+<!-- A capa: você no centro, em preto e branco, num fundo cinza de estúdio. O nome completo, em negrito e em escada
+     (Gabriel / Navarro / Germano), emoldura você e passa NA FRENTE da foto, mudando de cor onde cruza a camisa.
      Ao rolar, cada camada anda numa velocidade (parallax): o nome sobe mais rápido e esmaece, você acompanha a
-     página, "Navarro" quase parado; o fio nasce no centro e a seção seguinte entra esmaecida e ganha nitidez.
+     página; o fio nasce no centro e a seção seguinte entra esmaecida e ganha nitidez.
      Com movimento reduzido ou sem JS, é um bloco normal, parado. -->
 <section id="inicio" data-capa class="relative isolate">
   <div class="capa-conteudo">
     <div class="cena">
-      <!-- tom sobre tom, atrás de tudo; data-vel: a velocidade na rolagem (negativa = mais devagar que a página) -->
-      <p class="fantasma" data-vel="-0.55" style="--vel: -0.55" aria-hidden="true">{tx.fantasma}</p>
-
-      <!-- O nome: entra letra por letra e passa na frente da foto -->
+      <!-- O nome: entra letra por letra e passa na frente da foto, em escada (Gabriel à esquerda, Navarro à
+           direita, Germano à esquerda), igual no computador e no celular.
+           data-vel: a velocidade na rolagem (positiva = sobe mais rápido que a página) -->
       <h1 class="capa-nome" data-vel="0.45" style="--vel: 0.45" data-some>
         <span class="sr-only">{tx.nomeSr}</span>
-        <span class="nome-1 hero-name-line" aria-hidden="true"><Letras texto="Gabriel" atraso={0.35} /></span>
-        <span class="nome-2 hero-name-line" aria-hidden="true"><Letras texto="Germano" atraso={0.5} /></span>
+        <span class="nome-escada" aria-hidden="true">
+          <span class="nome-1 hero-name-line"><Letras texto="Gabriel" atraso={0.35} /></span>
+          <span class="nome-2 hero-name-line"><Letras texto="Navarro" atraso={0.5} /></span>
+          <span class="nome-3 hero-name-line"><Letras texto="Germano" atraso={0.65} /></span>
+        </span>
       </h1>
 
       <!-- Você, recortado, em preto e branco, saindo da borda de baixo. Anda junto com a página (sem data-vel):
@@ -118,25 +119,6 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     min-height: 0;
   }
 
-  /* "navarro": gigante, em negrito, num cinza só um pouco mais escuro que o fundo, atrás da cabeça */
-  .fantasma {
-    position: absolute;
-    z-index: 0;
-    left: 50%;
-    top: 0;
-    translate: -50% 0;
-    margin: 0;
-    font-family: var(--font-grotesk);
-    font-weight: 800;
-    font-size: min(24vw, 30svh);
-    line-height: 0.8;
-    letter-spacing: -0.055em;
-    white-space: nowrap;
-    color: var(--color-fantasma);
-    pointer-events: none;
-    user-select: none;
-  }
-
   /* O nome: sem serifa, em negrito e minúsculas, com as letras apertadas. Fica NA FRENTE da foto e inverte de cor:
      azul-marinho sobre o fundo, creme claro sobre a camisa preta. Com "difference", a cor final é |fundo − cor|;
      --color-nome-inverso é o fundo menos o azul-marinho (global.css), então sobre o cinza sai o azul-marinho do site. */
@@ -154,10 +136,35 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     pointer-events: none;
   }
 
-  .nome-1,
-  .nome-2 {
+  /* A escada: cada linha começa um degrau (--degrau, em em) à direita da de cima, e o bloco inteiro fica
+     centralizado no eixo da foto. Como o bloco tem a largura do próprio texto e o degrau é medido na letra, a
+     escada é a mesma no computador e no celular; só a escala muda. --topo (a altura) fica nas regras de cada tela. */
+  .nome-escada {
+    --degrau: 1.25em;
     position: absolute;
+    top: var(--topo);
+    left: 50%;
+    translate: -50% 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nome-1,
+  .nome-2,
+  .nome-3 {
     white-space: nowrap;
+  }
+
+  /* as linhas descem 0.9em: a folga de cima e de baixo do .hero-name-line (0.16em) volta com a margem negativa */
+  .nome-escada .nome-2 {
+    margin-top: -0.16em;
+    margin-left: calc(var(--degrau) - 0.1em);
+  }
+
+  .nome-escada .nome-3 {
+    margin-top: -0.16em;
+    margin-left: calc(var(--degrau) * 2 - 0.1em);
   }
 
   /* a linha esconde as letras enquanto elas sobem (componente Letras). Folgas: embaixo para a perna do "g", e
@@ -261,8 +268,8 @@ const tx = textos[idiomaDe(Astro.url)].capa;
   }
 
   /* ---------- Celular ----------
-     Você inteiro, centralizado, sobre o chão de estúdio, com "Gabriel / Germano" na frente do peito (mudando de
-     cor sobre a camisa). Sem "Navarro".
+     Você inteiro, centralizado, sobre o chão de estúdio, com "Gabriel / Navarro / Germano" em escada na frente do
+     peito (mudando de cor sobre a camisa).
      --p: a altura da foto (no máximo a da cena). O nome se mede a partir do topo da foto, para acompanhá-la. */
   @media (max-width: 55.99rem) {
     .capa-conteudo {
@@ -274,31 +281,17 @@ const tx = textos[idiomaDe(Astro.url)].capa;
       --p: min(100%, 124vw);
     }
 
-
-
-    .fantasma {
-      display: none;
-    }
-
-    /* o nome na frente da foto, sobre o peito, mudando de cor sobre a camisa (como no computador): "Gabriel" à
-       esquerda e "Germano" embaixo, à direita. Medido a partir do topo da foto (100% - --p). */
+    /* o nome na frente da foto, sobre o peito, mudando de cor sobre a camisa (como no computador), em escada.
+       Medido a partir do topo da foto (100% - --p). */
+    /* a escada inteira mede 6.52em de largura (medido no navegador): a letra é a maior que cabe entre as margens
+       de 1.25rem. Se o degrau ou o nome mudarem, meça de novo. */
     .capa-nome {
-      font-size: min(17vw, 8.5svh);
-    }
-
-    .nome-1 {
-      left: 1.25rem;
-      top: calc(100% - var(--p) * 0.6);
-    }
-
-    .nome-2 {
-      right: 1.25rem;
-      top: calc(100% - var(--p) * 0.6 + 0.9em);
+      --topo: calc(100% - var(--p) * 0.68);
+      font-size: min(calc((100vw - 2.5rem) / 6.52), 8.5svh);
     }
 
     /* multiply (só no celular): o branco e o halo claro da borda do recorte assumem o cinza do fundo, e a foto
-       passa a ter a mesma luz da página. No computador não, porque lá "Navarro" fica atrás da cabeça e as letras
-       apareceriam através do cabelo. */
+       passa a ter a mesma luz da página. No computador a foto fica como está. */
     .retrato {
       bottom: -2px; /* entra um pouco atrás do tampo, para não sobrar fresta */
       height: var(--p);
@@ -357,28 +350,21 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     }
   }
 
-  /* Computador: "gabriel" e "germano" na altura dos ombros, chegando perto do centro e cruzando os seus ombros
-     (sem passar pelo rosto); você no meio, ocupando a altura toda; função e botão numa linha, embaixo. */
+  /* Computador: a escada começa abaixo do queixo e desce em diagonal pela camisa (sem passar pelo rosto); você no
+     meio, ocupando a altura toda; função e botão numa linha, embaixo. */
   @media (min-width: 56rem) {
     .capa-conteudo {
       grid-template-rows: 1fr;
     }
 
+    /* no computador há espaço dos lados: o nome cresce e a escada abre (degraus mais largos) */
     .capa-nome {
-      font-size: min(7.2vw, 14svh);
+      --topo: 30%;
+      font-size: min(9vw, 16svh);
     }
 
-    .nome-1,
-    .nome-2 {
-      top: 38%;
-    }
-
-    .nome-1 {
-      right: calc(50% + 0.6em);
-    }
-
-    .nome-2 {
-      left: calc(50% + 0.6em);
+    .nome-escada {
+      --degrau: 1.9em;
     }
 
     .retrato {
@@ -474,14 +460,12 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     animation: hero-failsafe 0s 2.5s forwards;
   }
 
-  /* a foto e o "navarro" aparecem devagar */
-  .retrato-moldura,
-  .fantasma {
+  /* a foto aparece devagar */
+  .retrato-moldura {
     transition: opacity 1.2s ease 0.1s;
   }
 
-  :global(html.capa-carregando) .retrato-moldura,
-  :global(html.capa-carregando) .fantasma {
+  :global(html.capa-carregando) .retrato-moldura {
     opacity: 0;
     animation: hero-failsafe 0s 2.5s forwards;
   }
