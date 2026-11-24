@@ -30,10 +30,10 @@ const tx = textos[idiomaDe(Astro.url)].capa;
   <div class="capa-conteudo">
     <div class="cena">
       <!-- tom sobre tom, atrás de tudo; data-vel: a velocidade na rolagem (negativa = mais devagar que a página) -->
-      <p class="fantasma" data-vel="-0.55" aria-hidden="true">{tx.fantasma}</p>
+      <p class="fantasma" data-vel="-0.55" style="--vel: -0.55" aria-hidden="true">{tx.fantasma}</p>
 
       <!-- O nome: entra letra por letra e passa na frente da foto -->
-      <h1 class="capa-nome" data-vel="0.45" data-some>
+      <h1 class="capa-nome" data-vel="0.45" style="--vel: 0.45" data-some>
         <span class="sr-only">{tx.nomeSr}</span>
         <span class="nome-1 hero-name-line" aria-hidden="true"><Letras texto="Gabriel" atraso={0.35} /></span>
         <span class="nome-2 hero-name-line" aria-hidden="true"><Letras texto="Germano" atraso={0.5} /></span>
@@ -59,7 +59,7 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     </div>
 
     <!-- Só o essencial: o que eu faço e onde, e o contato (o resto fica na seção Contato) -->
-    <div class="capa-info" data-vel="0.3" data-some>
+    <div class="capa-info" data-vel="0.3" style="--vel: 0.3" data-some data-so-largo>
       <p class="capa-funcao hero-load" style="--k: 1">{tx.funcao}</p>
       <a href="#contato" class="capa-cta hero-load" style="--k: 2">{tx.contato}</a>
     </div>
@@ -329,6 +329,8 @@ const tx = textos[idiomaDe(Astro.url)].capa;
          da foto à mostra */
       transform: none !important;
       opacity: 1 !important;
+      will-change: auto !important; /* vence o [data-vel] de mais abaixo: no celular ela não precisa de camada própria */
+      animation: none !important;
     }
 
     /* o tampo: uma faixa clara (a luz batendo na borda), com a sombra que você faz sobre ele */
@@ -405,6 +407,56 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     will-change: transform, opacity;
   }
 
+  /* O parallax preso à rolagem pelo próprio navegador (animation-timeline): roda no mesmo lugar da rolagem, sem
+     passar pelo JavaScript. Com JS, no celular, a camada chegava sempre um quadro atrasada em relação à página e o
+     nome "tremia" ao rolar. Navegadores sem suporte seguem com o script abaixo.
+     A capa mede max(100svh, 34rem); a camada anda --vel vezes isso enquanto a capa sai, e [data-some] some em 62,5%
+     do caminho (o mesmo 1 - p * 1,6 do script). */
+  @supports (animation-timeline: scroll()) {
+    :global(html.capa-movimento) [data-vel] {
+      animation: capa-parallax linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 max(100svh, 34rem);
+    }
+
+    :global(html.capa-movimento) [data-some] {
+      animation-name: capa-parallax, capa-some;
+    }
+
+    :global(html.capa-movimento) .fio-capa {
+      animation: capa-fio linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 max(100svh, 34rem);
+    }
+  }
+
+  @keyframes capa-parallax {
+    to {
+      transform: translate3d(0, calc(var(--vel) * -1 * max(100svh, 34rem)), 0);
+    }
+  }
+
+  @keyframes capa-some {
+    0% {
+      opacity: 1;
+    }
+    62.5%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes capa-fio {
+    0%,
+    20% {
+      transform: scaleY(0);
+    }
+    90%,
+    100% {
+      transform: scaleY(1);
+    }
+  }
+
   /* ---------- A capa carrega ---------- */
   /* A função e o botão enchem da esquerda para a direita, um depois do outro (--k).
      A folga de 1rem no recorte deixa passar o hover e o contorno de foco. */
@@ -477,14 +529,19 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     }
 
     const movimento = root.classList.contains('capa-movimento');
-    const camadas = movimento
+    // com animation-timeline, o CSS move as camadas e o fio; o script só cuida do resto
+    const peloCss = CSS.supports('animation-timeline: scroll()');
+    const camadas = movimento && !peloCss
       ? [...capa.querySelectorAll<HTMLElement>('[data-vel]')].map((el) => ({
           el,
           vel: Number(el.dataset.vel),
           some: el.hasAttribute('data-some'),
+          soLargo: el.hasAttribute('data-so-largo'),
         }))
       : [];
-    const fio = movimento ? capa.querySelector<HTMLElement>('[data-fio-capa]') : null;
+    // no celular a função e o botão ficam parados (o CSS anula o movimento): nem escreve neles a cada quadro
+    const largo = matchMedia('(min-width: 56rem)');
+    const fio = movimento && !peloCss ? capa.querySelector<HTMLElement>('[data-fio-capa]') : null;
     const entrada = movimento ? document.querySelector<HTMLElement>('main [data-secao] .secao-largura') : null;
 
     // as medidas: só aqui, nunca durante a rolagem
@@ -521,6 +578,7 @@ const tx = textos[idiomaDe(Astro.url)].capa;
       if (p !== ultimoP && (p < 1 || ultimoP < 1)) {
         ultimoP = p;
         for (const c of camadas) {
+          if (c.soLargo && !largo.matches) continue;
           c.el.style.transform = p ? `translate3d(0, ${(-c.vel * Math.min(y, altura)).toFixed(1)}px, 0)` : '';
           if (c.some) c.el.style.opacity = p ? String(Math.max(0, 1 - p * 1.6)) : '';
         }
@@ -543,7 +601,23 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     };
 
     addEventListener('scroll', pedir, { passive: true, signal });
-    addEventListener('resize', medir, { signal });
+    // só a altura mudou (a barra de endereço do celular sumindo/voltando ao rolar): nada de medir a página no meio
+    // da rolagem, a capa usa svh e não muda de tamanho; mudanças reais chegam pelo ResizeObserver
+    let largura = innerWidth;
+    addEventListener(
+      'resize',
+      () => {
+        if (innerWidth === largura) {
+          vh = innerHeight;
+          ultimoK = -1;
+          pedir();
+          return;
+        }
+        largura = innerWidth;
+        medir();
+      },
+      { signal },
+    );
     // a altura da página muda quando as fontes e as imagens chegam: mede de novo
     const ro = new ResizeObserver(medir);
     ro.observe(document.body);

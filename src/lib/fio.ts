@@ -122,7 +122,16 @@ export function iniciarFio() {
   const ro = new ResizeObserver(() => medir());
   ro.observe(document.body);
   addEventListener('scroll', pedir, { passive: true, signal });
-  addEventListener('resize', medir, { signal });
+  // No celular, a barra de endereço some/volta ao rolar e dispara resize só com a altura mudando. Medir tudo de
+  // novo ali (getBoundingClientRect de cada seção + escrever alturas) recalcula a página no meio da rolagem e
+  // trava. As seções usam svh, que não muda com a barra: basta atualizar a altura da tela. Mudanças reais de
+  // layout chegam pelo ResizeObserver.
+  let largura = innerWidth;
+  addEventListener('resize', () => {
+    if (innerWidth === largura) { vh = innerHeight; pedir(); return; }
+    largura = innerWidth;
+    medir();
+  }, { signal });
   largo.addEventListener('change', medir, { signal });
 
   parar = () => {
