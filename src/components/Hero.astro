@@ -399,8 +399,13 @@ const tx = textos[idiomaDe(Astro.url)].capa;
      A capa mede max(100svh, 34rem); a camada anda --vel vezes isso enquanto a capa sai, e [data-some] some em 62,5%
      do caminho (o mesmo 1 - p * 1,6 do script). */
   @supports (animation-timeline: scroll()) {
+    /* Só propriedades separadas, sem o atalho `animation`: no build, o minificador fundia o atalho com o
+       animation-timeline num `animation: ... scroll(root)`, que o navegador recusa inteiro, e o parallax
+       sumia no site no ar (no dev, sem minificar, funcionava). */
     :global(html.capa-movimento) [data-vel] {
-      animation: capa-parallax linear both;
+      animation-name: capa-parallax;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
       animation-timeline: scroll(root);
       animation-range: 0 max(100svh, 34rem);
     }
@@ -410,7 +415,9 @@ const tx = textos[idiomaDe(Astro.url)].capa;
     }
 
     :global(html.capa-movimento) .fio-capa {
-      animation: capa-fio linear both;
+      animation-name: capa-fio;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
       animation-timeline: scroll(root);
       animation-range: 0 max(100svh, 34rem);
     }
