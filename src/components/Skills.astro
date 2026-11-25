@@ -457,6 +457,65 @@ const posicoes = [
     }
   }
 
+  /* Telas largas mas baixas (notebook, com a barra do navegador): o palco preso não cabia, e a parte de baixo da
+     cena (o bastidor, o pé da matriz) ficava cortada. Aqui tudo aperta para caber; se ainda assim não couber, o
+     script volta ao modo empilhado. */
+  @media (min-width: 56rem) and (max-height: 52rem) {
+    .pc.is-rolagem .pc-palco {
+      min-height: 0;
+      padding-top: 0.5rem;
+    }
+
+    .pc.is-rolagem .pc-nome {
+      font-size: 1.2rem;
+    }
+
+    .pc.is-rolagem .pc-no {
+      gap: 0.5rem;
+    }
+
+    .pc.is-rolagem .pc-passos {
+      margin-top: 1.2rem;
+    }
+
+    .pc.is-rolagem .pc-titulo {
+      font-size: 1.2rem;
+    }
+
+    .pc.is-rolagem .pc-texto {
+      font-size: 0.95rem;
+    }
+
+    .pc.is-rolagem .pc-cena {
+      margin-top: 1rem;
+      margin-bottom: 0.75rem;
+      padding: 1.4rem 3rem;
+    }
+
+    .pc.is-rolagem .c-bastidor {
+      margin-top: 1rem;
+      padding-top: 0.8rem;
+    }
+
+    .pc.is-rolagem .c1-pergunta,
+    .pc.is-rolagem .c3-frase {
+      font-size: 1.75rem;
+    }
+
+    .pc.is-rolagem .c2-valor {
+      font-size: 3rem;
+    }
+
+    .pc.is-rolagem .c2-grafico {
+      height: min(15rem, 24svh);
+    }
+
+    .pc.is-rolagem .c4-plano {
+      height: min(19rem, 28svh);
+      margin-top: 1.2rem;
+    }
+  }
+
   /* ---------- O bastidor de cada cena ----------
      Uma linha no pé do palco: a ferramenta (num selo de contorno), o trecho em fonte de código e uma nota curta */
   .c-bastidor {
@@ -1013,9 +1072,23 @@ const posicoes = [
       { threshold: 0.45 },
     );
 
+    // Cada cena cabe no palco preso? (a cena corta o que passa dela; a folga cobre o deslocamento das animações)
+    const cabe = () => cenas.every((c) => c.scrollHeight <= c.clientHeight + 10);
+
+    // O modo rolagem só vale se as quatro cenas couberem inteiras na tela; senão, empilhado (nada fica cortado)
+    let emRolagem: boolean | undefined;
     const modo = () => {
-      const rolagem = largo.matches && !reduzido;
+      let rolagem = largo.matches && !reduzido;
+      if (rolagem) {
+        pc.classList.add('is-rolagem');
+        rolagem = cabe();
+      }
       pc.classList.toggle('is-rolagem', rolagem);
+      if (rolagem === emRolagem) {
+        if (rolagem) pedir();
+        return;
+      }
+      emRolagem = rolagem;
       ioPalco.disconnect();
       ioCenas.disconnect();
       if (rolagem) {
@@ -1029,11 +1102,24 @@ const posicoes = [
     };
 
     modo();
+    // as fontes mudam a altura do texto: confere de novo quando chegam
+    document.fonts?.ready.then(() => !signal.aborted && modo());
     largo.addEventListener('change', modo, { signal });
     addEventListener('scroll', () => pc.classList.contains('is-rolagem') && pedir(), { passive: true, signal });
-    addEventListener('resize', () => pc.classList.contains('is-rolagem') && pedir(), { signal });
+    // ao mudar o tamanho da janela, confere (com uma pausa) se o palco preso ainda cabe
+    let espera = 0;
+    addEventListener(
+      'resize',
+      () => {
+        if (pc.classList.contains('is-rolagem')) pedir();
+        clearTimeout(espera);
+        espera = window.setTimeout(modo, 150);
+      },
+      { signal },
+    );
 
     cleanup = () => {
+      clearTimeout(espera);
       controller.abort();
       ioPalco.disconnect();
       ioCenas.disconnect();
