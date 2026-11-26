@@ -332,6 +332,38 @@ export function listaPendencias(base: Rec[], s: Sel) {
     .sort((a, b) => ordemSetores.indexOf(a.setor) - ordemSetores.indexOf(b.setor));
 }
 
+// ---------- Comparação mês a mês (aba Comparação) ----------
+// O último mês é a planilha de agora; os anteriores são fictícios, montados com diferenças fixas em relação a ele,
+// para a aba bater com as outras. Cada valor é o fechamento do mês, sem filtros.
+export const MESES = ['jun', 'jul', 'ago', 'set', 'out', 'nov'] as const;
+const DIFERENCA = {
+  std: [-7, -5, -4, -2, -1, 0],
+  basic: [-3, -3, -2, -1, -1, 0],
+  adobe: [-1, -1, -1, 0, 0, 0],
+  av: [-9, -7, -5, -3, -1, 0],
+  eq: [-3, -2, -2, -1, 0, 0],
+  pend: [11, 8, 6, 4, 2, 0],
+};
+
+export function historico(base: Rec[]) {
+  const pcs = new Map<string, Rec>();
+  for (const x of base) if (x.pc && !pcs.has(x.pc)) pcs.set(x.pc, x);
+  const eq = [...pcs.values()];
+  const agora = {
+    std: contas(base.filter((x) => x.lic === 'Standard')),
+    basic: contas(base.filter((x) => x.lic === 'Basic')),
+    adobe: contas(base.filter((x) => x.adobe)),
+    av: eq.filter((x) => x.av).length,
+    eq: eq.length,
+    pend: eq.filter((x) => pendencias(x)).length,
+  };
+  return MESES.map((mes, i) => {
+    const v = Object.fromEntries(Object.entries(agora).map(([k, n]) => [k, n + DIFERENCA[k as keyof typeof DIFERENCA][i]])) as typeof agora;
+    const custo = (v.std * PRECO.Standard + v.basic * PRECO.Basic + v.adobe * PRECO.Adobe + (v.av * AV_PRECO) / AV_ANOS) / 12;
+    return { mes, std: v.std, basic: v.basic, adobe: v.adobe, custo, pend: pct(v.pend, v.eq) };
+  });
+}
+
 // Rosca: círculo de perímetro 100; cada fatia começa onde a anterior terminou, com uma folga pequena entre elas
 export function rosca(fatias: number[]) {
   let ini = 0;

@@ -1,6 +1,6 @@
 ---
-// Simulação do painel "Usuários Office 365 e Equipamentos" no Power BI (dados fictícios), com as três abas do painel
-// real (Licenças, Segurança e Custos), a barra lateral de filtros e, embaixo, a planilha que alimenta o painel.
+// Simulação do painel "Usuários Office 365 e Equipamentos" no Power BI (dados fictícios), com as quatro abas do painel
+// real (Licenças, Segurança, Custos e Comparação), a barra lateral de filtros e, embaixo, a planilha que alimenta o painel.
 // A cada colaborador novo que chega do Microsoft 365, a linha entra na planilha e o painel é recalculado.
 // Sem JS, o painel aparece calculado e as abas funcionam (radio + CSS); os filtros precisam do script.
 import {
@@ -23,6 +23,8 @@ import {
   SEL_VAZIA,
   brl,
   brl2,
+  historico,
+  MESES,
   type Rec,
 } from '../lib/notebooks';
 
@@ -35,7 +37,53 @@ const ABAS = [
   ['lic', 'Licenças'],
   ['seg', 'Segurança'],
   ['cus', 'Custos'],
+  ['cmp', 'Comparação'],
 ] as const;
+
+// ===== Comparação: um gráfico de linha por assunto, com o fechamento de cada mês =====
+const hist = historico(inicial);
+const [anterior, ultimo] = hist.slice(-2);
+const virgula = (v: number, casas = 1) => v.toFixed(casas).replace('.', ',');
+const sinal = (v: number) => (v > 0 ? '+' : v < 0 ? '−' : '') + virgula(Math.abs(v));
+const totalLic = (m: (typeof hist)[number]) => m.std + m.basic + m.adobe;
+const varLic = totalLic(ultimo) - totalLic(anterior);
+const varCusto = ((ultimo.custo - anterior.custo) / anterior.custo) * 100;
+const varPend = ultimo.pend - anterior.pend;
+
+type Serie = { rotulo: string; cor: string; vals: number[]; fmt: (v: number) => string };
+// Posições em % (x da esquerda, y do topo) para o SVG esticado e para os pontos e valores em HTML por cima,
+// assim o texto não deforma quando o gráfico muda de largura
+function grafico(series: Serie[]) {
+  const todos = series.flatMap((s) => s.vals);
+  const min = Math.min(...todos);
+  const max = Math.max(...todos);
+  const folga = (max - min || 1) * 0.25;
+  const lo = min - folga;
+  const hi = max + folga;
+  return series.map((s) => {
+    const pts = s.vals.map((v, i) => ({ x: 5 + (i * 90) / (s.vals.length - 1), y: 100 - ((v - lo) / (hi - lo)) * 100, txt: s.fmt(v) }));
+    return { ...s, pts, d: `M ${pts.map((p) => `${p.x} ${p.y}`).join(' L ')}` };
+  });
+}
+const descrever = (series: Serie[]) => series.map((s) => `${s.rotulo}: ${s.vals.map((v, i) => `${MESES[i]} ${s.fmt(v)}`).join(', ')}`).join('. ');
+
+const SERIES_LIC: Serie[] = [
+  { rotulo: 'Standard', cor: 'ouro', vals: hist.map((m) => m.std), fmt: String },
+  { rotulo: 'Basic', cor: 'prata', vals: hist.map((m) => m.basic), fmt: String },
+  { rotulo: 'Adobe', cor: 'roxo', vals: hist.map((m) => m.adobe), fmt: String },
+];
+const SERIES_CUS: Serie[] = [{ rotulo: 'Custo por mês', cor: 'ciano', vals: hist.map((m) => m.custo), fmt: (v) => `${virgula(v / 1000)} mil` }];
+const SERIES_PEND: Serie[] = [{ rotulo: 'Equipamentos com pendência', cor: 'vermelho', vals: hist.map((m) => m.pend), fmt: (v) => `${Math.round(v)}%` }];
+const comparacoes = [
+  {
+    titulo: 'Licenças por mês',
+    sub: `quantidade de contas em cada licença · nov × out: ${varLic > 0 ? '+' : ''}${varLic} ${Math.abs(varLic) === 1 ? 'licença' : 'licenças'}`,
+    series: SERIES_LIC,
+    largo: true,
+  },
+  { titulo: 'Custo de licenças por mês', sub: `R$ por mês · nov × out: ${sinal(varCusto)}%`, series: SERIES_CUS },
+  { titulo: 'Pendências de segurança por mês', sub: `% dos equipamentos com alguma pendência · nov × out: ${sinal(varPend)} p.p.`, series: SERIES_PEND },
+];
 
 type Kpi = { rotulo: string; sub?: string; subKey?: string; key: string; st?: boolean };
 const kpis: Record<'lic' | 'seg' | 'cus', Kpi[]> = {
@@ -158,7 +206,9 @@ const primeiraLinha = inicial.length - exemplos.length + 2; // + 1 do cabeçalho
         </select>
       </label>
 
-      <div class="nb-aviso">
+      <p class="nb-filtro nb-filtro-nota" data-para="cmp">A comparação usa o fechamento de cada mês da planilha inteira, por isso não tem filtros.</p>
+
+      <div class="nb-aviso" data-sem-cmp>
         <p data-aviso aria-live="polite">Sem filtros ativos – os números referem-se ao total</p>
         <button type="button" data-limpar hidden class="nb-limpar">Limpar filtros</button>
       </div>
@@ -381,6 +431,37 @@ const primeiraLinha = inicial.length - exemplos.length + 2; // + 1 do cabeçalho
         </div>
       </div>
 
+      <!-- ===== Comparação: o fechamento de cada mês, sem filtros ===== -->
+      <div data-pg="cmp" class="nb-pagina">
+        <div class="nb-grade-cmp">
+          {comparacoes.map((g) => (
+            <div class:list={['nb-card', g.largo && 'nb-cmp-largo']}>
+              <p class="nb-card-titulo">{g.titulo}</p>
+              <p class="nb-card-sub">{g.sub}</p>
+              {g.series.length > 1 && <p class="nb-legenda">{g.series.map((s) => <span><i style={`background: var(--nb-${s.cor})`} />{s.rotulo}</span>)}</p>}
+              <div class="nb-lg" role="img" aria-label={`${g.titulo}. ${descrever(g.series)}`}>
+                <div class="nb-lg-area">
+                  <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="nb-lg-svg" aria-hidden="true">
+                    {[0, 50, 100].map((y) => <line x1="0" x2="100" y1={y} y2={y} class="nb-lg-guia" vector-effect="non-scaling-stroke" />)}
+                    {grafico(g.series).map((s) => <path d={s.d} fill="none" class="nb-lg-traco" style={`stroke: var(--nb-${s.cor})`} vector-effect="non-scaling-stroke" />)}
+                  </svg>
+                  {grafico(g.series).map((s) =>
+                    s.pts.map((p, i) => (
+                      <span class:list={['nb-lg-ponto', i === s.pts.length - 1 && 'is-ultimo']} style={`left: ${p.x}%; top: ${p.y}%; --cor: var(--nb-${s.cor})`}>
+                        <b>{p.txt}</b>
+                      </span>
+                    )),
+                  )}
+                </div>
+                <div class="nb-lg-meses" aria-hidden="true">
+                  {MESES.map((m, i) => <span style={`left: ${5 + (i * 90) / (MESES.length - 1)}%`}>{m}</span>)}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <!-- As abas no rodapé, como no Power BI -->
       <div role="radiogroup" aria-label="Abas do relatório" class="nb-abas">
         {ABAS.map(([k, rotulo]) => <label for={`nb-pg-${k}`} class="nb-aba">{rotulo}</label>)}
@@ -496,11 +577,21 @@ const primeiraLinha = inicial.length - exemplos.length + 2; // + 1 do cabeçalho
   /* Só a aba escolhida aparece (sem suporte a :has, todas ficam à vista) */
   .nb-relatorio:has(#nb-pg-seg:checked) [data-pg]:not([data-pg='seg']),
   .nb-relatorio:has(#nb-pg-cus:checked) [data-pg]:not([data-pg='cus']),
-  .nb-relatorio:not(:has(#nb-pg-seg:checked, #nb-pg-cus:checked)) [data-pg]:not([data-pg='lic']),
+  .nb-relatorio:has(#nb-pg-cmp:checked) [data-pg]:not([data-pg='cmp']),
+  .nb-relatorio:not(:has(#nb-pg-seg:checked, #nb-pg-cus:checked, #nb-pg-cmp:checked)) [data-pg]:not([data-pg='lic']),
   .nb-relatorio:has(#nb-pg-seg:checked) [data-para]:not([data-para='seg']),
   .nb-relatorio:has(#nb-pg-cus:checked) [data-para]:not([data-para='cus']),
-  .nb-relatorio:not(:has(#nb-pg-seg:checked, #nb-pg-cus:checked)) [data-para]:not([data-para='lic']) {
+  .nb-relatorio:has(#nb-pg-cmp:checked) [data-para]:not([data-para='cmp']),
+  .nb-relatorio:not(:has(#nb-pg-seg:checked, #nb-pg-cus:checked, #nb-pg-cmp:checked)) [data-para]:not([data-para='lic']),
+  /* Na Comparação não há filtros: some também o de setor e o aviso de filtros ativos */
+  .nb-relatorio:has(#nb-pg-cmp:checked) .nb-filtro:not([data-para]),
+  .nb-relatorio:has(#nb-pg-cmp:checked) [data-sem-cmp] {
     display: none;
+  }
+
+  .nb-filtro-nota {
+    font-size: 0.6875rem;
+    line-height: 1.4;
   }
 
   /* A barra lateral, em papel (como no painel real): filtros em cartões brancos */
@@ -1076,9 +1167,25 @@ const primeiraLinha = inicial.length - exemplos.length + 2; // + 1 do cabeçalho
     color: white;
   }
 
+  /* Celular: as quatro abas precisam caber lado a lado */
+  @media (max-width: 30rem) {
+    .nb-abas {
+      gap: 0;
+      overflow-x: auto;
+    }
+
+    .nb-aba {
+      flex: 1 0 auto;
+      padding: 0.6rem 0.5rem;
+      text-align: center;
+      white-space: nowrap;
+    }
+  }
+
   #nb-pg-lic:checked ~ .nb-main [for='nb-pg-lic'],
   #nb-pg-seg:checked ~ .nb-main [for='nb-pg-seg'],
-  #nb-pg-cus:checked ~ .nb-main [for='nb-pg-cus'] {
+  #nb-pg-cus:checked ~ .nb-main [for='nb-pg-cus'],
+  #nb-pg-cmp:checked ~ .nb-main [for='nb-pg-cmp'] {
     border-color: var(--nb-ouro);
     background: rgb(255 255 255 / 0.05);
     font-weight: 600;
@@ -1087,9 +1194,103 @@ const primeiraLinha = inicial.length - exemplos.length + 2; // + 1 do cabeçalho
 
   #nb-pg-lic:focus-visible ~ .nb-main [for='nb-pg-lic'],
   #nb-pg-seg:focus-visible ~ .nb-main [for='nb-pg-seg'],
-  #nb-pg-cus:focus-visible ~ .nb-main [for='nb-pg-cus'] {
+  #nb-pg-cus:focus-visible ~ .nb-main [for='nb-pg-cus'],
+  #nb-pg-cmp:focus-visible ~ .nb-main [for='nb-pg-cmp'] {
     outline: 2px solid var(--nb-ouro);
     outline-offset: -2px;
+  }
+
+  /* ---------- Comparação: gráficos de linha mês a mês ---------- */
+  .nb-grade-cmp {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  @media (min-width: 56rem) {
+    .nb-grade-cmp {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .nb-cmp-largo {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .nb-lg {
+    margin-top: 0.6rem;
+    padding-top: 1rem;
+  }
+
+  .nb-lg-area {
+    position: relative;
+    height: 8.5rem;
+  }
+
+  .nb-lg-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .nb-lg-guia {
+    stroke: var(--nb-linha);
+    stroke-width: 1;
+  }
+
+  .nb-lg-traco {
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  .nb-lg-ponto {
+    position: absolute;
+    width: 0.45rem;
+    height: 0.45rem;
+    border: 2px solid var(--cor);
+    border-radius: 9999px;
+    background: var(--nb-card);
+    transform: translate(-50%, -50%);
+  }
+
+  .nb-lg-ponto.is-ultimo {
+    width: 0.6rem;
+    height: 0.6rem;
+    background: var(--cor);
+  }
+
+  .nb-lg-ponto b {
+    position: absolute;
+    bottom: calc(100% + 0.2rem);
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.625rem;
+    font-weight: 600;
+    white-space: nowrap;
+    color: #d5daea;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nb-lg-ponto.is-ultimo b {
+    font-weight: 700;
+    color: white;
+  }
+
+  .nb-lg-meses {
+    position: relative;
+    height: 1.1rem;
+    margin-top: 0.45rem;
+    border-top: 1px solid var(--nb-linha);
+  }
+
+  .nb-lg-meses span {
+    position: absolute;
+    top: 0.3rem;
+    transform: translateX(-50%);
+    font-size: 0.625rem;
+    color: var(--nb-apagado);
   }
 
   /* ---------- A planilha ---------- */
